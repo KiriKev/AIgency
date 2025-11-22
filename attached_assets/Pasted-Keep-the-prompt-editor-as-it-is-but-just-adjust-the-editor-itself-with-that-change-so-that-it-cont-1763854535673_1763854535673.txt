@@ -1,0 +1,109 @@
+Keep the prompt editor as it is, but just adjust the editor itself with that change, so that it contains a Variablen-Verwaltung mit folgendem Verhalten:
+
+1. Layout
+
+Links: Prompt-Editor (75%)
+
+Rechts: Variablen-Spalte (25%), direkt angrenzend.
+
+2. Variable aus markiertem Text
+
+Markiert der User Text im Editor, erscheint direkt daneben ein Button „+ Variable“.
+
+Klick auf „+ Variable“:
+
+In der rechten Spalte wird eine neue Variable angelegt mit:
+
+internem Variablen-Namen (eindeutig)
+
+sichtbarer Beschriftung
+
+?-Icon mit Beschreibung / Hilfetext
+
+Typ: Text, Checkbox, Multi-Select, Single-Select (Radio), Regler (Min/Max)
+
+Default-Wert = markierter Text
+
+Im Prompt bleibt der Text erhalten, wird aber als Variable markiert.
+
+3. Manuelle Variablen via eckige Klammern
+
+Muster wie [MeineVariable] im Editor erzeugen automatisch eine Variable in der rechten Spalte.
+
+Es öffnet sich dieselbe Konfiguration wie bei „+ Variable“.
+
+Wird eine Variable ohne Text erzeugt, zeigt der Prompt einen Platzhaltertext.
+Vor dem Speichern muss der Typ gewählt werden und ob:
+
+der Abschnitt ein-/ausblendbar ist oder
+
+User-Eingaben erfordert.
+
+4. Variablen-Typen
+
+Text
+
+Checkbox (Abschnitt ein/aus)
+
+Multi-Select
+
+Single-Select (Radio)
+
+Regler mit konfigurierbarem Minimum und Maximum.
+
+5. Hilfe-Icon
+
+Neben jeder Beschriftung in der Variablen-Spalte befindet sich ein ?-Icon.
+
+Hover/Klick zeigt eine kurze Erklärung, was diese Variable steuert.
+
+6. Löschen von Variablen
+
+Löschen in der rechten Spalte:
+
+Entfernt die Variable aus dem Prompt, Text bleibt als normaler Text erhalten.
+
+Tastatur-Löschen im Prompt:
+
+Cursor direkt links oder rechts der Variable + Backspace/Entf:
+
+Ganze Variable wird markiert.
+
+Dialog: „Sind Sie sicher, dass Sie diese Variable löschen möchten?“ – Ja/Nein.
+
+Ja: Variable wird entfernt, Text bleibt.
+
+Nein: keine Änderung.
+
+7. Verhindern doppelter Variablen
+
+Interne Variablennamen müssen eindeutig sein.
+
+Versuch, dieselbe Variable erneut anzulegen (Button oder Klammern) → Hinweis, keine neue Variable.
+
+Keine Verschachtelung: Markierter Text, der bereits Teil einer Variable ist, kann keine neue Variable erzeugen.
+
+8. Generieren & Submitten
+
+Zwei Buttons:
+
+„Generieren“
+
+„Submitten“ rechts daneben.
+
+„Submitten“:
+
+ist ausgegraut, während generiert wird.
+
+wird erst nach abgeschlossener Generierung aktiv.
+
+speichert den aktuellen Prompt mit allen Variablen in einer Datenbank (Art der Datenbank nicht spezifizieren).
+
+
+
+make also sure that for multi-select and single select, i can add auswahlpunkte with an enter.
+each of these options has: 1 publicly visible name. 1 prompt. so that the user will later only see the publicly visible name.
+make me also save EVERY variable, so that it shows then unaufgeklappt.
+if I set up a variable for a prompt, the [] part should contain the original text of this prompt and work as a link.
+if I click on that, the variable should open up on the right side at the variable window.
+make sure to adhere to the attached UI for settings, prompt editor and generation

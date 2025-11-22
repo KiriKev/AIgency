@@ -27,14 +27,27 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { Plus, Trash2, HelpCircle, Sparkles, Save } from "lucide-react";
-import { useState, useRef, useEffect } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Plus, Trash2, HelpCircle, Sparkles, Save, X } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import { useToast } from "@/hooks/use-toast";
+import { useMutation } from "@tanstack/react-query";
+import { queryClient, apiRequest } from "@/lib/queryClient";
 
 type VariableType = 'text' | 'checkbox' | 'multi-select' | 'single-select' | 'slider';
+
+interface SelectOption {
+  visibleName: string;
+  promptValue: string;
+}
 
 interface Variable {
   id: string;
@@ -43,7 +56,7 @@ interface Variable {
   description: string;
   type: VariableType;
   defaultValue: string | number | boolean | string[];
-  options?: string[];
+  options?: SelectOption[];
   min?: number;
   max?: number;
   required: boolean;
@@ -51,6 +64,7 @@ interface Variable {
 }
 
 export default function PromptEditor() {
+  const [promptTitle, setPromptTitle] = useState("Untitled Prompt");
   const [prompt, setPrompt] = useState("");
   const [variables, setVariables] = useState<Variable[]>([]);
   const [selectedText, setSelectedText] = useState("");
@@ -58,9 +72,11 @@ export default function PromptEditor() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [variableToDelete, setVariableToDelete] = useState<string | null>(null);
-  const [editingVariable, setEditingVariable] = useState<string | null>(null);
+  const [openVariables, setOpenVariables] = useState<string[]>([]);
+  const [newOptionInput, setNewOptionInput] = useState<Record<string, string>>({});
   
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const { toast } = useToast();
 
   const handleTextSelection = () => {
     if (!textareaRef.current) return;
@@ -70,12 +86,30 @@ export default function PromptEditor() {
     const selected = prompt.substring(start, end);
     
     if (selected && selected.trim().length > 0) {
-      setSelectedText(selected);
-      setSelectionRange({ start, end });
+      const isInsideVariable = checkIfInsideVariable(start, end);
+      if (!isInsideVariable) {
+        setSelectedText(selected);
+        setSelectionRange({ start, end });
+      }
     } else {
       setSelectedText("");
       setSelectionRange(null);
     }
+  };
+
+  const checkIfInsideVariable = (start: number, end: number): boolean => {
+    const regex = /\[([^\]]+)\]/g;
+    let match;
+    
+    while ((match = regex.exec(prompt)) !== null) {
+      const varStart = match.index;
+      const varEnd = match.index + match[0].length;
+      
+      if ((start >= varStart && start < varEnd) || (end > varStart && end <= varEnd)) {
+        return true;
+      }
+    }
+    return false;
   };
 
   const createVariableFromSelection = () => {
@@ -86,7 +120,11 @@ export default function PromptEditor() {
     
     const isDuplicate = variables.some(v => v.name === varName);
     if (isDuplicate) {
-      alert('Diese Variable existiert bereits!');
+      toast({
+        title: "Fehler",
+        description: "Diese Variable existiert bereits!",
+        variant: "destructive"
+      });
       return;
     }
     
@@ -111,7 +149,7 @@ export default function PromptEditor() {
     
     setSelectedText("");
     setSelectionRange(null);
-    setEditingVariable(varName);
+    setOpenVariables([varName]);
   };
 
   const detectBracketVariables = (text: string) => {
@@ -135,13 +173,17 @@ export default function PromptEditor() {
         };
         
         setVariables(prev => [...prev, newVariable]);
-        setEditingVariable(varName);
+        setOpenVariables(prev => [...prev, varName]);
       }
     });
   };
 
   useEffect(() => {
-    detectBracketVariables(prompt);
+    const timeoutId = setTimeout(() => {
+      detectBracketVariables(prompt);
+    }, 500);
+    
+    return () => clearTimeout(timeoutId);
   }, [prompt]);
 
   const deleteVariable = (varId: string) => {
@@ -156,7 +198,7 @@ export default function PromptEditor() {
     if (!variable) return;
     
     const varPlaceholder = `[${variable.name}]`;
-    const newPrompt = prompt.replace(new RegExp(`\\[${variable.name}\\]`, 'g'), variable.defaultValue as string || '');
+    const newPrompt = prompt.replace(new RegExp(`\\[${variable.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\]`, 'g'), variable.defaultValue as string || '');
     setPrompt(newPrompt);
     
     setVariables(variables.filter(v => v.id !== variableToDelete));
@@ -170,41 +212,201 @@ export default function PromptEditor() {
     ));
   };
 
+  const handleVariableLinkClick = (varName: string) => {
+    const variable = variables.find(v => v.name === varName || v.label === varName);
+    if (variable) {
+      setOpenVariables([variable.id]);
+      
+      setTimeout(() => {
+        const element = document.getElementById(`variable-${variable.id}`);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+      }, 100);
+    }
+  };
+
+  const renderPromptWithLinks = () => {
+    const regex = /\[([^\]]+)\]/g;
+    const parts = [];
+    let lastIndex = 0;
+    let match;
+
+    while ((match = regex.exec(prompt)) !== null) {
+      if (match.index > lastIndex) {
+        parts.push(
+          <span key={`text-${lastIndex}`}>
+            {prompt.substring(lastIndex, match.index)}
+          </span>
+        );
+      }
+
+      const varName = match[1];
+      const variable = variables.find(v => v.name === varName);
+      const displayText = variable ? variable.label : varName;
+      
+      parts.push(
+        <button
+          key={`var-${match.index}`}
+          type="button"
+          onClick={() => handleVariableLinkClick(varName)}
+          className="text-primary hover-elevate px-1 rounded"
+          data-testid={`link-variable-${varName}`}
+        >
+          [{displayText}]
+        </button>
+      );
+
+      lastIndex = match.index + match[0].length;
+    }
+
+    if (lastIndex < prompt.length) {
+      parts.push(
+        <span key={`text-${lastIndex}`}>
+          {prompt.substring(lastIndex)}
+        </span>
+      );
+    }
+
+    return parts.length > 0 ? parts : prompt;
+  };
+
+  const addOption = (varId: string) => {
+    const input = newOptionInput[varId] || '';
+    if (!input.trim()) return;
+
+    const variable = variables.find(v => v.id === varId);
+    if (!variable) return;
+
+    const newOption: SelectOption = {
+      visibleName: input.trim(),
+      promptValue: input.trim()
+    };
+
+    updateVariable(varId, {
+      options: [...(variable.options || []), newOption]
+    });
+
+    setNewOptionInput({ ...newOptionInput, [varId]: '' });
+  };
+
+  const removeOption = (varId: string, index: number) => {
+    const variable = variables.find(v => v.id === varId);
+    if (!variable || !variable.options) return;
+
+    const newOptions = variable.options.filter((_, i) => i !== index);
+    updateVariable(varId, { options: newOptions });
+  };
+
+  const updateOption = (varId: string, index: number, field: 'visibleName' | 'promptValue', value: string) => {
+    const variable = variables.find(v => v.id === varId);
+    if (!variable || !variable.options) return;
+
+    const newOptions = [...variable.options];
+    newOptions[index] = { ...newOptions[index], [field]: value };
+    updateVariable(varId, { options: newOptions });
+  };
+
   const handleGenerate = () => {
     setIsGenerating(true);
     setTimeout(() => {
       setIsGenerating(false);
+      toast({
+        title: "Generierung abgeschlossen",
+        description: "Ihr Prompt wurde erfolgreich generiert."
+      });
     }, 2000);
   };
 
+  const savePromptMutation = useMutation({
+    mutationFn: async () => {
+      const promptData = {
+        title: promptTitle,
+        content: prompt,
+        userId: null
+      };
+
+      const response = await apiRequest('POST', '/api/prompts', promptData);
+      const savedPrompt = await response.json();
+
+      for (const variable of variables) {
+        const variableData: Record<string, any> = {
+          promptId: savedPrompt.id,
+          name: variable.name,
+          label: variable.label,
+          description: variable.description || null,
+          type: variable.type,
+          defaultValue: variable.defaultValue,
+          required: variable.required,
+          position: variable.position,
+          min: variable.min ?? null,
+          max: variable.max ?? null,
+          options: variable.options ?? null
+        };
+
+        await apiRequest('POST', '/api/variables', variableData);
+      }
+
+      return savedPrompt;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/prompts'] });
+      toast({
+        title: "Gespeichert",
+        description: "Ihr Prompt wurde erfolgreich gespeichert."
+      });
+    },
+    onError: (error) => {
+      console.error('Save error:', error);
+      toast({
+        title: "Fehler",
+        description: "Beim Speichern ist ein Fehler aufgetreten.",
+        variant: "destructive"
+      });
+    }
+  });
+
   const handleSubmit = () => {
-    console.log('Submitting prompt with variables:', { prompt, variables });
+    savePromptMutation.mutate();
   };
 
   return (
     <TooltipProvider>
-      <div className="grid grid-cols-[3fr_1fr] gap-4 h-[calc(100vh-12rem)]">
-        <Card className="flex flex-col">
+      <div className="space-y-4">
+        <Card>
           <CardHeader>
-            <CardTitle className="text-base">Prompt Editor</CardTitle>
+            <div className="flex items-center gap-4">
+              <div className="flex-1">
+                <Input
+                  value={promptTitle}
+                  onChange={(e) => setPromptTitle(e.target.value)}
+                  className="text-xl font-semibold border-none p-0 h-auto focus-visible:ring-0"
+                  placeholder="Prompt Titel eingeben..."
+                  data-testid="input-prompt-title"
+                />
+              </div>
+            </div>
           </CardHeader>
-          <CardContent className="flex-1 flex flex-col gap-4">
-            <div className="relative flex-1">
-              <Textarea
-                ref={textareaRef}
-                value={prompt}
-                onChange={(e) => setPrompt(e.target.value)}
-                onSelect={handleTextSelection}
-                className="h-full font-mono text-sm resize-none"
-                placeholder="Schreibe deinen Prompt hier... Nutze [VariableName] für Variablen"
-                data-testid="textarea-prompt"
-              />
-              
-              {selectedText && selectionRange && (
-                <div className="absolute" style={{
-                  top: `${(selectionRange.start / prompt.length) * 100}%`,
-                  right: '-120px'
-                }}>
+        </Card>
+
+        <div className="grid grid-cols-[3fr_1fr] gap-4 h-[calc(100vh-16rem)]">
+          <Card className="flex flex-col">
+            <CardHeader>
+              <CardTitle className="text-base">Prompt Editor</CardTitle>
+            </CardHeader>
+            <CardContent className="flex-1 flex flex-col gap-4">
+              <div className="flex-1 space-y-2">
+                <Textarea
+                  ref={textareaRef}
+                  value={prompt}
+                  onChange={(e) => setPrompt(e.target.value)}
+                  onSelect={handleTextSelection}
+                  className="h-[calc(100%-100px)] font-mono text-sm resize-none"
+                  placeholder="Schreibe deinen Prompt hier... Nutze [VariableName] für Variablen"
+                  data-testid="textarea-prompt"
+                />
+                
+                {selectedText && selectionRange && (
                   <Button
                     size="sm"
                     onClick={createVariableFromSelection}
@@ -213,39 +415,44 @@ export default function PromptEditor() {
                     <Plus className="h-3 w-3 mr-1" />
                     Variable
                   </Button>
-                </div>
-              )}
-            </div>
+                )}
 
-            <div className="flex gap-2 pt-4 border-t">
-              <Button
-                onClick={handleGenerate}
-                disabled={isGenerating}
-                data-testid="button-generate"
-              >
-                <Sparkles className="h-4 w-4 mr-2" />
-                {isGenerating ? 'Generiere...' : 'Generieren'}
-              </Button>
-              <Button
-                variant="outline"
-                onClick={handleSubmit}
-                disabled={isGenerating}
-                data-testid="button-submit"
-              >
-                <Save className="h-4 w-4 mr-2" />
-                Submitten
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+                <Card className="p-4">
+                  <h4 className="text-sm font-medium mb-2">Vorschau</h4>
+                  <div className="font-mono text-sm whitespace-pre-wrap break-words">
+                    {renderPromptWithLinks()}
+                  </div>
+                </Card>
+              </div>
 
-        <Card className="flex flex-col">
-          <CardHeader>
-            <CardTitle className="text-base">Variablen</CardTitle>
-          </CardHeader>
-          <CardContent className="flex-1 overflow-hidden">
-            <ScrollArea className="h-full pr-4">
-              <div className="space-y-4">
+              <div className="flex gap-2 pt-4 border-t">
+                <Button
+                  onClick={handleGenerate}
+                  disabled={isGenerating}
+                  data-testid="button-generate"
+                >
+                  <Sparkles className="h-4 w-4 mr-2" />
+                  {isGenerating ? 'Generiere...' : 'Generieren'}
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={handleSubmit}
+                  disabled={isGenerating || savePromptMutation.isPending}
+                  data-testid="button-submit"
+                >
+                  <Save className="h-4 w-4 mr-2" />
+                  {savePromptMutation.isPending ? 'Speichere...' : 'Submitten'}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="flex flex-col">
+            <CardHeader>
+              <CardTitle className="text-base">Variablen</CardTitle>
+            </CardHeader>
+            <CardContent className="flex-1 overflow-hidden">
+              <ScrollArea className="h-full pr-4">
                 {variables.length === 0 ? (
                   <p className="text-sm text-muted-foreground text-center py-8">
                     Keine Variablen vorhanden.
@@ -253,167 +460,237 @@ export default function PromptEditor() {
                     Markiere Text oder nutze [Name]
                   </p>
                 ) : (
-                  variables.map((variable) => (
-                    <Card key={variable.id} className="p-3">
-                      <div className="space-y-3">
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="flex-1 space-y-2">
-                            <div className="flex items-center gap-2">
+                  <Accordion type="multiple" value={openVariables} onValueChange={setOpenVariables}>
+                    {variables.map((variable) => (
+                      <AccordionItem 
+                        key={variable.id} 
+                        value={variable.id}
+                        id={`variable-${variable.id}`}
+                      >
+                        <AccordionTrigger className="hover-elevate px-2 rounded" data-testid={`accordion-trigger-${variable.id}`}>
+                          <div className="flex items-center gap-2 flex-1">
+                            <span className="text-sm font-medium">{variable.label}</span>
+                            <Badge variant="outline" className="text-xs">{variable.type}</Badge>
+                          </div>
+                        </AccordionTrigger>
+                        <AccordionContent className="px-2 pt-3 space-y-3">
+                          <div className="flex items-start gap-2">
+                            <div className="flex-1">
+                              <Label className="text-xs">Label</Label>
                               <Input
                                 value={variable.label}
                                 onChange={(e) => updateVariable(variable.id, { label: e.target.value })}
-                                className="h-8 text-sm font-medium"
+                                className="h-8 text-sm mt-1"
                                 placeholder="Label"
                                 data-testid={`input-label-${variable.id}`}
                               />
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Button variant="ghost" size="icon" className="h-8 w-8">
-                                    <HelpCircle className="h-4 w-4" />
-                                  </Button>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                  <Input
-                                    value={variable.description}
-                                    onChange={(e) => updateVariable(variable.id, { description: e.target.value })}
-                                    placeholder="Beschreibung hinzufügen..."
-                                    className="w-48"
-                                    data-testid={`input-description-${variable.id}`}
-                                  />
-                                </TooltipContent>
-                              </Tooltip>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8"
-                                onClick={() => deleteVariable(variable.id)}
-                                data-testid={`button-delete-${variable.id}`}
-                              >
-                                <Trash2 className="h-4 w-4 text-destructive" />
-                              </Button>
                             </div>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-8 w-8 mt-5">
+                                  <HelpCircle className="h-4 w-4" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent side="left" className="w-64">
+                                <Textarea
+                                  value={variable.description}
+                                  onChange={(e) => updateVariable(variable.id, { description: e.target.value })}
+                                  placeholder="Beschreibung hinzufügen..."
+                                  className="min-h-[80px]"
+                                  data-testid={`input-description-${variable.id}`}
+                                />
+                              </TooltipContent>
+                            </Tooltip>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 mt-5"
+                              onClick={() => deleteVariable(variable.id)}
+                              data-testid={`button-delete-${variable.id}`}
+                            >
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                          </div>
 
-                            <Badge variant="outline" className="text-xs">
+                          <div className="space-y-2">
+                            <Label className="text-xs">Interner Name</Label>
+                            <Badge variant="secondary" className="text-xs font-mono">
                               {variable.name}
                             </Badge>
                           </div>
-                        </div>
 
-                        <div className="space-y-2">
-                          <Label className="text-xs">Typ</Label>
-                          <Select
-                            value={variable.type}
-                            onValueChange={(value) => updateVariable(variable.id, { type: value as VariableType })}
-                          >
-                            <SelectTrigger className="h-8 text-sm" data-testid={`select-type-${variable.id}`}>
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="text">Text</SelectItem>
-                              <SelectItem value="checkbox">Checkbox</SelectItem>
-                              <SelectItem value="multi-select">Multi-Select</SelectItem>
-                              <SelectItem value="single-select">Single-Select</SelectItem>
-                              <SelectItem value="slider">Regler</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-
-                        {variable.type === 'text' && (
-                          <Input
-                            value={variable.defaultValue as string}
-                            onChange={(e) => updateVariable(variable.id, { defaultValue: e.target.value })}
-                            placeholder="Default-Wert"
-                            className="h-8 text-sm"
-                            data-testid={`input-default-${variable.id}`}
-                          />
-                        )}
-
-                        {variable.type === 'checkbox' && (
-                          <div className="flex items-center space-x-2">
-                            <Checkbox
-                              id={`checkbox-${variable.id}`}
-                              checked={variable.defaultValue as boolean}
-                              onCheckedChange={(checked) => updateVariable(variable.id, { defaultValue: checked })}
-                              data-testid={`checkbox-default-${variable.id}`}
-                            />
-                            <Label htmlFor={`checkbox-${variable.id}`} className="text-sm">
-                              Standardmäßig aktiv
-                            </Label>
-                          </div>
-                        )}
-
-                        {(variable.type === 'multi-select' || variable.type === 'single-select') && (
                           <div className="space-y-2">
-                            <Label className="text-xs">Optionen (kommagetrennt)</Label>
-                            <Input
-                              value={variable.options?.join(', ') || ''}
-                              onChange={(e) => updateVariable(variable.id, { 
-                                options: e.target.value.split(',').map(s => s.trim()).filter(Boolean) 
-                              })}
-                              placeholder="Option 1, Option 2, Option 3"
-                              className="h-8 text-sm"
-                              data-testid={`input-options-${variable.id}`}
-                            />
+                            <Label className="text-xs">Typ</Label>
+                            <Select
+                              value={variable.type}
+                              onValueChange={(value) => updateVariable(variable.id, { type: value as VariableType })}
+                            >
+                              <SelectTrigger className="h-8 text-sm" data-testid={`select-type-${variable.id}`}>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="text">Text</SelectItem>
+                                <SelectItem value="checkbox">Checkbox</SelectItem>
+                                <SelectItem value="multi-select">Multi-Select</SelectItem>
+                                <SelectItem value="single-select">Single-Select</SelectItem>
+                                <SelectItem value="slider">Regler</SelectItem>
+                              </SelectContent>
+                            </Select>
                           </div>
-                        )}
 
-                        {variable.type === 'slider' && (
-                          <div className="space-y-3">
-                            <div className="grid grid-cols-2 gap-2">
-                              <div className="space-y-1">
-                                <Label className="text-xs">Min</Label>
-                                <Input
-                                  type="number"
-                                  value={variable.min || 0}
-                                  onChange={(e) => updateVariable(variable.id, { min: parseInt(e.target.value) })}
-                                  className="h-8 text-sm"
-                                  data-testid={`input-min-${variable.id}`}
-                                />
-                              </div>
-                              <div className="space-y-1">
-                                <Label className="text-xs">Max</Label>
-                                <Input
-                                  type="number"
-                                  value={variable.max || 100}
-                                  onChange={(e) => updateVariable(variable.id, { max: parseInt(e.target.value) })}
-                                  className="h-8 text-sm"
-                                  data-testid={`input-max-${variable.id}`}
-                                />
-                              </div>
-                            </div>
-                            <div className="space-y-1">
-                              <Label className="text-xs">Default: {variable.defaultValue as number}</Label>
-                              <Slider
-                                value={[variable.defaultValue as number]}
-                                onValueChange={([value]) => updateVariable(variable.id, { defaultValue: value })}
-                                min={variable.min || 0}
-                                max={variable.max || 100}
-                                step={1}
-                                data-testid={`slider-default-${variable.id}`}
+                          {variable.type === 'text' && (
+                            <div className="space-y-2">
+                              <Label className="text-xs">Default-Wert</Label>
+                              <Input
+                                value={variable.defaultValue as string}
+                                onChange={(e) => updateVariable(variable.id, { defaultValue: e.target.value })}
+                                placeholder="Default-Wert"
+                                className="h-8 text-sm"
+                                data-testid={`input-default-${variable.id}`}
                               />
                             </div>
-                          </div>
-                        )}
+                          )}
 
-                        <div className="flex items-center space-x-2 pt-2 border-t">
-                          <Checkbox
-                            id={`required-${variable.id}`}
-                            checked={variable.required}
-                            onCheckedChange={(checked) => updateVariable(variable.id, { required: checked as boolean })}
-                            data-testid={`checkbox-required-${variable.id}`}
-                          />
-                          <Label htmlFor={`required-${variable.id}`} className="text-xs">
-                            Pflichtfeld
-                          </Label>
-                        </div>
-                      </div>
-                    </Card>
-                  ))
+                          {variable.type === 'checkbox' && (
+                            <div className="flex items-center space-x-2">
+                              <Checkbox
+                                id={`checkbox-${variable.id}`}
+                                checked={variable.defaultValue as boolean}
+                                onCheckedChange={(checked) => updateVariable(variable.id, { defaultValue: checked })}
+                                data-testid={`checkbox-default-${variable.id}`}
+                              />
+                              <Label htmlFor={`checkbox-${variable.id}`} className="text-sm">
+                                Standardmäßig aktiv
+                              </Label>
+                            </div>
+                          )}
+
+                          {(variable.type === 'multi-select' || variable.type === 'single-select') && (
+                            <div className="space-y-2">
+                              <Label className="text-xs">Optionen</Label>
+                              <div className="space-y-2">
+                                {variable.options?.map((option, index) => (
+                                  <Card key={index} className="p-2">
+                                    <div className="space-y-2">
+                                      <div className="flex items-center gap-2">
+                                        <div className="flex-1">
+                                          <Label className="text-xs">Sichtbarer Name</Label>
+                                          <Input
+                                            value={option.visibleName}
+                                            onChange={(e) => updateOption(variable.id, index, 'visibleName', e.target.value)}
+                                            className="h-8 text-sm mt-1"
+                                            placeholder="Sichtbarer Name"
+                                            data-testid={`input-option-visible-${variable.id}-${index}`}
+                                          />
+                                        </div>
+                                        <Button
+                                          variant="ghost"
+                                          size="icon"
+                                          className="h-8 w-8 mt-5"
+                                          onClick={() => removeOption(variable.id, index)}
+                                          data-testid={`button-remove-option-${variable.id}-${index}`}
+                                        >
+                                          <X className="h-4 w-4" />
+                                        </Button>
+                                      </div>
+                                      <div>
+                                        <Label className="text-xs">Prompt-Wert</Label>
+                                        <Input
+                                          value={option.promptValue}
+                                          onChange={(e) => updateOption(variable.id, index, 'promptValue', e.target.value)}
+                                          className="h-8 text-sm mt-1"
+                                          placeholder="Prompt-Wert"
+                                          data-testid={`input-option-prompt-${variable.id}-${index}`}
+                                        />
+                                      </div>
+                                    </div>
+                                  </Card>
+                                ))}
+                                
+                                <div className="flex gap-2">
+                                  <Input
+                                    value={newOptionInput[variable.id] || ''}
+                                    onChange={(e) => setNewOptionInput({ ...newOptionInput, [variable.id]: e.target.value })}
+                                    onKeyDown={(e) => {
+                                      if (e.key === 'Enter') {
+                                        e.preventDefault();
+                                        addOption(variable.id);
+                                      }
+                                    }}
+                                    placeholder="Neue Option (Enter drücken)"
+                                    className="h-8 text-sm"
+                                    data-testid={`input-new-option-${variable.id}`}
+                                  />
+                                  <Button
+                                    size="sm"
+                                    onClick={() => addOption(variable.id)}
+                                    data-testid={`button-add-option-${variable.id}`}
+                                  >
+                                    <Plus className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+
+                          {variable.type === 'slider' && (
+                            <div className="space-y-3">
+                              <div className="grid grid-cols-2 gap-2">
+                                <div className="space-y-1">
+                                  <Label className="text-xs">Min</Label>
+                                  <Input
+                                    type="number"
+                                    value={variable.min || 0}
+                                    onChange={(e) => updateVariable(variable.id, { min: parseInt(e.target.value) })}
+                                    className="h-8 text-sm"
+                                    data-testid={`input-min-${variable.id}`}
+                                  />
+                                </div>
+                                <div className="space-y-1">
+                                  <Label className="text-xs">Max</Label>
+                                  <Input
+                                    type="number"
+                                    value={variable.max || 100}
+                                    onChange={(e) => updateVariable(variable.id, { max: parseInt(e.target.value) })}
+                                    className="h-8 text-sm"
+                                    data-testid={`input-max-${variable.id}`}
+                                  />
+                                </div>
+                              </div>
+                              <div className="space-y-1">
+                                <Label className="text-xs">Default: {variable.defaultValue as number}</Label>
+                                <Slider
+                                  value={[variable.defaultValue as number || 0]}
+                                  onValueChange={([value]) => updateVariable(variable.id, { defaultValue: value })}
+                                  min={variable.min || 0}
+                                  max={variable.max || 100}
+                                  step={1}
+                                  data-testid={`slider-default-${variable.id}`}
+                                />
+                              </div>
+                            </div>
+                          )}
+
+                          <div className="flex items-center space-x-2 pt-2 border-t">
+                            <Checkbox
+                              id={`required-${variable.id}`}
+                              checked={variable.required}
+                              onCheckedChange={(checked) => updateVariable(variable.id, { required: checked as boolean })}
+                              data-testid={`checkbox-required-${variable.id}`}
+                            />
+                            <Label htmlFor={`required-${variable.id}`} className="text-xs">
+                              Pflichtfeld
+                            </Label>
+                          </div>
+                        </AccordionContent>
+                      </AccordionItem>
+                    ))}
+                  </Accordion>
                 )}
-              </div>
-            </ScrollArea>
-          </CardContent>
-        </Card>
+              </ScrollArea>
+            </CardContent>
+          </Card>
+        </div>
       </div>
 
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
@@ -425,8 +702,10 @@ export default function PromptEditor() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Nein</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmDeleteVariable}>Ja, löschen</AlertDialogAction>
+            <AlertDialogCancel data-testid="button-cancel-delete">Nein</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDeleteVariable} data-testid="button-confirm-delete">
+              Ja, löschen
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
