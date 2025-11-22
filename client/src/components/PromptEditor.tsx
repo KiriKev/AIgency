@@ -36,10 +36,10 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Plus, Trash2, HelpCircle, Sparkles, Save, X } from "lucide-react";
+import { Plus, Trash2, HelpCircle, Sparkles, Save, X, FolderOpen } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 
 type VariableType = 'text' | 'checkbox' | 'multi-select' | 'single-select' | 'slider';
@@ -64,6 +64,7 @@ interface Variable {
 }
 
 export default function PromptEditor() {
+  const [currentPromptId, setCurrentPromptId] = useState<string | null>(null);
   const [promptTitle, setPromptTitle] = useState("Untitled Prompt");
   const [prompt, setPrompt] = useState("");
   const [variables, setVariables] = useState<Variable[]>([]);
@@ -74,9 +75,15 @@ export default function PromptEditor() {
   const [variableToDelete, setVariableToDelete] = useState<string | null>(null);
   const [openVariables, setOpenVariables] = useState<string[]>([]);
   const [newOptionInput, setNewOptionInput] = useState<Record<string, string>>({});
+  const [showLoadDialog, setShowLoadDialog] = useState(false);
   
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { toast } = useToast();
+
+  const { data: savedPrompts } = useQuery({
+    queryKey: ['/api/prompts'],
+    enabled: showLoadDialog
+  });
 
   const handleTextSelection = () => {
     if (!textareaRef.current) return;
@@ -115,7 +122,7 @@ export default function PromptEditor() {
   const createVariableFromSelection = () => {
     if (!selectedText || !selectionRange) return;
     
-    const varName = `var_${Date.now()}`;
+    const varName = selectedText.replace(/\s+/g, '_').replace(/[^\w-]/g, '');
     const varPlaceholder = `[${varName}]`;
     
     const isDuplicate = variables.some(v => v.name === varName);
@@ -197,8 +204,8 @@ export default function PromptEditor() {
     const variable = variables.find(v => v.id === variableToDelete);
     if (!variable) return;
     
-    const varPlaceholder = `[${variable.name}]`;
-    const newPrompt = prompt.replace(new RegExp(`\\[${variable.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\]`, 'g'), variable.defaultValue as string || '');
+    const placeholderRegex = new RegExp(`\\[${variable.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\]`, 'g');
+    const newPrompt = prompt.replace(placeholderRegex, '');
     setPrompt(newPrompt);
     
     setVariables(variables.filter(v => v.id !== variableToDelete));
@@ -320,14 +327,32 @@ export default function PromptEditor() {
 
   const savePromptMutation = useMutation({
     mutationFn: async () => {
-      const promptData = {
-        title: promptTitle,
-        content: prompt,
-        userId: null
-      };
-
-      const response = await apiRequest('POST', '/api/prompts', promptData);
-      const savedPrompt = await response.json();
+      let savedPrompt;
+      
+      if (currentPromptId) {
+        const promptData = {
+          title: promptTitle,
+          content: prompt,
+          userId: null
+        };
+        const response = await apiRequest('PATCH', `/api/prompts/${currentPromptId}`, promptData);
+        savedPrompt = await response.json();
+        
+        const existingVarsResponse = await fetch(`/api/prompts/${currentPromptId}/variables`);
+        const existingVars = await existingVarsResponse.json();
+        
+        for (const existingVar of existingVars) {
+          await apiRequest('DELETE', `/api/variables/${existingVar.id}`, {});
+        }
+      } else {
+        const promptData = {
+          title: promptTitle,
+          content: prompt,
+          userId: null
+        };
+        const response = await apiRequest('POST', '/api/prompts', promptData);
+        savedPrompt = await response.json();
+      }
 
       for (const variable of variables) {
         const variableData: Record<string, any> = {
@@ -347,6 +372,7 @@ export default function PromptEditor() {
         await apiRequest('POST', '/api/variables', variableData);
       }
 
+      setCurrentPromptId(savedPrompt.id);
       return savedPrompt;
     },
     onSuccess: () => {
@@ -368,6 +394,55 @@ export default function PromptEditor() {
 
   const handleSubmit = () => {
     savePromptMutation.mutate();
+  };
+
+  const loadPrompt = async (promptId: string) => {
+    try {
+      const promptResponse = await fetch(`/api/prompts/${promptId}`);
+      const promptData = await promptResponse.json();
+      
+      const variablesResponse = await fetch(`/api/prompts/${promptId}/variables`);
+      const variablesData = await variablesResponse.json();
+      
+      setCurrentPromptId(promptId);
+      setPromptTitle(promptData.title);
+      setPrompt(promptData.content);
+      setVariables(variablesData.map((v: any) => ({
+        id: v.id,
+        name: v.name,
+        label: v.label,
+        description: v.description || '',
+        type: v.type,
+        defaultValue: v.defaultValue,
+        required: v.required,
+        position: v.position,
+        min: v.min,
+        max: v.max,
+        options: v.options
+      })));
+      setOpenVariables([]);
+      setShowLoadDialog(false);
+      
+      toast({
+        title: "Geladen",
+        description: "Prompt wurde erfolgreich geladen."
+      });
+    } catch (error) {
+      console.error('Load error:', error);
+      toast({
+        title: "Fehler",
+        description: "Beim Laden ist ein Fehler aufgetreten.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const newPrompt = () => {
+    setCurrentPromptId(null);
+    setPromptTitle("Untitled Prompt");
+    setPrompt("");
+    setVariables([]);
+    setOpenVariables([]);
   };
 
   return (
@@ -442,6 +517,14 @@ export default function PromptEditor() {
                 >
                   <Save className="h-4 w-4 mr-2" />
                   {savePromptMutation.isPending ? 'Speichere...' : 'Submitten'}
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => setShowLoadDialog(true)}
+                  data-testid="button-load"
+                >
+                  <FolderOpen className="h-4 w-4 mr-2" />
+                  Laden
                 </Button>
               </div>
             </CardContent>
@@ -706,6 +789,46 @@ export default function PromptEditor() {
             <AlertDialogAction onClick={confirmDeleteVariable} data-testid="button-confirm-delete">
               Ja, löschen
             </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={showLoadDialog} onOpenChange={setShowLoadDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Prompt laden</AlertDialogTitle>
+            <AlertDialogDescription>
+              Wählen Sie einen gespeicherten Prompt, um ihn zu laden und zu bearbeiten.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <ScrollArea className="max-h-[400px]">
+            <div className="space-y-2 p-1">
+              {savedPrompts && savedPrompts.length > 0 ? (
+                savedPrompts.map((p: any) => (
+                  <Button
+                    key={p.id}
+                    variant="outline"
+                    className="w-full justify-start"
+                    onClick={() => loadPrompt(p.id)}
+                    data-testid={`button-load-prompt-${p.id}`}
+                  >
+                    <div className="flex flex-col items-start">
+                      <span className="font-medium">{p.title}</span>
+                      <span className="text-xs text-muted-foreground">
+                        {new Date(p.createdAt).toLocaleDateString()}
+                      </span>
+                    </div>
+                  </Button>
+                ))
+              ) : (
+                <p className="text-sm text-muted-foreground text-center py-4">
+                  Keine gespeicherten Prompts gefunden.
+                </p>
+              )}
+            </div>
+          </ScrollArea>
+          <AlertDialogFooter>
+            <AlertDialogCancel data-testid="button-cancel-load">Abbrechen</AlertDialogCancel>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
