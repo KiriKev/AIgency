@@ -53,6 +53,7 @@ export default function FilterBar({ onFilterChange }: FilterBarProps) {
               variant={priceFilter === 'all' ? 'default' : 'outline'}
               size="sm"
               onClick={() => handlePriceFilterChange('all')}
+              className={priceFilter === 'all' ? '' : 'text-foreground'}
               data-testid="button-filter-all"
             >
               All
@@ -61,6 +62,7 @@ export default function FilterBar({ onFilterChange }: FilterBarProps) {
               variant={priceFilter === 'free' ? 'default' : 'outline'}
               size="sm"
               onClick={() => handlePriceFilterChange('free')}
+              className={priceFilter === 'free' ? '' : 'text-foreground'}
               data-testid="button-filter-free"
             >
               Free
@@ -69,6 +71,7 @@ export default function FilterBar({ onFilterChange }: FilterBarProps) {
               variant={priceFilter === 'paid' ? 'default' : 'outline'}
               size="sm"
               onClick={() => handlePriceFilterChange('paid')}
+              className={priceFilter === 'paid' ? '' : 'text-foreground'}
               data-testid="button-filter-paid"
             >
               Paid

@@ -1,17 +1,33 @@
 import Navbar from "@/components/Navbar";
 import PromptEditor from "@/components/PromptEditor";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft } from "lucide-react";
+import { useLocation } from "wouter";
 
 export default function Editor() {
+  const [, setLocation] = useLocation();
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
       
-      <main className="w-full px-6 lg:px-8 py-8">
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold mb-2">Create Prompt Template</h1>
-          <p className="text-muted-foreground">
-            Design reusable prompt templates with customizable variables
-          </p>
+      <main className="w-full px-6 lg:px-8 py-6">
+        <div className="mb-6 flex items-center gap-4">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => setLocation('/')}
+            data-testid="button-back"
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Zurück
+          </Button>
+          <div>
+            <h1 className="text-2xl font-bold">Create Prompt Template</h1>
+            <p className="text-sm text-muted-foreground">
+              Design reusable prompt templates with customizable variables
+            </p>
+          </div>
         </div>
 
         <PromptEditor />

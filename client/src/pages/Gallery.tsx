@@ -103,22 +103,19 @@ export default function Gallery() {
       <Navbar />
       <FilterBar onFilterChange={(f) => console.log('Filters:', f)} />
       
-      <main className="w-full max-w-7xl mx-auto px-6 lg:px-8 py-8">
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold mb-2">Marketplace Gallery</h1>
-          <p className="text-muted-foreground">
-            Discover thousands of AI prompt templates from talented artists
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {mockPrompts.map(prompt => (
-            <PromptCard
-              key={prompt.id}
-              {...prompt}
-              onClick={() => setLocation(`/generator/${prompt.id}`)}
-            />
-          ))}
+      <main className="w-full px-2 py-2">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-1 auto-rows-[200px]">
+          {mockPrompts.map((prompt, idx) => {
+            const spans = idx % 7 === 0 ? 'row-span-2 col-span-2' : idx % 5 === 0 ? 'row-span-2' : '';
+            return (
+              <div key={prompt.id} className={spans}>
+                <PromptCard
+                  {...prompt}
+                  onClick={() => setLocation(`/generator/${prompt.id}`)}
+                />
+              </div>
+            );
+          })}
         </div>
       </main>
     </div>
