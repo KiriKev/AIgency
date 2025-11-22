@@ -22,6 +22,14 @@ export const prompts = pgTable("prompts", {
   title: text("title").notNull(),
   content: text("content").notNull(),
   userId: varchar("user_id"),
+  category: text("category"),
+  tags: jsonb("tags"),
+  aiModel: text("ai_model").default("gemini"),
+  price: integer("price").default(1),
+  aspectRatio: text("aspect_ratio"),
+  photoCount: integer("photo_count").default(1),
+  promptType: text("prompt_type").default("create-now"),
+  uploadedPhotos: jsonb("uploaded_photos"),
 });
 
 export const insertPromptSchema = createInsertSchema(prompts).omit({

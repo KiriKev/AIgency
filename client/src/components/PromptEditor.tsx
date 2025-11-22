@@ -77,7 +77,18 @@ export default function PromptEditor() {
   const [newOptionInput, setNewOptionInput] = useState<Record<string, string>>({});
   const [showLoadDialog, setShowLoadDialog] = useState(false);
   
+  const [category, setCategory] = useState("");
+  const [tags, setTags] = useState<string[]>([]);
+  const [aiModel, setAiModel] = useState("gemini");
+  const [price, setPrice] = useState(0.0001);
+  const [aspectRatio, setAspectRatio] = useState<string | null>(null);
+  const [photoCount, setPhotoCount] = useState(1);
+  const [promptType, setPromptType] = useState("create-now");
+  const [uploadedPhotos, setUploadedPhotos] = useState<string[]>([]);
+  const [newTag, setNewTag] = useState("");
+  
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
   const { data: savedPrompts } = useQuery({
