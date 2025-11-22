@@ -11,268 +11,425 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Save, Eye, Sparkles, Image as ImageIcon } from "lucide-react";
-import { useState } from "react";
+import { Plus, Trash2, HelpCircle, Sparkles, Save } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
-const ASPECT_RATIOS = [
-  { value: "1:1", label: "1:1", width: 1024, height: 1024 },
-  { value: "16:9", label: "16:9", width: 1920, height: 1080 },
-  { value: "9:16", label: "9:16", width: 1080, height: 1920 },
-  { value: "4:3", label: "4:3", width: 1024, height: 768 },
-  { value: "3:4", label: "3:4", width: 768, height: 1024 },
-];
+type VariableType = 'text' | 'checkbox' | 'multi-select' | 'single-select' | 'slider';
+
+interface Variable {
+  id: string;
+  name: string;
+  label: string;
+  description: string;
+  type: VariableType;
+  defaultValue: string | number | boolean | string[];
+  options?: string[];
+  min?: number;
+  max?: number;
+  required: boolean;
+  position: number;
+}
 
 export default function PromptEditor() {
-  const [title, setTitle] = useState("");
-  const [prompt, setPrompt] = useState("A {{subject}} in a {{style}} setting with {{atmosphere}} lighting");
-  const [selectedModel, setSelectedModel] = useState("gemini-2.5");
-  const [aspectRatio, setAspectRatio] = useState("1:1");
-  const [evilSlider, setEvilSlider] = useState([50]);
-  const [fireSlider, setFireSlider] = useState([60]);
-  const [priceType, setPriceType] = useState<'free' | 'paid'>('free');
-  const [price, setPrice] = useState(0);
+  const [prompt, setPrompt] = useState("");
+  const [variables, setVariables] = useState<Variable[]>([]);
+  const [selectedText, setSelectedText] = useState("");
+  const [selectionRange, setSelectionRange] = useState<{ start: number; end: number } | null>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [variableToDelete, setVariableToDelete] = useState<string | null>(null);
+  const [editingVariable, setEditingVariable] = useState<string | null>(null);
+  
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  const currentRatio = ASPECT_RATIOS.find(r => r.value === aspectRatio);
-  const baseCost = selectedModel === "gemini-3.0" ? 0.3 : 0.1;
-  const totalCost = baseCost + (evilSlider[0] / 100 * 0.2) + (fireSlider[0] / 100 * 0.2);
+  const handleTextSelection = () => {
+    if (!textareaRef.current) return;
+    
+    const start = textareaRef.current.selectionStart;
+    const end = textareaRef.current.selectionEnd;
+    const selected = prompt.substring(start, end);
+    
+    if (selected && selected.trim().length > 0) {
+      setSelectedText(selected);
+      setSelectionRange({ start, end });
+    } else {
+      setSelectedText("");
+      setSelectionRange(null);
+    }
+  };
+
+  const createVariableFromSelection = () => {
+    if (!selectedText || !selectionRange) return;
+    
+    const varName = `var_${Date.now()}`;
+    const varPlaceholder = `[${varName}]`;
+    
+    const isDuplicate = variables.some(v => v.name === varName);
+    if (isDuplicate) {
+      alert('Diese Variable existiert bereits!');
+      return;
+    }
+    
+    const newVariable: Variable = {
+      id: varName,
+      name: varName,
+      label: selectedText,
+      description: '',
+      type: 'text',
+      defaultValue: selectedText,
+      required: false,
+      position: variables.length
+    };
+    
+    setVariables([...variables, newVariable]);
+    
+    const newPrompt = 
+      prompt.substring(0, selectionRange.start) + 
+      varPlaceholder + 
+      prompt.substring(selectionRange.end);
+    setPrompt(newPrompt);
+    
+    setSelectedText("");
+    setSelectionRange(null);
+    setEditingVariable(varName);
+  };
+
+  const detectBracketVariables = (text: string) => {
+    const regex = /\[([^\]]+)\]/g;
+    const matches = Array.from(text.matchAll(regex));
+    
+    matches.forEach(match => {
+      const varName = match[1];
+      const exists = variables.some(v => v.name === varName);
+      
+      if (!exists) {
+        const newVariable: Variable = {
+          id: varName,
+          name: varName,
+          label: varName,
+          description: '',
+          type: 'text',
+          defaultValue: '',
+          required: true,
+          position: variables.length
+        };
+        
+        setVariables(prev => [...prev, newVariable]);
+        setEditingVariable(varName);
+      }
+    });
+  };
+
+  useEffect(() => {
+    detectBracketVariables(prompt);
+  }, [prompt]);
+
+  const deleteVariable = (varId: string) => {
+    setVariableToDelete(varId);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDeleteVariable = () => {
+    if (!variableToDelete) return;
+    
+    const variable = variables.find(v => v.id === variableToDelete);
+    if (!variable) return;
+    
+    const varPlaceholder = `[${variable.name}]`;
+    const newPrompt = prompt.replace(new RegExp(`\\[${variable.name}\\]`, 'g'), variable.defaultValue as string || '');
+    setPrompt(newPrompt);
+    
+    setVariables(variables.filter(v => v.id !== variableToDelete));
+    setDeleteDialogOpen(false);
+    setVariableToDelete(null);
+  };
+
+  const updateVariable = (varId: string, updates: Partial<Variable>) => {
+    setVariables(variables.map(v => 
+      v.id === varId ? { ...v, ...updates } : v
+    ));
+  };
+
+  const handleGenerate = () => {
+    setIsGenerating(true);
+    setTimeout(() => {
+      setIsGenerating(false);
+    }, 2000);
+  };
+
+  const handleSubmit = () => {
+    console.log('Submitting prompt with variables:', { prompt, variables });
+  };
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-[300px_1fr_400px] gap-6 h-full">
-      <div className="space-y-4 overflow-y-auto max-h-[calc(100vh-12rem)]">
-        <Card>
+    <TooltipProvider>
+      <div className="grid grid-cols-[3fr_1fr] gap-4 h-[calc(100vh-12rem)]">
+        <Card className="flex flex-col">
           <CardHeader>
-            <CardTitle className="text-base">Settings</CardTitle>
+            <CardTitle className="text-base">Prompt Editor</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="title">Title</Label>
-              <Input
-                id="title"
-                placeholder="Give title for your prompt"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                data-testid="input-title"
+          <CardContent className="flex-1 flex flex-col gap-4">
+            <div className="relative flex-1">
+              <Textarea
+                ref={textareaRef}
+                value={prompt}
+                onChange={(e) => setPrompt(e.target.value)}
+                onSelect={handleTextSelection}
+                className="h-full font-mono text-sm resize-none"
+                placeholder="Schreibe deinen Prompt hier... Nutze [VariableName] für Variablen"
+                data-testid="textarea-prompt"
               />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="category">Category</Label>
-              <Select defaultValue="scifi">
-                <SelectTrigger id="category" data-testid="select-category">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="scifi">Sci-Fi</SelectItem>
-                  <SelectItem value="fantasy">Fantasy</SelectItem>
-                  <SelectItem value="portrait">Portrait</SelectItem>
-                  <SelectItem value="landscape">Landscape</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Price per generation</Label>
-              <div className="flex gap-2">
-                <Button
-                  variant={priceType === 'free' ? 'default' : 'outline'}
-                  size="sm"
-                  className="flex-1"
-                  onClick={() => setPriceType('free')}
-                  data-testid="button-price-free"
-                >
-                  Free
-                </Button>
-                <Button
-                  variant={priceType === 'paid' ? 'default' : 'outline'}
-                  size="sm"
-                  className="flex-1"
-                  onClick={() => setPriceType('paid')}
-                  data-testid="button-price-paid"
-                >
-                  USD
-                </Button>
-              </div>
-              {priceType === 'paid' && (
-                <Input
-                  type="number"
-                  placeholder="0.00"
-                  value={price}
-                  onChange={(e) => setPrice(parseFloat(e.target.value) || 0)}
-                  className="mt-2"
-                  data-testid="input-price"
-                />
-              )}
-            </div>
-
-            <Separator />
-
-            <div className="space-y-2">
-              <Label>AI Model</Label>
-              <div className="grid grid-cols-2 gap-2">
-                <Button
-                  variant={selectedModel === 'gemini-2.5' ? 'default' : 'outline'}
-                  size="sm"
-                  className="flex flex-col h-auto py-3"
-                  onClick={() => setSelectedModel('gemini-2.5')}
-                  data-testid="button-model-2.5"
-                >
-                  <span className="font-semibold">Gemini 2.5</span>
-                  <span className="text-xs text-muted-foreground">up to 1024px</span>
-                </Button>
-                <Button
-                  variant={selectedModel === 'gemini-3.0' ? 'default' : 'outline'}
-                  size="sm"
-                  className="flex flex-col h-auto py-3"
-                  onClick={() => setSelectedModel('gemini-3.0')}
-                  data-testid="button-model-3.0"
-                >
-                  <span className="font-semibold">Gemini 3.0</span>
-                  <span className="text-xs text-muted-foreground">up to 4096px</span>
-                </Button>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Aspect Ratio</Label>
-              <div className="grid grid-cols-3 gap-2">
-                {ASPECT_RATIOS.map(ratio => (
+              
+              {selectedText && selectionRange && (
+                <div className="absolute" style={{
+                  top: `${(selectionRange.start / prompt.length) * 100}%`,
+                  right: '-120px'
+                }}>
                   <Button
-                    key={ratio.value}
-                    variant={aspectRatio === ratio.value ? 'default' : 'outline'}
                     size="sm"
-                    onClick={() => setAspectRatio(ratio.value)}
-                    data-testid={`button-ratio-${ratio.value}`}
+                    onClick={createVariableFromSelection}
+                    data-testid="button-create-variable"
                   >
-                    {ratio.label}
+                    <Plus className="h-3 w-3 mr-1" />
+                    Variable
                   </Button>
-                ))}
-              </div>
-              {currentRatio && (
-                <p className="text-xs text-muted-foreground">
-                  {currentRatio.width} x {currentRatio.height} px
-                </p>
+                </div>
               )}
             </div>
+
+            <div className="flex gap-2 pt-4 border-t">
+              <Button
+                onClick={handleGenerate}
+                disabled={isGenerating}
+                data-testid="button-generate"
+              >
+                <Sparkles className="h-4 w-4 mr-2" />
+                {isGenerating ? 'Generiere...' : 'Generieren'}
+              </Button>
+              <Button
+                variant="outline"
+                onClick={handleSubmit}
+                disabled={isGenerating}
+                data-testid="button-submit"
+              >
+                <Save className="h-4 w-4 mr-2" />
+                Submitten
+              </Button>
+            </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="flex flex-col">
           <CardHeader>
-            <CardTitle className="text-base">Image Settings</CardTitle>
+            <CardTitle className="text-base">Variablen</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label>Evil</Label>
-                <span className="text-sm font-mono">{evilSlider[0]}%</span>
-              </div>
-              <Slider
-                value={evilSlider}
-                onValueChange={setEvilSlider}
-                max={100}
-                step={1}
-                data-testid="slider-evil"
-              />
-            </div>
+          <CardContent className="flex-1 overflow-hidden">
+            <ScrollArea className="h-full pr-4">
+              <div className="space-y-4">
+                {variables.length === 0 ? (
+                  <p className="text-sm text-muted-foreground text-center py-8">
+                    Keine Variablen vorhanden.
+                    <br />
+                    Markiere Text oder nutze [Name]
+                  </p>
+                ) : (
+                  variables.map((variable) => (
+                    <Card key={variable.id} className="p-3">
+                      <div className="space-y-3">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex-1 space-y-2">
+                            <div className="flex items-center gap-2">
+                              <Input
+                                value={variable.label}
+                                onChange={(e) => updateVariable(variable.id, { label: e.target.value })}
+                                className="h-8 text-sm font-medium"
+                                placeholder="Label"
+                                data-testid={`input-label-${variable.id}`}
+                              />
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button variant="ghost" size="icon" className="h-8 w-8">
+                                    <HelpCircle className="h-4 w-4" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <Input
+                                    value={variable.description}
+                                    onChange={(e) => updateVariable(variable.id, { description: e.target.value })}
+                                    placeholder="Beschreibung hinzufügen..."
+                                    className="w-48"
+                                    data-testid={`input-description-${variable.id}`}
+                                  />
+                                </TooltipContent>
+                              </Tooltip>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8"
+                                onClick={() => deleteVariable(variable.id)}
+                                data-testid={`button-delete-${variable.id}`}
+                              >
+                                <Trash2 className="h-4 w-4 text-destructive" />
+                              </Button>
+                            </div>
 
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label>Fire</Label>
-                <span className="text-sm font-mono">{fireSlider[0]}%</span>
+                            <Badge variant="outline" className="text-xs">
+                              {variable.name}
+                            </Badge>
+                          </div>
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label className="text-xs">Typ</Label>
+                          <Select
+                            value={variable.type}
+                            onValueChange={(value) => updateVariable(variable.id, { type: value as VariableType })}
+                          >
+                            <SelectTrigger className="h-8 text-sm" data-testid={`select-type-${variable.id}`}>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="text">Text</SelectItem>
+                              <SelectItem value="checkbox">Checkbox</SelectItem>
+                              <SelectItem value="multi-select">Multi-Select</SelectItem>
+                              <SelectItem value="single-select">Single-Select</SelectItem>
+                              <SelectItem value="slider">Regler</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        {variable.type === 'text' && (
+                          <Input
+                            value={variable.defaultValue as string}
+                            onChange={(e) => updateVariable(variable.id, { defaultValue: e.target.value })}
+                            placeholder="Default-Wert"
+                            className="h-8 text-sm"
+                            data-testid={`input-default-${variable.id}`}
+                          />
+                        )}
+
+                        {variable.type === 'checkbox' && (
+                          <div className="flex items-center space-x-2">
+                            <Checkbox
+                              id={`checkbox-${variable.id}`}
+                              checked={variable.defaultValue as boolean}
+                              onCheckedChange={(checked) => updateVariable(variable.id, { defaultValue: checked })}
+                              data-testid={`checkbox-default-${variable.id}`}
+                            />
+                            <Label htmlFor={`checkbox-${variable.id}`} className="text-sm">
+                              Standardmäßig aktiv
+                            </Label>
+                          </div>
+                        )}
+
+                        {(variable.type === 'multi-select' || variable.type === 'single-select') && (
+                          <div className="space-y-2">
+                            <Label className="text-xs">Optionen (kommagetrennt)</Label>
+                            <Input
+                              value={variable.options?.join(', ') || ''}
+                              onChange={(e) => updateVariable(variable.id, { 
+                                options: e.target.value.split(',').map(s => s.trim()).filter(Boolean) 
+                              })}
+                              placeholder="Option 1, Option 2, Option 3"
+                              className="h-8 text-sm"
+                              data-testid={`input-options-${variable.id}`}
+                            />
+                          </div>
+                        )}
+
+                        {variable.type === 'slider' && (
+                          <div className="space-y-3">
+                            <div className="grid grid-cols-2 gap-2">
+                              <div className="space-y-1">
+                                <Label className="text-xs">Min</Label>
+                                <Input
+                                  type="number"
+                                  value={variable.min || 0}
+                                  onChange={(e) => updateVariable(variable.id, { min: parseInt(e.target.value) })}
+                                  className="h-8 text-sm"
+                                  data-testid={`input-min-${variable.id}`}
+                                />
+                              </div>
+                              <div className="space-y-1">
+                                <Label className="text-xs">Max</Label>
+                                <Input
+                                  type="number"
+                                  value={variable.max || 100}
+                                  onChange={(e) => updateVariable(variable.id, { max: parseInt(e.target.value) })}
+                                  className="h-8 text-sm"
+                                  data-testid={`input-max-${variable.id}`}
+                                />
+                              </div>
+                            </div>
+                            <div className="space-y-1">
+                              <Label className="text-xs">Default: {variable.defaultValue as number}</Label>
+                              <Slider
+                                value={[variable.defaultValue as number]}
+                                onValueChange={([value]) => updateVariable(variable.id, { defaultValue: value })}
+                                min={variable.min || 0}
+                                max={variable.max || 100}
+                                step={1}
+                                data-testid={`slider-default-${variable.id}`}
+                              />
+                            </div>
+                          </div>
+                        )}
+
+                        <div className="flex items-center space-x-2 pt-2 border-t">
+                          <Checkbox
+                            id={`required-${variable.id}`}
+                            checked={variable.required}
+                            onCheckedChange={(checked) => updateVariable(variable.id, { required: checked as boolean })}
+                            data-testid={`checkbox-required-${variable.id}`}
+                          />
+                          <Label htmlFor={`required-${variable.id}`} className="text-xs">
+                            Pflichtfeld
+                          </Label>
+                        </div>
+                      </div>
+                    </Card>
+                  ))
+                )}
               </div>
-              <Slider
-                value={fireSlider}
-                onValueChange={setFireSlider}
-                max={100}
-                step={1}
-                data-testid="slider-fire"
-              />
-            </div>
+            </ScrollArea>
           </CardContent>
         </Card>
       </div>
 
-      <Card className="h-full">
-        <CardHeader>
-          <CardTitle className="text-base">Prompt Editor</CardTitle>
-        </CardHeader>
-        <CardContent className="h-[calc(100%-5rem)]">
-          <Textarea
-            value={prompt}
-            onChange={(e) => setPrompt(e.target.value)}
-            className="h-full font-mono text-sm resize-none"
-            placeholder="Write your prompt here... Use {{variable}} for dynamic values"
-            data-testid="textarea-prompt"
-          />
-          <div className="mt-4 flex gap-2">
-            <Button variant="default" className="flex-1" data-testid="button-save">
-              <Save className="h-4 w-4 mr-2" />
-              Save
-            </Button>
-            <Button variant="outline" className="flex-1" data-testid="button-validate">
-              <Eye className="h-4 w-4 mr-2" />
-              Validate
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
-      <div className="space-y-4">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Preview</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="aspect-square bg-muted rounded-md flex items-center justify-center border-2 border-dashed">
-              <div className="text-center">
-                <ImageIcon className="h-12 w-12 mx-auto text-muted-foreground mb-2" />
-                <p className="text-sm text-muted-foreground">No preview generated yet</p>
-              </div>
-            </div>
-            
-            <div className="space-y-1">
-              <p className="text-xs text-muted-foreground">Generated Prompt:</p>
-              <div className="p-3 bg-muted rounded-md font-mono text-xs">
-                {prompt}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Cost Calculator</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Base Generation</span>
-                <span className="font-mono">{baseCost.toFixed(2)}$</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Evil {evilSlider[0]}%</span>
-                <span className="font-mono">{(evilSlider[0] / 100 * 0.2).toFixed(2)}$</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Fire {fireSlider[0]}%</span>
-                <span className="font-mono">{(fireSlider[0] / 100 * 0.2).toFixed(2)}$</span>
-              </div>
-              <Separator />
-              <div className="flex justify-between font-semibold">
-                <span>Total</span>
-                <span className="font-mono text-primary">{totalCost.toFixed(2)}$</span>
-              </div>
-            </div>
-
-            <Button className="w-full" size="lg" data-testid="button-generate">
-              <Sparkles className="h-4 w-4 mr-2" />
-              Generate ({totalCost.toFixed(2)}$)
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    </div>
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Variable löschen?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Sind Sie sicher, dass Sie diese Variable löschen möchten? Der Text bleibt als normaler Text im Prompt erhalten.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Nein</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDeleteVariable}>Ja, löschen</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </TooltipProvider>
   );
 }
