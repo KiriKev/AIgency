@@ -239,13 +239,33 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
     setVariables([...variables, newVariable]);
     setOpenVariables([varName]);
     
+    // Add the variable placeholder to the prompt
+    const varPlaceholder = `[${varName}]`;
+    const currentPos = textareaRef.current?.selectionStart || prompt.length;
+    const newPrompt = 
+      prompt.substring(0, currentPos) + 
+      (prompt.length > 0 && currentPos > 0 && prompt[currentPos - 1] !== ' ' ? ' ' : '') +
+      varPlaceholder + 
+      ' ' + 
+      prompt.substring(currentPos);
+    setPrompt(newPrompt);
+    
+    // Focus and move cursor after the variable
+    setTimeout(() => {
+      if (textareaRef.current) {
+        const newCursorPos = currentPos + varPlaceholder.length + (prompt.length > 0 && currentPos > 0 && prompt[currentPos - 1] !== ' ' ? 2 : 1);
+        textareaRef.current.focus();
+        textareaRef.current.setSelectionRange(newCursorPos, newCursorPos);
+      }
+    }, 100);
+    
     // Open variable editor overlay on mobile
     setEditingVariableId(varName);
     setShowVariableEditor(true);
     
     toast({
       title: "Variable erstellt",
-      description: `Variable "${varName}" wurde erstellt. Fügen Sie sie mit [${varName}] in Ihren Prompt ein.`,
+      description: `Variable "${varName}" wurde zum Prompt hinzugefügt.`,
     });
   };
 
@@ -905,13 +925,9 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
                   onMouseDown={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                  }}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
                     createVariableFromSelection();
                   }}
-                  className="absolute z-[9999] shadow-lg"
+                  className="absolute z-[9999] shadow-lg pointer-events-auto"
                   style={{
                     top: `${buttonPosition.top}px`,
                     left: `${buttonPosition.left}px`,
