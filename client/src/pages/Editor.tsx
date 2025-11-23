@@ -31,7 +31,9 @@ export default function Editor() {
           </div>
         </div>
 
-        <PromptEditor />
+        <div className="px-6 lg:px-8 bg-background">
+          <PromptEditor />
+        </div>
       </main>
     </div>
   );

@@ -612,7 +612,7 @@ export default function PromptEditor() {
 
   return (
     <TooltipProvider>
-      <div className="h-[calc(100vh-10rem)] grid grid-cols-[minmax(200px,_0.75fr)_minmax(350px,_2fr)_minmax(250px,_1.25fr)_minmax(280px,_1.5fr)] gap-1">
+      <div className="h-[calc(100vh-10rem)] grid grid-cols-[minmax(200px,_0.75fr)_minmax(350px,_2fr)_minmax(250px,_1.25fr)_minmax(280px,_1.5fr)] gap-1 bg-background">
         {/* Settings Panel */}
         <PromptSettingsPanel 
           settings={settingsData}
