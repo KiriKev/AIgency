@@ -11,7 +11,7 @@ export default function Editor() {
     <div className="bg-background min-h-screen">
       <Navbar />
       
-      <main className="w-full bg-background h-[calc(100vh-4rem)] overflow-y-auto pt-4 px-2">
+      <main className="w-full bg-background h-[calc(100vh-4rem)] overflow-y-auto mt-16 p-4">
         <PromptEditor onBack={() => setLocation('/')} />
       </main>
     </div>
