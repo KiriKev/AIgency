@@ -625,9 +625,9 @@ export default function PromptEditor() {
                       return (
                         <span
                           key={index}
-                          className="relative inline-block bg-teal-500/20 text-teal-700 dark:text-teal-300 rounded px-1 mx-[1px] cursor-pointer pointer-events-auto hover-elevate select-none"
+                          className="relative inline-block bg-teal-500/20 text-teal-700 dark:text-teal-300 rounded px-1 cursor-pointer pointer-events-auto hover-elevate select-none"
                           style={{
-                            minWidth: `${part.length * 0.6}em`,
+                            minWidth: `${varName.length * 0.6}em`,
                             textAlign: 'center',
                             verticalAlign: 'baseline'
                           }}
@@ -642,7 +642,7 @@ export default function PromptEditor() {
                           onMouseDown={(e) => e.preventDefault()}
                           data-testid={`badge-inline-variable-${variable.id}`}
                         >
-                          {part}
+                          {varName}
                         </span>
                       );
                     }
