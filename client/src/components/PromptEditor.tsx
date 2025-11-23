@@ -1155,6 +1155,23 @@ export default function PromptEditor() {
           {mobileTab === 'editor' && (
             <Card className="h-full flex flex-col overflow-hidden rounded-none border-0">
               <CardContent className="flex-1 min-h-0 flex flex-col gap-2 px-3 pt-3 pb-3">
+                {/* Mobile Toolbar with Variables Button */}
+                <div className="flex items-center justify-end mb-2 -mt-1">
+                  <Button
+                    onClick={() => {
+                      setEditingVariableId(null);
+                      setShowVariableEditor(true);
+                    }}
+                    size="sm"
+                    variant="outline"
+                    className="bg-teal-500/10 text-teal-700 dark:text-teal-300 border-teal-500/20 hover:bg-teal-500/20"
+                    data-testid="button-show-variables"
+                  >
+                    <List className="h-4 w-4 mr-1" />
+                    Variablen
+                  </Button>
+                </div>
+
                 <div className="relative flex-1">
                   <div className="absolute inset-0 font-mono text-sm whitespace-pre-wrap break-words px-3 py-[11px] pointer-events-none overflow-hidden leading-[1.375rem] select-none">
                     {prompt.split(/(\[[^\]]+\])/).map((part, index) => {
@@ -1234,19 +1251,6 @@ export default function PromptEditor() {
                     Variable erstellen: "{selectedText.slice(0, 20)}{selectedText.length > 20 ? '...' : ''}"
                   </Button>
                 )}
-
-                {/* Floating Variables Button */}
-                <Button
-                  onClick={() => {
-                    setEditingVariableId(null);
-                    setShowVariableEditor(true);
-                  }}
-                  className="fixed bottom-24 right-4 rounded-full h-14 w-14 shadow-lg z-10"
-                  size="icon"
-                  data-testid="button-show-variables"
-                >
-                  <List className="h-6 w-6" />
-                </Button>
               </CardContent>
             </Card>
           )}
