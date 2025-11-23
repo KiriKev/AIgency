@@ -36,7 +36,7 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Plus, Trash2, HelpCircle, X, FolderOpen, Settings, FileText, Sparkles, List } from "lucide-react";
+import { Plus, Trash2, HelpCircle, X, FolderOpen, Settings, FileText, Sparkles, List, ArrowLeft } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -65,7 +65,11 @@ interface Variable {
   defaultOptionIndex?: number;
 }
 
-export default function PromptEditor() {
+interface PromptEditorProps {
+  onBack?: () => void;
+}
+
+export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
   const [currentPromptId, setCurrentPromptId] = useState<string | null>(null);
   const [promptTitle, setPromptTitle] = useState("");
   const [prompt, setPrompt] = useState("");
@@ -713,6 +717,40 @@ export default function PromptEditor() {
   const [mobileTab, setMobileTab] = useState<'settings' | 'editor' | 'generation'>('settings');
   const [showVariableEditor, setShowVariableEditor] = useState(false);
   const [editingVariableId, setEditingVariableId] = useState<string | null>(null);
+  const scrollYRef = useRef(0);
+
+  // Lock body scroll when variable editor overlay is open on mobile
+  useEffect(() => {
+    if (showVariableEditor) {
+      const scrollY = window.scrollY;
+      scrollYRef.current = scrollY;
+      document.body.style.position = 'fixed';
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.width = '100%';
+      document.body.style.overflow = 'hidden';
+    } else {
+      // Always restore body styles when overlay closes
+      const savedScroll = scrollYRef.current;
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.width = '';
+      document.body.style.overflow = '';
+      window.scrollTo(0, savedScroll);
+      scrollYRef.current = 0;
+    }
+    
+    // Cleanup on unmount - always restore body styles and scroll position
+    return () => {
+      const savedScroll = scrollYRef.current;
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.width = '';
+      document.body.style.overflow = '';
+      if (savedScroll > 0) {
+        window.scrollTo(0, savedScroll);
+      }
+    };
+  }, [showVariableEditor]);
 
   return (
     <TooltipProvider>
@@ -1238,9 +1276,31 @@ export default function PromptEditor() {
       </div>
 
       {/* Mobile View */}
-      <div className="lg:hidden flex flex-col h-[calc(100vh-4rem-4rem)] overflow-x-hidden w-full max-w-full">
+      <div className="lg:hidden flex flex-col h-[calc(100vh-8rem)] overflow-y-auto overflow-x-hidden w-full max-w-full">
+        {/* Header - inside scrollable area */}
+        <div className="shrink-0 flex items-center gap-4 px-6 py-4 border-b w-full max-w-full overflow-x-hidden">
+          {onBack && (
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={onBack}
+              data-testid="button-back"
+              className="text-foreground"
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Zurück
+            </Button>
+          )}
+          <div className="flex-1 min-w-0">
+            <h1 className="text-lg font-semibold text-foreground truncate">Create Prompt Template</h1>
+            <p className="text-xs text-muted-foreground truncate">
+              Design reusable prompt templates with customizable variables
+            </p>
+          </div>
+        </div>
+
         {mobileTab === 'settings' && (
-          <div className="overflow-y-auto h-full w-full max-w-full">
+          <div className="h-full w-full max-w-full overflow-x-hidden">
             <PromptSettingsPanel 
               settings={settingsData}
               onUpdate={handleSettingsUpdate}
@@ -1249,9 +1309,9 @@ export default function PromptEditor() {
         )}
 
         {mobileTab === 'editor' && (
-            <div className="flex flex-col h-full w-full max-w-full">
+            <div className="flex flex-col w-full max-w-full overflow-x-hidden">
               {/* Sticky Toolbar with Variables Button */}
-              <div className="sticky top-0 z-10 bg-background border-b px-3 py-2 flex items-center justify-end w-full max-w-full">
+              <div className="sticky top-0 z-10 bg-background border-b px-3 py-2 flex items-center justify-end w-full max-w-full shrink-0">
                 <Button
                   onClick={() => {
                     setEditingVariableId(null);
@@ -1268,7 +1328,7 @@ export default function PromptEditor() {
               </div>
 
               {/* Scrollable Content */}
-              <div className="px-3 pt-3 pb-3 w-full max-w-full overflow-y-auto overflow-x-hidden flex-1">
+              <div className="px-3 pt-3 pb-3 w-full max-w-full overflow-x-hidden">
                 <div className="relative min-h-[500px] w-full max-w-full overflow-visible">
                   <div className="absolute inset-0 font-mono text-sm whitespace-pre-wrap break-words px-3 py-[11px] pointer-events-none overflow-hidden leading-[1.375rem] select-none text-white">
                     {prompt.split(/(\[[^\]]+\])/).map((part, index) => {
@@ -1372,7 +1432,7 @@ export default function PromptEditor() {
         )}
 
         {mobileTab === 'generation' && (
-          <div className="px-3 pt-3 pb-3 flex flex-col h-full w-full max-w-full overflow-y-auto">
+          <div className="px-3 pt-3 pb-3 flex flex-col w-full max-w-full overflow-x-hidden">
             {generatedImage ? (
               <div className="flex-1 flex flex-col">
                 <img 
@@ -1454,8 +1514,8 @@ export default function PromptEditor() {
 
         {/* Variable Editor Overlay (Mobile) */}
         {showVariableEditor && (
-          <div className="fixed inset-0 bg-background z-50 flex flex-col">
-            <div className="shrink-0 flex items-center justify-between p-4 border-b">
+          <div className="fixed inset-0 bg-background z-50 flex flex-col overflow-hidden">
+            <div className="shrink-0 flex items-center justify-between p-4 border-b w-full max-w-full overflow-x-hidden">
               <h2 className="text-lg font-semibold text-foreground">Variablen</h2>
               <Button
                 variant="ghost"
@@ -1471,8 +1531,8 @@ export default function PromptEditor() {
               </Button>
             </div>
             
-            <ScrollArea className="flex-1">
-              <div className="p-4 space-y-2">
+            <ScrollArea className="flex-1 w-full max-w-full overflow-x-hidden">
+              <div className="p-4 space-y-2 w-full max-w-full overflow-x-hidden">
                 {variables.length === 0 ? (
                   <p className="text-sm text-muted-foreground text-center py-8">
                     Keine Variablen vorhanden.
@@ -1493,7 +1553,7 @@ export default function PromptEditor() {
                             <Badge variant="outline" className="text-xs">{variable.type}</Badge>
                           </div>
                         </AccordionTrigger>
-                        <AccordionContent className="px-1.5 pt-1 space-y-2">
+                        <AccordionContent className="px-1.5 pt-1 space-y-2 w-full max-w-full overflow-x-hidden">
                           <div className="space-y-2">
                             <Label className="text-xs text-white">Label</Label>
                             <Input
@@ -1581,8 +1641,8 @@ export default function PromptEditor() {
                                 {variable.options?.map((option, index) => {
                                   const isDefault = (variable.defaultOptionIndex ?? 0) === index;
                                   return (
-                                    <Card key={index} className={`p-2 ${isDefault ? 'border-teal-500/50 bg-teal-500/5' : ''}`}>
-                                      <div className="space-y-2">
+                                    <Card key={index} className={`p-2 w-full max-w-full overflow-x-hidden ${isDefault ? 'border-teal-500/50 bg-teal-500/5' : ''}`}>
+                                      <div className="space-y-2 w-full max-w-full overflow-x-hidden">
                                         <div className="flex items-center gap-2">
                                           <Checkbox
                                             checked={isDefault}

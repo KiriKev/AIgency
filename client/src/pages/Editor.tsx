@@ -8,30 +8,11 @@ export default function Editor() {
   const [, setLocation] = useLocation();
 
   return (
-    <div className="min-h-screen flex flex-col bg-background pt-16 overflow-x-hidden">
+    <div className="flex flex-col bg-background h-screen">
       <Navbar />
       
-      <main className="w-full py-6 flex-1 bg-background overflow-x-hidden">
-        <div className="mb-4 flex items-center gap-4 px-6 lg:px-8">
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={() => setLocation('/')}
-            data-testid="button-back"
-            className="text-foreground"
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Zurück
-          </Button>
-          <div>
-            <h1 className="text-xl font-semibold text-foreground">Create Prompt Template</h1>
-            <p className="text-xs text-muted-foreground">
-              Design reusable prompt templates with customizable variables
-            </p>
-          </div>
-        </div>
-
-        <PromptEditor />
+      <main className="w-full bg-background flex-1 overflow-hidden">
+        <PromptEditor onBack={() => setLocation('/')} />
       </main>
     </div>
   );
