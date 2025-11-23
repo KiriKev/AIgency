@@ -1140,9 +1140,9 @@ export default function PromptEditor() {
       </div>
 
       {/* Mobile View */}
-      <div className="lg:hidden flex flex-col h-screen">
+      <div className="lg:hidden flex flex-col h-screen pt-16">
         {/* Content Area */}
-        <div className="flex-1 overflow-hidden pb-16">
+        <div className="flex-1 overflow-hidden pb-16 -mt-16">
           {mobileTab === 'settings' && (
             <div className="h-full">
               <PromptSettingsPanel 
@@ -1154,10 +1154,7 @@ export default function PromptEditor() {
 
           {mobileTab === 'editor' && (
             <Card className="h-full flex flex-col overflow-hidden rounded-none border-0">
-              <CardHeader className="pb-2 px-3 shrink-0">
-                <CardTitle className="text-base">Prompt Editor</CardTitle>
-              </CardHeader>
-              <CardContent className="flex-1 min-h-0 flex flex-col gap-2 px-3 pb-3">
+              <CardContent className="flex-1 min-h-0 flex flex-col gap-2 px-3 pt-3 pb-3">
                 <div className="relative flex-1">
                   <div className="absolute inset-0 font-mono text-sm whitespace-pre-wrap break-words px-3 py-[11px] pointer-events-none overflow-hidden leading-[1.375rem] select-none">
                     {prompt.split(/(\[[^\]]+\])/).map((part, index) => {
@@ -1244,7 +1241,7 @@ export default function PromptEditor() {
                     setEditingVariableId(null);
                     setShowVariableEditor(true);
                   }}
-                  className="fixed bottom-20 right-4 rounded-full h-14 w-14 shadow-lg z-10"
+                  className="fixed bottom-24 right-4 rounded-full h-14 w-14 shadow-lg z-10"
                   size="icon"
                   data-testid="button-show-variables"
                 >
@@ -1256,10 +1253,7 @@ export default function PromptEditor() {
 
           {mobileTab === 'generation' && (
             <Card className="h-full flex flex-col overflow-hidden rounded-none border-0">
-              <CardHeader className="pb-2 px-3 shrink-0">
-                <CardTitle className="text-sm">Generierung</CardTitle>
-              </CardHeader>
-              <CardContent className="flex-1 min-h-0 flex flex-col gap-2 px-3 pb-3">
+              <CardContent className="flex-1 min-h-0 flex flex-col gap-2 px-3 pt-3 pb-3">
                 {generatedImage ? (
                   <div className="flex-1 flex flex-col">
                     <img 

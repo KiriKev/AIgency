@@ -8,7 +8,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { X, SlidersHorizontal } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 
 interface FilterBarProps {
   onFilterChange?: (filters: any) => void;
@@ -18,6 +18,25 @@ export default function FilterBar({ onFilterChange }: FilterBarProps) {
   const [priceFilter, setPriceFilter] = useState<'all' | 'free' | 'paid'>('all');
   const [sortBy, setSortBy] = useState('popular');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [showFilters, setShowFilters] = useState(true);
+  const lastScrollYRef = useRef(0);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      
+      if (currentScrollY > lastScrollYRef.current && currentScrollY > 50) {
+        setShowFilters(false);
+      } else if (currentScrollY < lastScrollYRef.current) {
+        setShowFilters(true);
+      }
+      
+      lastScrollYRef.current = currentScrollY;
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const mockTags = ['Cyberpunk', 'Portrait', 'Nature'];
 
@@ -40,7 +59,12 @@ export default function FilterBar({ onFilterChange }: FilterBarProps) {
   };
 
   return (
-    <div className="sticky top-16 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <>
+      {/* Spacer that collapses when filters hide */}
+      <div className={`transition-all duration-300 ${showFilters ? 'h-[60px]' : 'h-0'}`} />
+      <div className={`fixed top-16 left-0 right-0 z-30 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 transition-transform duration-300 ${
+        showFilters ? 'translate-y-0' : '-translate-y-full'
+      }`}>
       <div className="w-full px-6 lg:px-8 py-3">
         <div className="flex flex-wrap items-center gap-3">
           <div className="flex items-center gap-2">
@@ -131,5 +155,6 @@ export default function FilterBar({ onFilterChange }: FilterBarProps) {
         </div>
       </div>
     </div>
+    </>
   );
 }
