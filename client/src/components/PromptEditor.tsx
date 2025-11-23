@@ -169,6 +169,15 @@ export default function PromptEditor() {
       prompt.substring(selectionRange.end);
     setPrompt(newPrompt);
     
+    // Move cursor to after the variable
+    const newCursorPos = selectionRange.start + varPlaceholder.length;
+    setTimeout(() => {
+      if (textareaRef.current) {
+        textareaRef.current.focus();
+        textareaRef.current.setSelectionRange(newCursorPos, newCursorPos);
+      }
+    }, 0);
+    
     setSelectedText("");
     setSelectionRange(null);
     setOpenVariables([varName]);
@@ -687,7 +696,7 @@ export default function PromptEditor() {
                     }
                   }, 0);
                 }}
-                className="absolute inset-0 font-mono text-sm resize-none min-h-[200px] bg-transparent text-foreground/10 caret-foreground z-10 selection:bg-primary/30 selection:text-foreground leading-[1.375rem]"
+                className="absolute inset-0 font-mono text-sm resize-none min-h-[200px] bg-transparent text-transparent caret-foreground z-10 selection:bg-primary/30 leading-[1.375rem]"
                 placeholder="Schreibe deinen Prompt hier... Nutze [VariableName] für Variablen"
                 data-testid="textarea-prompt"
               />
