@@ -606,7 +606,7 @@ export default function PromptEditor() {
           </CardHeader>
           <CardContent className="flex-1 flex flex-col gap-2 px-3 pb-3">
             <div className="relative flex-1">
-              <div className="absolute inset-0 font-mono text-sm whitespace-pre-wrap break-words p-3 pointer-events-none overflow-hidden leading-5">
+              <div className="absolute inset-0 font-mono text-sm whitespace-pre-wrap break-words p-3 pointer-events-none overflow-hidden leading-5 select-none">
                 {prompt.split(/(\[[^\]]+\])/).map((part, index) => {
                   const match = part.match(/\[([^\]]+)\]/);
                   if (match) {
@@ -616,14 +616,16 @@ export default function PromptEditor() {
                       return (
                         <span
                           key={index}
-                          className="inline-block bg-teal-500/20 text-teal-700 dark:text-teal-300 border border-teal-500/30 rounded-full px-2 py-0.5 cursor-pointer pointer-events-auto hover-elevate"
-                          onClick={() => {
+                          className="inline-block bg-teal-500/20 text-teal-700 dark:text-teal-300 border border-teal-500/30 rounded-full px-2 py-0.5 cursor-pointer pointer-events-auto hover-elevate select-none"
+                          onClick={(e) => {
+                            e.preventDefault();
                             setOpenVariables([...openVariables, variable.id]);
                             const element = document.getElementById(`variable-${variable.id}`);
                             if (element) {
                               element.scrollIntoView({ behavior: 'smooth', block: 'center' });
                             }
                           }}
+                          onMouseDown={(e) => e.preventDefault()}
                           data-testid={`badge-inline-variable-${variable.id}`}
                         >
                           {part}
@@ -631,7 +633,7 @@ export default function PromptEditor() {
                       );
                     }
                   }
-                  return <span key={index}>{part}</span>;
+                  return <span key={index} className="select-none">{part}</span>;
                 })}
               </div>
               <Textarea
@@ -639,7 +641,28 @@ export default function PromptEditor() {
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
                 onSelect={handleTextSelection}
-                className="absolute inset-0 font-mono text-sm resize-none min-h-[200px] bg-transparent text-transparent caret-foreground z-10 selection:bg-primary/20 leading-5"
+                onClick={(e) => {
+                  if (!textareaRef.current) return;
+                  const pos = textareaRef.current.selectionStart;
+                  
+                  // Find if cursor is inside a variable
+                  const beforeCursor = prompt.substring(0, pos);
+                  const afterCursor = prompt.substring(pos);
+                  
+                  const openBracketBefore = beforeCursor.lastIndexOf('[');
+                  const closeBracketBefore = beforeCursor.lastIndexOf(']');
+                  const closeBracketAfter = afterCursor.indexOf(']');
+                  
+                  // If cursor is inside [variable]
+                  if (openBracketBefore > closeBracketBefore && closeBracketAfter !== -1) {
+                    // Move cursor to after the ]
+                    const newPos = pos + closeBracketAfter + 1;
+                    setTimeout(() => {
+                      textareaRef.current?.setSelectionRange(newPos, newPos);
+                    }, 0);
+                  }
+                }}
+                className="absolute inset-0 font-mono text-sm resize-none min-h-[200px] bg-transparent text-transparent caret-foreground z-10 selection:bg-foreground/20 leading-5"
                 placeholder="Schreibe deinen Prompt hier... Nutze [VariableName] für Variablen"
                 data-testid="textarea-prompt"
               />
