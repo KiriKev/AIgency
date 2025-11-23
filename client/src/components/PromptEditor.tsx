@@ -62,6 +62,7 @@ interface Variable {
   max?: number;
   required: boolean;
   position: number;
+  defaultOptionIndex?: number;
 }
 
 export default function PromptEditor() {
@@ -576,8 +577,9 @@ export default function PromptEditor() {
       } else if (variable.type === 'checkbox') {
         defaultDisplay = (variable.defaultValue as boolean) ? variable.label : '';
       } else if (variable.type === 'multi-select' || variable.type === 'single-select') {
-        const firstOption = variable.options?.[0];
-        defaultDisplay = firstOption?.promptValue || '';
+        const defaultIndex = variable.defaultOptionIndex ?? 0;
+        const defaultOption = variable.options?.[defaultIndex];
+        defaultDisplay = defaultOption?.promptValue || '';
       } else if (variable.type === 'slider') {
         defaultDisplay = String(variable.defaultValue || variable.min || 0);
       }
@@ -609,7 +611,7 @@ export default function PromptEditor() {
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
                 onSelect={handleTextSelection}
-                className="absolute inset-0 font-mono text-sm resize-none min-h-[200px] bg-transparent z-10"
+                className="absolute inset-0 font-mono text-sm resize-none min-h-[200px] bg-transparent text-transparent caret-foreground z-10 selection:bg-primary/20"
                 placeholder="Schreibe deinen Prompt hier... Nutze [VariableName] für Variablen"
                 data-testid="textarea-prompt"
               />
@@ -819,18 +821,17 @@ export default function PromptEditor() {
                                 <Label className="text-xs text-muted-foreground">Default</Label>
                               </div>
                               <div className="space-y-1">
-                                {variable.options?.map((option, index) => (
-                                  <Card key={index} className="p-1.5">
+                                {variable.options?.map((option, index) => {
+                                  const isDefault = (variable.defaultOptionIndex ?? 0) === index;
+                                  return (
+                                  <Card key={index} className={`p-1.5 ${isDefault ? 'border-teal-500/50 bg-teal-500/5' : ''}`}>
                                     <div className="space-y-1">
                                       <div className="flex items-center gap-1">
                                         <Checkbox
-                                          checked={index === 0}
+                                          checked={isDefault}
                                           onCheckedChange={(checked) => {
-                                            if (checked && index !== 0) {
-                                              const newOptions = [...(variable.options || [])];
-                                              const [movedOption] = newOptions.splice(index, 1);
-                                              newOptions.unshift(movedOption);
-                                              updateVariable(variable.id, { options: newOptions });
+                                            if (checked) {
+                                              updateVariable(variable.id, { defaultOptionIndex: index });
                                             }
                                           }}
                                           disabled={promptType === 'showcase'}
@@ -872,7 +873,8 @@ export default function PromptEditor() {
                                       </div>
                                     </div>
                                   </Card>
-                                ))}
+                                  );
+                                })}
                                 
                                 <Card className="p-1.5 bg-muted/50">
                                   <div className="space-y-1">

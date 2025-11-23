@@ -52,6 +52,7 @@ export const variables = pgTable("variables", {
   min: integer("min"),
   max: integer("max"),
   options: jsonb("options"),
+  defaultOptionIndex: integer("default_option_index").default(0),
 });
 
 export const insertVariableSchema = createInsertSchema(variables).omit({
