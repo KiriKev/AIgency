@@ -849,26 +849,24 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
                     const variable = variables.find(v => v.name === varName);
                     if (variable) {
                       return (
-                        <span
-                          key={index}
-                          className="relative inline-block bg-teal-500/20 text-teal-700 dark:text-teal-300 rounded px-1 cursor-pointer pointer-events-auto hover-elevate select-none"
-                          style={{
-                            minWidth: `${(varName.length + 2) * 0.6}em`,
-                            textAlign: 'center',
-                            verticalAlign: 'baseline'
-                          }}
-                          onClick={(e) => {
-                            e.preventDefault();
-                            setOpenVariables([...openVariables, variable.id]);
-                            const element = document.getElementById(`variable-${variable.id}`);
-                            if (element) {
-                              element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                            }
-                          }}
-                          onMouseDown={(e) => e.preventDefault()}
-                          data-testid={`badge-inline-variable-${variable.id}`}
-                        >
-                          {varName}
+                        <span key={index} className="select-none">
+                          <span className="select-none">[</span>
+                          <span
+                            className="bg-teal-500/20 text-teal-700 dark:text-teal-300 rounded-sm cursor-pointer pointer-events-auto hover-elevate select-none"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              setOpenVariables([...openVariables, variable.id]);
+                              const element = document.getElementById(`variable-${variable.id}`);
+                              if (element) {
+                                element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                              }
+                            }}
+                            onMouseDown={(e) => e.preventDefault()}
+                            data-testid={`badge-inline-variable-${variable.id}`}
+                          >
+                            {varName}
+                          </span>
+                          <span className="select-none">]</span>
                         </span>
                       );
                     }
@@ -1423,23 +1421,21 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
                         const variable = variables.find(v => v.name === varName);
                         if (variable) {
                           return (
-                            <span
-                              key={index}
-                              className="relative inline-block bg-teal-500/20 text-teal-700 dark:text-teal-300 rounded px-1 cursor-pointer pointer-events-auto hover-elevate select-none"
-                              style={{
-                                minWidth: `${(varName.length + 2) * 0.6}em`,
-                                textAlign: 'center',
-                                verticalAlign: 'baseline'
-                              }}
-                              onClick={(e) => {
-                                e.preventDefault();
-                                setEditingVariableId(variable.id);
-                                setShowVariableEditor(true);
-                              }}
-                              onMouseDown={(e) => e.preventDefault()}
-                              data-testid={`badge-inline-variable-${variable.id}`}
-                            >
-                              {varName}
+                            <span key={index} className="select-none">
+                              <span className="select-none">[</span>
+                              <span
+                                className="bg-teal-500/20 text-teal-700 dark:text-teal-300 rounded-sm cursor-pointer pointer-events-auto hover-elevate select-none"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  setEditingVariableId(variable.id);
+                                  setShowVariableEditor(true);
+                                }}
+                                onMouseDown={(e) => e.preventDefault()}
+                                data-testid={`badge-inline-variable-${variable.id}`}
+                              >
+                                {varName}
+                              </span>
+                              <span className="select-none">]</span>
                             </span>
                           );
                         }
