@@ -166,31 +166,23 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
     // Get accurate caret position within textarea
     const coords = getCaretCoordinates(textareaRef.current, selectionRange.end);
     const textarea = textareaRef.current;
-    const textareaRect = textarea.getBoundingClientRect();
     
-    // Calculate absolute position on screen
-    const buttonHeight = 32; // Approximate button height (sm size)
+    // Position RELATIVE to textarea (for absolute positioning within parent)
+    // Add padding offset (px-3 py-[11px] on textarea = 12px left, 11px top)
+    let top = coords.top + coords.height + 11 + 8; // +8 for spacing below text
+    let left = coords.left + 12; // Account for px-3 padding
     
-    // Position relative to viewport (for fixed positioning)
-    let top = textareaRect.top + coords.top + coords.height - textarea.scrollTop + 8;
-    let left = textareaRect.left + coords.left - textarea.scrollLeft;
+    console.log('Calculated position (relative):', { top, left, coords });
     
-    console.log('Calculated position:', { top, left, coords, textareaRect });
+    // Make sure button doesn't overflow the textarea container
+    const containerWidth = textarea.clientWidth;
+    const buttonWidth = 100;
     
-    // Make sure button doesn't go off screen
-    const viewportWidth = window.innerWidth;
-    const viewportHeight = window.innerHeight;
-    const buttonWidth = 100; // Approximate button width
-    
-    if (left + buttonWidth > viewportWidth) {
-      left = viewportWidth - buttonWidth - 16;
+    if (left + buttonWidth > containerWidth) {
+      left = Math.max(12, containerWidth - buttonWidth - 12);
     }
     
-    if (top + buttonHeight > viewportHeight) {
-      top = textareaRect.top + coords.top - textarea.scrollTop - buttonHeight - 8;
-    }
-    
-    console.log('Final position:', { top, left });
+    console.log('Final position (relative):', { top, left });
     setButtonPosition({ top, left });
   }, [selectionRange]);
 
@@ -851,8 +843,8 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
               Variable
             </Button>
           </CardHeader>
-          <CardContent className="flex-1 min-h-0 flex flex-col gap-2 px-3 pb-3 relative">
-            <div className="relative flex-1">
+          <CardContent className="flex-1 min-h-0 flex flex-col gap-2 px-3 pb-3">
+            <div className="relative flex-1 overflow-visible">
               <div className="absolute inset-0 font-mono text-sm whitespace-pre-wrap break-words px-3 py-[11px] pointer-events-none overflow-hidden leading-[1.375rem] select-none">
                 {prompt.split(/(\[[^\]]+\])/).map((part, index) => {
                   const match = part.match(/\[([^\]]+)\]/);
@@ -938,9 +930,29 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
                 placeholder="Schreibe deinen Prompt hier... Nutze [VariableName] für Variablen"
                 data-testid="textarea-prompt"
               />
+              
+              {/* Floating "+ Variable" button - positioned relative to textarea */}
+              {selectedText && selectionRange && buttonPosition && (
+                <Button
+                  size="sm"
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    createVariableFromSelection();
+                  }}
+                  className="absolute z-[100] shadow-xl cursor-pointer bg-primary text-primary-foreground border-2 border-background"
+                  style={{
+                    top: `${buttonPosition.top}px`,
+                    left: `${buttonPosition.left}px`,
+                  }}
+                  data-testid="button-create-variable"
+                >
+                  <Plus className="h-3 w-3 mr-1" />
+                  Variable
+                </Button>
+              )}
+              {console.log('Render check:', { selectedText, selectionRange, buttonPosition })}
             </div>
-            {/* Button moved to end of component to avoid overflow-hidden issues */}
-            {console.log('Render check:', { selectedText, selectionRange, buttonPosition })}
             
             <div className="flex flex-wrap gap-1">
               {variables.length > 0 && (
@@ -1978,27 +1990,6 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-
-      {/* Floating "+ Variable" button - rendered outside all Cards to avoid overflow-hidden clipping */}
-      {selectedText && selectionRange && buttonPosition && (
-        <Button
-          size="sm"
-          onMouseDown={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            createVariableFromSelection();
-          }}
-          className="fixed z-[99999] shadow-xl cursor-pointer bg-primary text-white border-2 border-white hover:scale-105"
-          style={{
-            top: `${buttonPosition.top}px`,
-            left: `${buttonPosition.left}px`,
-          }}
-          data-testid="button-create-variable"
-        >
-          <Plus className="h-3 w-3 mr-1" />
-          Variable
-        </Button>
-      )}
     </TooltipProvider>
   );
 }
