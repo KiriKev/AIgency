@@ -163,14 +163,15 @@ export default function PromptEditor() {
     
     setVariables([...variables, newVariable]);
     
+    // Add space after variable for cursor positioning
     const newPrompt = 
       prompt.substring(0, selectionRange.start) + 
-      varPlaceholder + 
+      varPlaceholder + ' ' +
       prompt.substring(selectionRange.end);
     setPrompt(newPrompt);
     
-    // Position cursor right after the variable
-    const newCursorPos = selectionRange.start + varPlaceholder.length;
+    // Position cursor right after the variable (after the space)
+    const newCursorPos = selectionRange.start + varPlaceholder.length + 1;
     requestAnimationFrame(() => {
       if (textareaRef.current) {
         textareaRef.current.focus();
@@ -625,7 +626,7 @@ export default function PromptEditor() {
                       return (
                         <span
                           key={index}
-                          className="inline-flex items-center align-middle bg-teal-500/20 text-teal-700 dark:text-teal-300 border border-teal-500/30 rounded-full px-2 leading-none cursor-pointer pointer-events-auto hover-elevate select-none h-[calc(1em+2px)]"
+                          className="inline-block bg-teal-500/20 text-teal-700 dark:text-teal-300 border border-teal-500/30 rounded-full px-2 py-0.5 cursor-pointer pointer-events-auto hover-elevate select-none align-baseline"
                           onClick={(e) => {
                             e.preventDefault();
                             setOpenVariables([...openVariables, variable.id]);
