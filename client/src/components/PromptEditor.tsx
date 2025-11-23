@@ -896,7 +896,7 @@ export default function PromptEditor() {
                         <AccordionContent className="px-1.5 pt-1 space-y-1">
                           <div className="flex items-start gap-1">
                             <div className="flex-1">
-                              <Label className="text-xs">Label</Label>
+                              <Label className="text-xs text-white">Label</Label>
                               <Input
                                 value={variable.label}
                                 onChange={(e) => updateVariable(variable.id, { label: e.target.value })}
@@ -936,14 +936,14 @@ export default function PromptEditor() {
                           </div>
 
                           <div className="space-y-0">
-                            <Label className="text-xs">Interner Name</Label>
+                            <Label className="text-xs text-white">Interner Name</Label>
                             <Badge variant="secondary" className="text-xs font-mono">
                               {variable.name}
                             </Badge>
                           </div>
 
                           <div className="space-y-0">
-                            <Label className="text-xs">Typ</Label>
+                            <Label className="text-xs text-white">Typ</Label>
                             <Select
                               value={variable.type}
                               onValueChange={(value) => updateVariable(variable.id, { type: value as VariableType })}
@@ -964,7 +964,7 @@ export default function PromptEditor() {
 
                           {variable.type === 'text' && (
                             <div className="space-y-0">
-                              <Label className="text-xs">Default-Wert</Label>
+                              <Label className="text-xs text-white">Default-Wert</Label>
                               <Textarea
                                 value={variable.defaultValue as string}
                                 onChange={(e) => updateVariable(variable.id, { defaultValue: e.target.value })}
@@ -985,7 +985,7 @@ export default function PromptEditor() {
                                 disabled={promptType === 'showcase'}
                                 data-testid={`checkbox-default-${variable.id}`}
                               />
-                              <Label htmlFor={`checkbox-${variable.id}`} className="text-xs">
+                              <Label htmlFor={`checkbox-${variable.id}`} className="text-xs text-white">
                                 Standardmäßig aktiv
                               </Label>
                             </div>
@@ -994,8 +994,8 @@ export default function PromptEditor() {
                           {(variable.type === 'multi-select' || variable.type === 'single-select') && (
                             <div className="space-y-1">
                               <div className="grid grid-cols-2 gap-2">
-                                <Label className="text-xs">Optionen</Label>
-                                <Label className="text-xs text-muted-foreground text-right">Default</Label>
+                                <Label className="text-xs text-white">Optionen</Label>
+                                <Label className="text-xs text-white text-right">Default</Label>
                               </div>
                               <div className="space-y-1">
                                 {variable.options?.map((option, index) => {
@@ -1018,7 +1018,7 @@ export default function PromptEditor() {
                                           {isDefault && <span className="text-[9px] text-teal-600 dark:text-teal-400 font-medium">Default</span>}
                                         </div>
                                         <div className="flex-1">
-                                          <Label className="text-xs">Sichtbarer Name</Label>
+                                          <Label className="text-xs text-white">Sichtbarer Name</Label>
                                           <Input
                                             value={option.visibleName}
                                             onChange={(e) => updateOption(variable.id, index, 'visibleName', e.target.value)}
@@ -1040,7 +1040,7 @@ export default function PromptEditor() {
                                         </Button>
                                       </div>
                                       <div>
-                                        <Label className="text-xs">Prompt-Wert</Label>
+                                        <Label className="text-xs text-white">Prompt-Wert</Label>
                                         <Textarea
                                           value={option.promptValue}
                                           onChange={(e) => updateOption(variable.id, index, 'promptValue', e.target.value)}
@@ -1058,7 +1058,7 @@ export default function PromptEditor() {
                                 <Card className="p-1.5 bg-muted/50">
                                   <div className="space-y-1">
                                     <div>
-                                      <Label className="text-xs">Sichtbarer Name</Label>
+                                      <Label className="text-xs text-white">Sichtbarer Name</Label>
                                       <Input
                                         value={newOptionInput[variable.id]?.split('|||')[0] || ''}
                                         onChange={(e) => {
@@ -1076,7 +1076,7 @@ export default function PromptEditor() {
                                       />
                                     </div>
                                     <div>
-                                      <Label className="text-xs">Prompt-Wert</Label>
+                                      <Label className="text-xs text-white">Prompt-Wert</Label>
                                       <Textarea
                                         value={newOptionInput[variable.id]?.split('|||')[1] || ''}
                                         onChange={(e) => {
@@ -1113,7 +1113,7 @@ export default function PromptEditor() {
                             <div className="space-y-1">
                               <div className="grid grid-cols-2 gap-1.5">
                                 <div className="space-y-0">
-                                  <Label className="text-xs">Min</Label>
+                                  <Label className="text-xs text-white">Min</Label>
                                   <Input
                                     type="number"
                                     value={variable.min || 0}
@@ -1124,7 +1124,7 @@ export default function PromptEditor() {
                                   />
                                 </div>
                                 <div className="space-y-0">
-                                  <Label className="text-xs">Max</Label>
+                                  <Label className="text-xs text-white">Max</Label>
                                   <Input
                                     type="number"
                                     value={variable.max || 100}
@@ -1136,7 +1136,7 @@ export default function PromptEditor() {
                                 </div>
                               </div>
                               <div className="space-y-0">
-                                <Label className="text-xs">Default: {variable.defaultValue as number}</Label>
+                                <Label className="text-xs text-white">Default: {variable.defaultValue as number}</Label>
                                 <Slider
                                   value={[variable.defaultValue as number || 0]}
                                   onValueChange={([value]) => updateVariable(variable.id, { defaultValue: value })}
@@ -1157,7 +1157,7 @@ export default function PromptEditor() {
                               onCheckedChange={(checked) => updateVariable(variable.id, { required: checked as boolean })}
                               data-testid={`checkbox-required-${variable.id}`}
                             />
-                            <Label htmlFor={`required-${variable.id}`} className="text-xs">
+                            <Label htmlFor={`required-${variable.id}`} className="text-xs text-white">
                               Pflichtfeld
                             </Label>
                           </div>
@@ -1481,7 +1481,7 @@ export default function PromptEditor() {
                         </AccordionTrigger>
                         <AccordionContent className="px-1.5 pt-1 space-y-2">
                           <div className="space-y-2">
-                            <Label className="text-xs text-foreground">Label</Label>
+                            <Label className="text-xs text-white">Label</Label>
                             <Input
                               value={variable.label}
                               onChange={(e) => updateVariable(variable.id, { label: e.target.value })}
@@ -1493,7 +1493,7 @@ export default function PromptEditor() {
                           </div>
 
                           <div className="space-y-2">
-                            <Label className="text-xs text-foreground">Beschreibung</Label>
+                            <Label className="text-xs text-white">Beschreibung</Label>
                             <Textarea
                               value={variable.description}
                               onChange={(e) => updateVariable(variable.id, { description: e.target.value })}
@@ -1505,14 +1505,14 @@ export default function PromptEditor() {
                           </div>
 
                           <div className="space-y-2">
-                            <Label className="text-xs text-foreground">Interner Name</Label>
+                            <Label className="text-xs text-white">Interner Name</Label>
                             <Badge variant="secondary" className="text-xs font-mono">
                               {variable.name}
                             </Badge>
                           </div>
 
                           <div className="space-y-2">
-                            <Label className="text-xs text-foreground">Typ</Label>
+                            <Label className="text-xs text-white">Typ</Label>
                             <Select
                               value={variable.type}
                               onValueChange={(value) => updateVariable(variable.id, { type: value as VariableType })}
@@ -1533,7 +1533,7 @@ export default function PromptEditor() {
 
                           {variable.type === 'text' && (
                             <div className="space-y-2">
-                              <Label className="text-xs text-foreground">Default-Wert</Label>
+                              <Label className="text-xs text-white">Default-Wert</Label>
                               <Textarea
                                 value={variable.defaultValue as string}
                                 onChange={(e) => updateVariable(variable.id, { defaultValue: e.target.value })}
@@ -1554,7 +1554,7 @@ export default function PromptEditor() {
                                 disabled={promptType === 'showcase'}
                                 data-testid={`checkbox-default-${variable.id}`}
                               />
-                              <Label htmlFor={`checkbox-mobile-${variable.id}`} className="text-sm">
+                              <Label htmlFor={`checkbox-mobile-${variable.id}`} className="text-sm text-white">
                                 Standardmäßig aktiv
                               </Label>
                             </div>
@@ -1562,7 +1562,7 @@ export default function PromptEditor() {
 
                           {(variable.type === 'multi-select' || variable.type === 'single-select') && (
                             <div className="space-y-2">
-                              <Label className="text-xs text-foreground">Optionen & Default</Label>
+                              <Label className="text-xs text-white">Optionen & Default</Label>
                               <div className="space-y-2">
                                 {variable.options?.map((option, index) => {
                                   const isDefault = (variable.defaultOptionIndex ?? 0) === index;
@@ -1580,10 +1580,10 @@ export default function PromptEditor() {
                                             disabled={promptType === 'showcase'}
                                             data-testid={`checkbox-default-option-${variable.id}-${index}`}
                                           />
-                                          <Label className="text-xs font-medium">Default</Label>
+                                          <Label className="text-xs text-white font-medium">Default</Label>
                                         </div>
                                         <div className="space-y-1">
-                                          <Label className="text-xs text-foreground">Anzeigename</Label>
+                                          <Label className="text-xs text-white">Anzeigename</Label>
                                           <Input
                                             value={option.visibleName}
                                             onChange={(e) => {
@@ -1598,7 +1598,7 @@ export default function PromptEditor() {
                                           />
                                         </div>
                                         <div className="space-y-1">
-                                          <Label className="text-xs text-foreground">Prompt-Wert</Label>
+                                          <Label className="text-xs text-white">Prompt-Wert</Label>
                                           <Input
                                             value={option.promptValue}
                                             onChange={(e) => {
@@ -1662,7 +1662,7 @@ export default function PromptEditor() {
                             <div className="space-y-2">
                               <div className="grid grid-cols-2 gap-2">
                                 <div className="space-y-1">
-                                  <Label className="text-xs text-foreground">Min</Label>
+                                  <Label className="text-xs text-white">Min</Label>
                                   <Input
                                     type="number"
                                     value={variable.min || 0}
@@ -1673,7 +1673,7 @@ export default function PromptEditor() {
                                   />
                                 </div>
                                 <div className="space-y-1">
-                                  <Label className="text-xs text-foreground">Max</Label>
+                                  <Label className="text-xs text-white">Max</Label>
                                   <Input
                                     type="number"
                                     value={variable.max || 100}
@@ -1685,7 +1685,7 @@ export default function PromptEditor() {
                                 </div>
                               </div>
                               <div className="space-y-1">
-                                <Label className="text-xs text-foreground">Default-Wert</Label>
+                                <Label className="text-xs text-white">Default-Wert</Label>
                                 <Input
                                   type="number"
                                   value={variable.defaultValue as number}
@@ -1706,7 +1706,7 @@ export default function PromptEditor() {
                               disabled={promptType === 'showcase'}
                               data-testid={`checkbox-required-${variable.id}`}
                             />
-                            <Label htmlFor={`required-mobile-${variable.id}`} className="text-sm">
+                            <Label htmlFor={`required-mobile-${variable.id}`} className="text-sm text-white">
                               Pflichtfeld
                             </Label>
                           </div>
