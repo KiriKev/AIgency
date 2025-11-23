@@ -37,7 +37,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.patch("/api/prompts/:id", async (req, res) => {
     try {
-      const prompt = await storage.updatePrompt(req.params.id, req.body);
+      const validatedData = insertPromptSchema.parse(req.body);
+      const prompt = await storage.updatePrompt(req.params.id, validatedData);
       if (!prompt) {
         return res.status(404).json({ error: "Prompt not found" });
       }

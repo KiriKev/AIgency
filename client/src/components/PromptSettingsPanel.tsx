@@ -104,6 +104,7 @@ export default function PromptSettingsPanel({ settings, onUpdate }: PromptSettin
                   <SelectItem value="photography">Photography</SelectItem>
                   <SelectItem value="design">Design</SelectItem>
                   <SelectItem value="illustration">Illustration</SelectItem>
+                  <SelectItem value="anime">Anime</SelectItem>
                   <SelectItem value="3d">3D</SelectItem>
                   <SelectItem value="other">Other</SelectItem>
                 </SelectContent>
