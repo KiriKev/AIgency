@@ -10,7 +10,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, createContext, useContext } from "react";
 
 interface NavbarProps {
   credits?: number;
@@ -18,27 +18,33 @@ interface NavbarProps {
   onSearch?: (query: string) => void;
 }
 
+export const NavbarContext = createContext({ showNav: true });
+
+export function useNavbarVisibility() {
+  return useContext(NavbarContext);
+}
+
 export default function Navbar({ credits = 125, username = "Artist", onSearch }: NavbarProps) {
   const [location, setLocation] = useLocation();
   const [showNav, setShowNav] = useState(true);
-  const [lastScrollY, setLastScrollY] = useState(0);
+  const lastScrollYRef = useRef(0);
 
   useEffect(() => {
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
       
-      if (currentScrollY > lastScrollY && currentScrollY > 50) {
+      if (currentScrollY > lastScrollYRef.current && currentScrollY > 50) {
         setShowNav(false);
-      } else if (currentScrollY < lastScrollY) {
+      } else if (currentScrollY < lastScrollYRef.current) {
         setShowNav(true);
       }
       
-      setLastScrollY(currentScrollY);
+      lastScrollYRef.current = currentScrollY;
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [lastScrollY]);
+  }, []);
 
   return (
     <header className={`fixed top-0 left-0 right-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 transition-transform duration-300 ${
@@ -48,7 +54,7 @@ export default function Navbar({ credits = 125, username = "Artist", onSearch }:
         <div className="flex h-16 items-center justify-between gap-6">
           <div className="flex items-center gap-4">
             <button 
-              onClick={() => window.location.href = '/'}
+              onClick={() => setLocation('/')}
               className="flex items-center gap-2 hover-elevate active-elevate-2 rounded-md px-2 py-2" 
               data-testid="link-home"
             >
@@ -145,6 +151,8 @@ export default function Navbar({ credits = 125, username = "Artist", onSearch }:
         </div>
       </div>
 
+      {/* Spacer that collapses when navbar hides */}
+      <div className={`transition-all duration-300 ${showNav ? 'h-16' : 'h-0'}`} />
     </header>
   );
 }
