@@ -1166,14 +1166,12 @@ export default function PromptEditor() {
                             variant="default"
                             size="sm"
                             onClick={() => {
-                              handleSubmit();
                               setOpenVariables(openVariables.filter(id => id !== variable.id));
                             }}
-                            disabled={savePromptMutation.isPending}
                             className="w-full mt-2"
                             data-testid={`button-save-variable-${variable.id}`}
                           >
-                            {savePromptMutation.isPending ? 'Releasing...' : 'Release'}
+                            Fertig
                           </Button>
                         </AccordionContent>
                       </AccordionItem>
@@ -1240,9 +1238,9 @@ export default function PromptEditor() {
       </div>
 
       {/* Mobile View */}
-      <div className="lg:hidden flex flex-col pb-16 overflow-x-hidden w-full max-w-full">
+      <div className="lg:hidden flex flex-col h-[calc(100vh-4rem-4rem)] overflow-x-hidden w-full max-w-full">
         {mobileTab === 'settings' && (
-          <div className="overflow-y-auto w-full max-w-full">
+          <div className="overflow-y-auto h-full w-full max-w-full">
             <PromptSettingsPanel 
               settings={settingsData}
               onUpdate={handleSettingsUpdate}
@@ -1251,7 +1249,7 @@ export default function PromptEditor() {
         )}
 
         {mobileTab === 'editor' && (
-            <div className="flex flex-col w-full max-w-full">
+            <div className="flex flex-col h-full w-full max-w-full overflow-hidden">
               {/* Sticky Toolbar with Variables Button */}
               <div className="sticky top-0 z-10 bg-background border-b px-3 py-2 flex items-center justify-end w-full max-w-full">
                 <Button
@@ -1270,7 +1268,7 @@ export default function PromptEditor() {
               </div>
 
               {/* Scrollable Content */}
-              <div className="px-3 pt-3 pb-3 w-full max-w-full">
+              <div className="px-3 pt-3 pb-3 w-full max-w-full overflow-y-auto flex-1">
                 <div className="relative min-h-[500px] w-full max-w-full">
                   <div className="absolute inset-0 font-mono text-sm whitespace-pre-wrap break-words px-3 py-[11px] pointer-events-none overflow-hidden leading-[1.375rem] select-none text-white">
                     {prompt.split(/(\[[^\]]+\])/).map((part, index) => {
@@ -1358,7 +1356,7 @@ export default function PromptEditor() {
         )}
 
         {mobileTab === 'generation' && (
-          <div className="px-3 pt-3 pb-3 flex flex-col min-h-[500px] w-full max-w-full">
+          <div className="px-3 pt-3 pb-3 flex flex-col h-full w-full max-w-full overflow-y-auto">
             {generatedImage ? (
               <div className="flex-1 flex flex-col">
                 <img 
@@ -1714,14 +1712,12 @@ export default function PromptEditor() {
                           <div className="flex gap-2 mt-4 pt-4 border-t">
                             <Button
                               onClick={() => {
-                                handleSubmit();
                                 setShowVariableEditor(false);
                               }}
-                              disabled={savePromptMutation.isPending}
                               className="flex-1"
                               data-testid={`button-save-variable-${variable.id}`}
                             >
-                              {savePromptMutation.isPending ? 'Releasing...' : 'Save'}
+                              Fertig
                             </Button>
                             <Button
                               variant="destructive"
