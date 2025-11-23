@@ -99,7 +99,7 @@ export default function Showcase() {
   ];
 
   return (
-    <div className="min-h-screen bg-background pb-16 md:pb-0">
+    <div className="min-h-screen bg-background pb-16">
       <Navbar />
       <FilterBar onFilterChange={(f) => console.log('Filters:', f)} />
       

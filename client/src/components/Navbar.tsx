@@ -25,31 +25,15 @@ export default function Navbar({ credits = 125, username = "Artist", onSearch }:
       <div className="w-full px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between gap-6">
           <div className="flex items-center gap-8">
-            <Link href="/">
-              <a className="flex items-center gap-2 hover-elevate active-elevate-2 rounded-md px-2 py-2" data-testid="link-home">
-                <div className="h-8 w-8 rounded-md bg-gradient-to-br from-primary to-chart-2 flex items-center justify-center">
-                  <span className="text-white font-bold text-sm">P</span>
-                </div>
-              </a>
-            </Link>
-
-            <nav className="hidden md:flex items-center gap-1">
-              <Link href="/">
-                <a className={`px-4 py-2 rounded-md text-sm font-medium hover-elevate active-elevate-2 ${location === '/' ? 'text-foreground' : 'text-muted-foreground'}`} data-testid="link-art-hub">
-                  Art Hub
-                </a>
-              </Link>
-              <Link href="/showcase">
-                <a className={`px-4 py-2 rounded-md text-sm font-medium hover-elevate active-elevate-2 ${location === '/showcase' ? 'text-foreground' : 'text-muted-foreground'}`} data-testid="link-showroom">
-                  Showroom
-                </a>
-              </Link>
-              <Link href="/editor">
-                <a className={`px-4 py-2 rounded-md text-sm font-medium hover-elevate active-elevate-2 ${location === '/editor' ? 'text-foreground' : 'text-muted-foreground'}`} data-testid="link-create-prompt">
-                  Create Prompt
-                </a>
-              </Link>
-            </nav>
+            <button 
+              onClick={() => window.location.href = '/'}
+              className="flex items-center gap-2 hover-elevate active-elevate-2 rounded-md px-2 py-2" 
+              data-testid="link-home"
+            >
+              <div className="h-8 w-8 rounded-md bg-gradient-to-br from-primary to-chart-2 flex items-center justify-center">
+                <span className="text-white font-bold text-sm">P</span>
+              </div>
+            </button>
           </div>
 
           <div className="hidden lg:flex flex-1 max-w-md">
@@ -110,14 +94,14 @@ export default function Navbar({ credits = 125, username = "Artist", onSearch }:
         </div>
       </div>
 
-      {/* Mobile Bottom Navigation */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 border-t bg-card">
+      {/* Global Bottom Navigation */}
+      <div className="fixed bottom-0 left-0 right-0 z-50 border-t bg-card">
         <div className="grid grid-cols-3 gap-1 p-2">
           <Button
             variant="ghost"
             onClick={() => window.location.href = '/'}
             className={`flex flex-col h-auto py-2 gap-1 ${location === '/' ? 'text-foreground' : 'text-muted-foreground'}`}
-            data-testid="mobile-link-art-hub"
+            data-testid="link-art-hub"
           >
             <Home className="h-5 w-5" />
             <span className="text-xs font-medium">Art Hub</span>
@@ -126,7 +110,7 @@ export default function Navbar({ credits = 125, username = "Artist", onSearch }:
             variant="ghost"
             onClick={() => window.location.href = '/showcase'}
             className={`flex flex-col h-auto py-2 gap-1 ${location === '/showcase' ? 'text-foreground' : 'text-muted-foreground'}`}
-            data-testid="mobile-link-showroom"
+            data-testid="link-showroom"
           >
             <Eye className="h-5 w-5" />
             <span className="text-xs font-medium">Showroom</span>
@@ -135,7 +119,7 @@ export default function Navbar({ credits = 125, username = "Artist", onSearch }:
             variant="ghost"
             onClick={() => window.location.href = '/editor'}
             className={`flex flex-col h-auto py-2 gap-1 ${location === '/editor' ? 'text-foreground' : 'text-muted-foreground'}`}
-            data-testid="mobile-link-create-prompt"
+            data-testid="link-create-prompt"
           >
             <FileEdit className="h-5 w-5" />
             <span className="text-xs font-medium">Create</span>

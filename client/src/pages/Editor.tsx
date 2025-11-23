@@ -8,7 +8,7 @@ export default function Editor() {
   const [, setLocation] = useLocation();
 
   return (
-    <div className="min-h-screen flex flex-col bg-background pb-16 md:pb-0">
+    <div className="min-h-screen flex flex-col bg-background pb-16">
       <Navbar />
       
       <main className="w-full py-6 flex-1 bg-background">
