@@ -169,6 +169,15 @@ export default function PromptEditor() {
       prompt.substring(selectionRange.end);
     setPrompt(newPrompt);
     
+    // Position cursor right after the variable
+    const newCursorPos = selectionRange.start + varPlaceholder.length;
+    requestAnimationFrame(() => {
+      if (textareaRef.current) {
+        textareaRef.current.focus();
+        textareaRef.current.setSelectionRange(newCursorPos, newCursorPos);
+      }
+    });
+    
     setSelectedText("");
     setSelectionRange(null);
     setOpenVariables([varName]);
@@ -616,7 +625,7 @@ export default function PromptEditor() {
                       return (
                         <span
                           key={index}
-                          className="inline-block bg-teal-500/20 text-teal-700 dark:text-teal-300 border border-teal-500/30 rounded-full px-2 py-0.5 cursor-pointer pointer-events-auto hover-elevate select-none align-baseline"
+                          className="inline-flex items-center align-middle bg-teal-500/20 text-teal-700 dark:text-teal-300 border border-teal-500/30 rounded-full px-2 leading-none cursor-pointer pointer-events-auto hover-elevate select-none h-[calc(1em+2px)]"
                           onClick={(e) => {
                             e.preventDefault();
                             setOpenVariables([...openVariables, variable.id]);
