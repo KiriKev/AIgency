@@ -72,7 +72,7 @@ interface PromptEditorProps {
 export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
   const [currentPromptId, setCurrentPromptId] = useState<string | null>(null);
   const [promptTitle, setPromptTitle] = useState("");
-  const [prompt, setPrompt] = useState("");
+  const [prompt, setPrompt] = useState("Schreiben Sie Ihren Prompt hier...\n\n[style] [subject] in einem [setting].\n\nDie Szene sollte [mood] sein mit [lighting] Beleuchtung.\n\nZusätzliche Details:\n- [detail1]\n- [detail2]\n- [detail3]\n\nKameraeinstellungen: [camera_angle] mit [lens_type] Objektiv.\n\nFarbpalette: [color_scheme]\n\nStimmung: [atmosphere]\n\nQualität: [quality_level]");
   const [variables, setVariables] = useState<Variable[]>([]);
   const [selectedText, setSelectedText] = useState("");
   const [selectionRange, setSelectionRange] = useState<{ start: number; end: number } | null>(null);
@@ -718,36 +718,36 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
   const [showVariableEditor, setShowVariableEditor] = useState(false);
   const [editingVariableId, setEditingVariableId] = useState<string | null>(null);
   const scrollYRef = useRef(0);
+  const mobileContainerRef = useRef<HTMLDivElement>(null);
 
-  // Lock body scroll when variable editor overlay is open on mobile
+  // Lock mobile container scroll when variable editor overlay is open
   useEffect(() => {
+    const mobileContainer = mobileContainerRef.current;
+    if (!mobileContainer) return;
+
     if (showVariableEditor) {
-      const scrollY = window.scrollY;
+      // Save current scroll position of the mobile container
+      const scrollY = mobileContainer.scrollTop;
       scrollYRef.current = scrollY;
-      document.body.style.position = 'fixed';
-      document.body.style.top = `-${scrollY}px`;
-      document.body.style.width = '100%';
-      document.body.style.overflow = 'hidden';
+      // Lock the mobile container's vertical scroll
+      mobileContainer.style.overflowY = 'hidden';
     } else {
-      // Always restore body styles when overlay closes
+      // Restore mobile container scroll
       const savedScroll = scrollYRef.current;
-      document.body.style.position = '';
-      document.body.style.top = '';
-      document.body.style.width = '';
-      document.body.style.overflow = '';
-      window.scrollTo(0, savedScroll);
+      mobileContainer.style.overflowY = 'auto';
+      // Use requestAnimationFrame to ensure DOM has updated before setting scroll
+      requestAnimationFrame(() => {
+        if (mobileContainer) {
+          mobileContainer.scrollTop = savedScroll;
+        }
+      });
       scrollYRef.current = 0;
     }
     
-    // Cleanup on unmount - always restore body styles and scroll position
+    // Cleanup on unmount - always restore overflow
     return () => {
-      const savedScroll = scrollYRef.current;
-      document.body.style.position = '';
-      document.body.style.top = '';
-      document.body.style.width = '';
-      document.body.style.overflow = '';
-      if (savedScroll > 0) {
-        window.scrollTo(0, savedScroll);
+      if (mobileContainer) {
+        mobileContainer.style.overflowY = 'auto';
       }
     };
   }, [showVariableEditor]);
@@ -1276,7 +1276,7 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
       </div>
 
       {/* Mobile View */}
-      <div className="lg:hidden flex flex-col h-[calc(100vh-8rem)] overflow-y-auto overflow-x-hidden w-full max-w-full">
+      <div ref={mobileContainerRef} className="lg:hidden flex flex-col h-[calc(100vh-8rem)] overflow-y-auto overflow-x-hidden w-full max-w-full">
         {/* Header - inside scrollable area */}
         <div className="shrink-0 flex items-center gap-4 px-6 py-4 border-b w-full max-w-full overflow-x-hidden">
           {onBack && (
@@ -1300,10 +1300,11 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
         </div>
 
         {mobileTab === 'settings' && (
-          <div className="h-full w-full max-w-full overflow-x-hidden">
+          <div className="w-full max-w-full overflow-x-hidden">
             <PromptSettingsPanel 
               settings={settingsData}
               onUpdate={handleSettingsUpdate}
+              useScrollArea={false}
             />
           </div>
         )}

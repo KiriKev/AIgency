@@ -38,9 +38,10 @@ interface PromptSettings {
 interface PromptSettingsPanelProps {
   settings: PromptSettings;
   onUpdate: (updates: Partial<PromptSettings>) => void;
+  useScrollArea?: boolean;
 }
 
-export default function PromptSettingsPanel({ settings, onUpdate }: PromptSettingsPanelProps) {
+export default function PromptSettingsPanel({ settings, onUpdate, useScrollArea = true }: PromptSettingsPanelProps) {
   const [newTag, setNewTag] = useState("");
   const [hoveredPhotoIndex, setHoveredPhotoIndex] = useState<number | null>(null);
 
@@ -86,9 +87,8 @@ export default function PromptSettingsPanel({ settings, onUpdate }: PromptSettin
     });
   };
 
-  return (
-    <ScrollArea className="h-full bg-transparent">
-      <div className="space-y-2 p-3 pr-2 bg-transparent">
+  const content = (
+    <div className="space-y-2 p-3 pr-2 bg-transparent">
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm">Prompt Meta</CardTitle>
@@ -413,6 +413,13 @@ export default function PromptSettingsPanel({ settings, onUpdate }: PromptSettin
           </Card>
         )}
       </div>
+  );
+
+  return useScrollArea ? (
+    <ScrollArea className="h-full bg-transparent">
+      {content}
     </ScrollArea>
+  ) : (
+    content
   );
 }
