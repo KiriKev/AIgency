@@ -80,6 +80,7 @@ export default function PromptEditor() {
   const [openVariables, setOpenVariables] = useState<string[]>([]);
   const [newOptionInput, setNewOptionInput] = useState<Record<string, string>>({});
   const [showLoadDialog, setShowLoadDialog] = useState(false);
+  const [pendingCursorPosition, setPendingCursorPosition] = useState<number | null>(null);
   
   const [category, setCategory] = useState("");
   const [tags, setTags] = useState<string[]>([]);
@@ -94,6 +95,15 @@ export default function PromptEditor() {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+
+  // Set cursor position after prompt updates
+  useEffect(() => {
+    if (pendingCursorPosition !== null && textareaRef.current) {
+      textareaRef.current.focus();
+      textareaRef.current.setSelectionRange(pendingCursorPosition, pendingCursorPosition);
+      setPendingCursorPosition(null);
+    }
+  }, [prompt, pendingCursorPosition]);
 
   const { data: savedPrompts = [] } = useQuery<any[]>({
     queryKey: ['/api/prompts'],
@@ -168,16 +178,11 @@ export default function PromptEditor() {
       prompt.substring(0, selectionRange.start) + 
       varPlaceholder + ' ' +
       prompt.substring(selectionRange.end);
-    setPrompt(newPrompt);
     
     // Position cursor right after the variable (after the space)
     const newCursorPos = selectionRange.start + varPlaceholder.length + 1;
-    requestAnimationFrame(() => {
-      if (textareaRef.current) {
-        textareaRef.current.focus();
-        textareaRef.current.setSelectionRange(newCursorPos, newCursorPos);
-      }
-    });
+    setPendingCursorPosition(newCursorPos);
+    setPrompt(newPrompt);
     
     setSelectedText("");
     setSelectionRange(null);
