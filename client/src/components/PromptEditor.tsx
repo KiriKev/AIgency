@@ -36,7 +36,7 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Plus, Trash2, HelpCircle, Sparkles, Save, X, FolderOpen } from "lucide-react";
+import { Plus, Trash2, HelpCircle, X, FolderOpen } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -73,6 +73,7 @@ export default function PromptEditor() {
   const [selectionRange, setSelectionRange] = useState<{ start: number; end: number } | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
+  const [unsavedVariableDialog, setUnsavedVariableDialog] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [variableToDelete, setVariableToDelete] = useState<string | null>(null);
   const [openVariables, setOpenVariables] = useState<string[]>([]);
@@ -343,6 +344,11 @@ export default function PromptEditor() {
   };
 
   const handleGenerate = async () => {
+    if (openVariables.length > 0) {
+      setUnsavedVariableDialog(true);
+      return;
+    }
+
     const previewText = renderPreviewWithDefaults();
     if (!previewText.trim()) {
       toast({
@@ -353,6 +359,32 @@ export default function PromptEditor() {
       return;
     }
 
+    setIsGenerating(true);
+    setGeneratedImage(null);
+
+    try {
+      const response = await apiRequest('POST', '/api/generate-image', { prompt: previewText });
+      const data = await response.json();
+      setGeneratedImage(data.imageUrl);
+      toast({
+        title: "Generierung abgeschlossen",
+        description: "Ihr Bild wurde erfolgreich generiert."
+      });
+    } catch (error: any) {
+      toast({
+        title: "Generierung fehlgeschlagen",
+        description: error.message || "Fehler bei der Bildgenerierung.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+  
+  const proceedWithGenerate = async () => {
+    setUnsavedVariableDialog(false);
+    setOpenVariables([]);
+    const previewText = renderPreviewWithDefaults();
     setIsGenerating(true);
     setGeneratedImage(null);
 
@@ -599,8 +631,7 @@ export default function PromptEditor() {
                   {variables.map((variable) => (
                     <Badge
                       key={variable.id}
-                      variant="secondary"
-                      className="text-xs cursor-pointer hover-elevate"
+                      className="text-xs cursor-pointer hover-elevate bg-teal-500/20 text-teal-700 dark:text-teal-300 border border-teal-500/30 rounded-full px-2.5 py-0.5"
                       onClick={() => {
                         setOpenVariables([...openVariables, variable.id]);
                         const element = document.getElementById(`variable-${variable.id}`);
@@ -662,6 +693,7 @@ export default function PromptEditor() {
                                 onChange={(e) => updateVariable(variable.id, { label: e.target.value })}
                                 className="h-7 text-xs mt-0.5"
                                 placeholder="Label"
+                                disabled={promptType === 'showcase'}
                                 data-testid={`input-label-${variable.id}`}
                               />
                             </div>
@@ -677,6 +709,7 @@ export default function PromptEditor() {
                                   onChange={(e) => updateVariable(variable.id, { description: e.target.value })}
                                   placeholder="Beschreibung hinzufügen..."
                                   className="min-h-[60px] text-xs"
+                                  disabled={promptType === 'showcase'}
                                   data-testid={`input-description-${variable.id}`}
                                 />
                               </TooltipContent>
@@ -686,21 +719,10 @@ export default function PromptEditor() {
                               size="icon"
                               className="h-7 w-7 mt-4"
                               onClick={() => deleteVariable(variable.id)}
+                              disabled={promptType === 'showcase'}
                               data-testid={`button-delete-${variable.id}`}
                             >
                               <Trash2 className="h-3.5 w-3.5 text-destructive" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-7 w-7 mt-4"
-                              onClick={() => {
-                                handleSubmit();
-                                setOpenVariables(openVariables.filter(id => id !== variable.id));
-                              }}
-                              data-testid={`button-save-collapse-${variable.id}`}
-                            >
-                              <Save className="h-3.5 w-3.5" />
                             </Button>
                           </div>
 
@@ -716,6 +738,7 @@ export default function PromptEditor() {
                             <Select
                               value={variable.type}
                               onValueChange={(value) => updateVariable(variable.id, { type: value as VariableType })}
+                              disabled={promptType === 'showcase'}
                             >
                               <SelectTrigger className="h-7 text-xs" data-testid={`select-type-${variable.id}`}>
                                 <SelectValue />
@@ -738,6 +761,7 @@ export default function PromptEditor() {
                                 onChange={(e) => updateVariable(variable.id, { defaultValue: e.target.value })}
                                 placeholder="Default-Wert"
                                 className="min-h-8 text-xs resize-y"
+                                disabled={promptType === 'showcase'}
                                 data-testid={`input-default-${variable.id}`}
                               />
                             </div>
@@ -749,6 +773,7 @@ export default function PromptEditor() {
                                 id={`checkbox-${variable.id}`}
                                 checked={variable.defaultValue as boolean}
                                 onCheckedChange={(checked) => updateVariable(variable.id, { defaultValue: checked })}
+                                disabled={promptType === 'showcase'}
                                 data-testid={`checkbox-default-${variable.id}`}
                               />
                               <Label htmlFor={`checkbox-${variable.id}`} className="text-xs">
@@ -772,6 +797,7 @@ export default function PromptEditor() {
                                             onChange={(e) => updateOption(variable.id, index, 'visibleName', e.target.value)}
                                             className="h-7 text-xs mt-0.5"
                                             placeholder="Sichtbarer Name"
+                                            disabled={promptType === 'showcase'}
                                             data-testid={`input-option-visible-${variable.id}-${index}`}
                                           />
                                         </div>
@@ -780,6 +806,7 @@ export default function PromptEditor() {
                                           size="icon"
                                           className="h-7 w-7 mt-4"
                                           onClick={() => removeOption(variable.id, index)}
+                                          disabled={promptType === 'showcase'}
                                           data-testid={`button-remove-option-${variable.id}-${index}`}
                                         >
                                           <X className="h-3.5 w-3.5" />
@@ -792,6 +819,7 @@ export default function PromptEditor() {
                                           onChange={(e) => updateOption(variable.id, index, 'promptValue', e.target.value)}
                                           className="min-h-[50px] text-xs mt-0.5 resize-y"
                                           placeholder="Prompt-Wert"
+                                          disabled={promptType === 'showcase'}
                                           data-testid={`input-option-prompt-${variable.id}-${index}`}
                                         />
                                       </div>
@@ -815,6 +843,7 @@ export default function PromptEditor() {
                                         }}
                                         placeholder="z.B. Professional"
                                         className="h-7 text-xs mt-0.5"
+                                        disabled={promptType === 'showcase'}
                                         data-testid={`input-new-option-visible-${variable.id}`}
                                       />
                                     </div>
@@ -832,6 +861,7 @@ export default function PromptEditor() {
                                         }}
                                         placeholder="z.B. professional, detailed"
                                         className="min-h-[50px] text-xs mt-0.5 resize-y"
+                                        disabled={promptType === 'showcase'}
                                         data-testid={`input-new-option-prompt-${variable.id}`}
                                       />
                                     </div>
@@ -839,7 +869,7 @@ export default function PromptEditor() {
                                       size="sm"
                                       onClick={() => addOption(variable.id)}
                                       className="w-full"
-                                      disabled={!newOptionInput[variable.id]?.split('|||').every(p => p.trim())}
+                                      disabled={promptType === 'showcase' || !newOptionInput[variable.id]?.split('|||').every(p => p.trim())}
                                       data-testid={`button-add-option-${variable.id}`}
                                     >
                                       <Plus className="h-4 w-4 mr-1" />
@@ -861,6 +891,7 @@ export default function PromptEditor() {
                                     value={variable.min || 0}
                                     onChange={(e) => updateVariable(variable.id, { min: parseInt(e.target.value) })}
                                     className="h-7 text-xs"
+                                    disabled={promptType === 'showcase'}
                                     data-testid={`input-min-${variable.id}`}
                                   />
                                 </div>
@@ -871,6 +902,7 @@ export default function PromptEditor() {
                                     value={variable.max || 100}
                                     onChange={(e) => updateVariable(variable.id, { max: parseInt(e.target.value) })}
                                     className="h-7 text-xs"
+                                    disabled={promptType === 'showcase'}
                                     data-testid={`input-max-${variable.id}`}
                                   />
                                 </div>
@@ -883,6 +915,7 @@ export default function PromptEditor() {
                                   min={variable.min || 0}
                                   max={variable.max || 100}
                                   step={1}
+                                  disabled={promptType === 'showcase'}
                                   data-testid={`slider-default-${variable.id}`}
                                 />
                               </div>
@@ -900,6 +933,21 @@ export default function PromptEditor() {
                               Pflichtfeld
                             </Label>
                           </div>
+                          
+                          <Button
+                            variant="default"
+                            size="sm"
+                            onClick={() => {
+                              handleSubmit();
+                              setOpenVariables(openVariables.filter(id => id !== variable.id));
+                            }}
+                            disabled={savePromptMutation.isPending}
+                            className="w-full mt-2"
+                            data-testid={`button-save-variable-${variable.id}`}
+                          >
+                            <Save className="h-3 w-3 mr-1" />
+                            {savePromptMutation.isPending ? 'Speichere...' : 'Speichern'}
+                          </Button>
                         </AccordionContent>
                       </AccordionItem>
                     ))}
@@ -939,7 +987,6 @@ export default function PromptEditor() {
                   className="w-full"
                   data-testid="button-generate"
                 >
-                  <Sparkles className="h-4 w-4 mr-2" />
                   {isGenerating ? 'Generiere...' : 'Generieren'}
                 </Button>
                 <Button
@@ -949,7 +996,6 @@ export default function PromptEditor() {
                   className="w-full"
                   data-testid="button-submit"
                 >
-                  <Save className="h-4 w-4 mr-2" />
                   {savePromptMutation.isPending ? 'Speichere...' : 'Speichern'}
                 </Button>
                 <Button
@@ -978,6 +1024,23 @@ export default function PromptEditor() {
             <AlertDialogCancel data-testid="button-cancel-delete">Nein</AlertDialogCancel>
             <AlertDialogAction onClick={confirmDeleteVariable} data-testid="button-confirm-delete">
               Ja, löschen
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={unsavedVariableDialog} onOpenChange={setUnsavedVariableDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Ungespeicherte Variablen</AlertDialogTitle>
+            <AlertDialogDescription>
+              Sie haben offene Variablen mit möglicherweise ungespeicherten Änderungen. Möchten Sie trotzdem generieren?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel data-testid="button-cancel-generate">Abbrechen</AlertDialogCancel>
+            <AlertDialogAction onClick={proceedWithGenerate} data-testid="button-proceed-generate">
+              Generieren
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

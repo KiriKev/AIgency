@@ -58,7 +58,8 @@ export default function PromptSettingsPanel({ settings, onUpdate }: PromptSettin
     const files = e.target.files;
     if (!files) return;
 
-    const remainingSlots = settings.photoCount - settings.uploadedPhotos.length;
+    const maxPhotos = Math.min(settings.photoCount, 20);
+    const remainingSlots = maxPhotos - settings.uploadedPhotos.length;
     if (remainingSlots <= 0) {
       return;
     }
@@ -69,7 +70,10 @@ export default function PromptSettingsPanel({ settings, onUpdate }: PromptSettin
       const reader = new FileReader();
       reader.onloadend = () => {
         const base64 = reader.result as string;
-        onUpdate({ uploadedPhotos: [...settings.uploadedPhotos, base64] });
+        const currentPhotos = settings.uploadedPhotos;
+        if (currentPhotos.length < maxPhotos) {
+          onUpdate({ uploadedPhotos: [...currentPhotos, base64] });
+        }
       };
       reader.readAsDataURL(file);
     });
@@ -111,15 +115,35 @@ export default function PromptSettingsPanel({ settings, onUpdate }: PromptSettin
               >
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="showcase" id="showcase" data-testid="radio-showcase" />
-                  <Label htmlFor="showcase" className="text-sm font-normal cursor-pointer">Showcase</Label>
+                  <Label htmlFor="showcase" className="text-sm font-normal cursor-pointer flex-1">Showcase</Label>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <HelpCircle className="h-3 w-3 text-muted-foreground cursor-help" />
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p className="text-xs max-w-xs">
+                          Zeige den Prompt nur zur Ansicht. Andere können ihn nicht nutzen. Alle Variablen-Bearbeitungsfelder sind deaktiviert.
+                        </p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                 </div>
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="create-now" id="create-now" data-testid="radio-create-now" />
-                  <Label htmlFor="create-now" className="text-sm font-normal cursor-pointer">Create now</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="custom" id="custom" data-testid="radio-custom" />
-                  <Label htmlFor="custom" className="text-sm font-normal cursor-pointer">Custom</Label>
+                  <Label htmlFor="create-now" className="text-sm font-normal cursor-pointer flex-1">Create now</Label>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <HelpCircle className="h-3 w-3 text-muted-foreground cursor-help" />
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p className="text-xs max-w-xs">
+                          Ermöglicht sofortige Generierung. Nutzer können Variable anpassen und direkt Bilder erstellen.
+                        </p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                 </div>
               </RadioGroup>
             </div>
@@ -267,7 +291,7 @@ export default function PromptSettingsPanel({ settings, onUpdate }: PromptSettin
                 <Select 
                   value={settings.photoCount.toString()} 
                   onValueChange={(value) => {
-                    const newCount = parseInt(value);
+                    const newCount = Math.min(parseInt(value), 20);
                     onUpdate({ photoCount: newCount });
                     if (settings.uploadedPhotos.length > newCount) {
                       onUpdate({ uploadedPhotos: settings.uploadedPhotos.slice(0, newCount) });
@@ -278,7 +302,7 @@ export default function PromptSettingsPanel({ settings, onUpdate }: PromptSettin
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {[1, 2, 3, 4, 5, 6, 7, 8].map(num => (
+                    {Array.from({ length: 20 }, (_, i) => i + 1).map(num => (
                       <SelectItem key={num} value={num.toString()}>
                         {num} {num === 1 ? 'Photo' : 'Photos'}
                       </SelectItem>

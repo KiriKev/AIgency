@@ -68,7 +68,7 @@ export default function Navbar({ credits = 125, username = "Artist", onSearch }:
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-accent/50 border border-accent-border">
               <Coins className="h-4 w-4 text-primary" />
-              <span className="font-mono text-sm font-semibold" data-testid="text-credits">{credits}</span>
+              <span className="font-mono text-sm font-semibold text-foreground" data-testid="text-credits">{credits}</span>
             </div>
 
             <Button variant="default" size="sm" data-testid="button-buy-credits">
