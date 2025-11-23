@@ -606,7 +606,7 @@ export default function PromptEditor() {
           </CardHeader>
           <CardContent className="flex-1 flex flex-col gap-2 px-3 pb-3">
             <div className="relative flex-1">
-              <div className="absolute inset-0 font-mono text-sm whitespace-pre-wrap break-words p-3 pointer-events-none overflow-hidden leading-5 select-none">
+              <div className="absolute inset-0 font-mono text-sm whitespace-pre-wrap break-words px-3 py-[11px] pointer-events-none overflow-hidden leading-[1.375rem] select-none">
                 {prompt.split(/(\[[^\]]+\])/).map((part, index) => {
                   const match = part.match(/\[([^\]]+)\]/);
                   if (match) {
@@ -616,7 +616,7 @@ export default function PromptEditor() {
                       return (
                         <span
                           key={index}
-                          className="inline-block bg-teal-500/20 text-teal-700 dark:text-teal-300 border border-teal-500/30 rounded-full px-2 py-0.5 cursor-pointer pointer-events-auto hover-elevate select-none"
+                          className="inline-block bg-teal-500/20 text-teal-700 dark:text-teal-300 border border-teal-500/30 rounded-full px-2 py-0.5 cursor-pointer pointer-events-auto hover-elevate select-none align-baseline"
                           onClick={(e) => {
                             e.preventDefault();
                             setOpenVariables([...openVariables, variable.id]);
@@ -641,11 +641,11 @@ export default function PromptEditor() {
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
                 onSelect={handleTextSelection}
-                onClick={(e) => {
+                onKeyDown={(e) => {
                   if (!textareaRef.current) return;
                   const pos = textareaRef.current.selectionStart;
                   
-                  // Find if cursor is inside a variable
+                  // Check if cursor is inside a variable
                   const beforeCursor = prompt.substring(0, pos);
                   const afterCursor = prompt.substring(pos);
                   
@@ -655,14 +655,34 @@ export default function PromptEditor() {
                   
                   // If cursor is inside [variable]
                   if (openBracketBefore > closeBracketBefore && closeBracketAfter !== -1) {
-                    // Move cursor to after the ]
                     const newPos = pos + closeBracketAfter + 1;
-                    setTimeout(() => {
-                      textareaRef.current?.setSelectionRange(newPos, newPos);
-                    }, 0);
+                    e.preventDefault();
+                    textareaRef.current.setSelectionRange(newPos, newPos);
                   }
                 }}
-                className="absolute inset-0 font-mono text-sm resize-none min-h-[200px] bg-transparent text-transparent caret-foreground z-10 selection:bg-foreground/20 leading-5"
+                onClick={(e) => {
+                  if (!textareaRef.current) return;
+                  setTimeout(() => {
+                    if (!textareaRef.current) return;
+                    const pos = textareaRef.current.selectionStart;
+                    
+                    // Find if cursor is inside a variable
+                    const beforeCursor = prompt.substring(0, pos);
+                    const afterCursor = prompt.substring(pos);
+                    
+                    const openBracketBefore = beforeCursor.lastIndexOf('[');
+                    const closeBracketBefore = beforeCursor.lastIndexOf(']');
+                    const closeBracketAfter = afterCursor.indexOf(']');
+                    
+                    // If cursor is inside [variable]
+                    if (openBracketBefore > closeBracketBefore && closeBracketAfter !== -1) {
+                      // Move cursor to after the ]
+                      const newPos = pos + closeBracketAfter + 1;
+                      textareaRef.current.setSelectionRange(newPos, newPos);
+                    }
+                  }, 0);
+                }}
+                className="absolute inset-0 font-mono text-sm resize-none min-h-[200px] bg-transparent text-transparent caret-foreground z-10 selection:bg-foreground/20 leading-[1.375rem]"
                 placeholder="Schreibe deinen Prompt hier... Nutze [VariableName] für Variablen"
                 data-testid="textarea-prompt"
               />
@@ -850,17 +870,19 @@ export default function PromptEditor() {
                                   <Card key={index} className={`p-1.5 ${isDefault ? 'border-teal-500/50 bg-teal-500/5' : ''}`}>
                                     <div className="space-y-1">
                                       <div className="flex items-center gap-1">
-                                        <Checkbox
-                                          checked={isDefault}
-                                          onCheckedChange={(checked) => {
-                                            if (checked) {
-                                              updateVariable(variable.id, { defaultOptionIndex: index });
-                                            }
-                                          }}
-                                          disabled={promptType === 'showcase'}
-                                          className="mt-4"
-                                          data-testid={`checkbox-default-option-${variable.id}-${index}`}
-                                        />
+                                        <div className="flex flex-col items-center gap-0.5 mt-4">
+                                          <Checkbox
+                                            checked={isDefault}
+                                            onCheckedChange={(checked) => {
+                                              if (checked) {
+                                                updateVariable(variable.id, { defaultOptionIndex: index });
+                                              }
+                                            }}
+                                            disabled={promptType === 'showcase'}
+                                            data-testid={`checkbox-default-option-${variable.id}-${index}`}
+                                          />
+                                          {isDefault && <span className="text-[9px] text-teal-600 dark:text-teal-400 font-medium">Default</span>}
+                                        </div>
                                         <div className="flex-1">
                                           <Label className="text-xs">Sichtbarer Name</Label>
                                           <Input
