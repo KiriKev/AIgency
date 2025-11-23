@@ -75,12 +75,12 @@ export default function PromptSettingsPanel({ settings, onUpdate }: PromptSettin
 
   return (
     <ScrollArea className="h-full">
-      <div className="space-y-4 p-4">
+      <div className="space-y-2 p-3 pr-2">
         <Card>
-          <CardHeader>
+          <CardHeader className="pb-2">
             <CardTitle className="text-sm">Prompt Meta</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-3">
             <div className="space-y-2">
               <Label htmlFor="title" className="text-xs">Title</Label>
               <Input
@@ -149,10 +149,10 @@ export default function PromptSettingsPanel({ settings, onUpdate }: PromptSettin
         </Card>
 
         <Card>
-          <CardHeader>
+          <CardHeader className="pb-2">
             <CardTitle className="text-sm">AI Model & Pricing</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-3">
             <div className="space-y-2">
               <Label htmlFor="ai-model" className="text-xs">AI Model</Label>
               <Select value={settings.aiModel} onValueChange={(value) => onUpdate({ aiModel: value })}>
@@ -185,10 +185,10 @@ export default function PromptSettingsPanel({ settings, onUpdate }: PromptSettin
         </Card>
 
         <Card>
-          <CardHeader>
+          <CardHeader className="pb-2">
             <CardTitle className="text-sm">Output Controls</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-3">
             <div className="space-y-2">
               <Label htmlFor="prompt-type" className="text-xs">Prompt Type</Label>
               <Select value={settings.promptType} onValueChange={(value) => onUpdate({ promptType: value })}>
@@ -227,10 +227,10 @@ export default function PromptSettingsPanel({ settings, onUpdate }: PromptSettin
 
         {settings.aiModel === "gemini" && (
           <Card>
-            <CardHeader>
+            <CardHeader className="pb-2">
               <CardTitle className="text-sm">Gemini Assets</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-3">
               <div className="space-y-2">
                 <Label htmlFor="photo-count" className="text-xs">Photo Count</Label>
                 <Select 

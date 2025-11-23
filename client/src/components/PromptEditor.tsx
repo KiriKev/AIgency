@@ -509,9 +509,33 @@ export default function PromptEditor() {
     if (updates.uploadedPhotos !== undefined) setUploadedPhotos(updates.uploadedPhotos);
   };
 
+  const renderPreviewWithDefaults = () => {
+    let previewText = prompt;
+    
+    variables.forEach(variable => {
+      const placeholder = `[${variable.name}]`;
+      let defaultDisplay = '';
+      
+      if (variable.type === 'text') {
+        defaultDisplay = (variable.defaultValue as string) || '';
+      } else if (variable.type === 'checkbox') {
+        defaultDisplay = (variable.defaultValue as boolean) ? variable.label : '';
+      } else if (variable.type === 'multi-select' || variable.type === 'single-select') {
+        const firstOption = variable.options?.[0];
+        defaultDisplay = firstOption?.promptValue || '';
+      } else if (variable.type === 'slider') {
+        defaultDisplay = String(variable.defaultValue || variable.min || 0);
+      }
+      
+      previewText = previewText.replace(new RegExp(`\\[${variable.name}\\]`, 'g'), defaultDisplay);
+    });
+    
+    return previewText;
+  };
+
   return (
     <TooltipProvider>
-      <div className="h-[calc(100vh-10rem)] grid grid-cols-[minmax(250px,_1fr)_minmax(400px,_2.75fr)_minmax(250px,_1.25fr)] gap-4">
+      <div className="h-[calc(100vh-10rem)] grid grid-cols-[minmax(220px,_0.9fr)_minmax(400px,_2.75fr)_minmax(280px,_1.35fr)] gap-2">
         {/* Settings Panel */}
         <PromptSettingsPanel 
           settings={settingsData}
@@ -520,10 +544,10 @@ export default function PromptEditor() {
 
         {/* Editor Panel */}
         <Card className="flex flex-col">
-          <CardHeader>
+          <CardHeader className="pb-3">
             <CardTitle className="text-base">Prompt Editor</CardTitle>
           </CardHeader>
-          <CardContent className="flex-1 flex flex-col gap-4">
+          <CardContent className="flex-1 flex flex-col gap-2">
               <div className="flex-1 space-y-2">
                 <Textarea
                   ref={textareaRef}
@@ -546,46 +570,19 @@ export default function PromptEditor() {
                   </Button>
                 )}
 
-                <Card className="p-4">
+                <Card className="p-3">
                   <h4 className="text-sm font-medium mb-2">Vorschau</h4>
-                  <div className="font-mono text-sm whitespace-pre-wrap break-words">
-                    {renderPromptWithLinks()}
+                  <div className="font-mono text-sm whitespace-pre-wrap break-words text-muted-foreground">
+                    {renderPreviewWithDefaults()}
                   </div>
                 </Card>
-              </div>
-
-              <div className="flex gap-2 pt-4 border-t">
-                <Button
-                  onClick={handleGenerate}
-                  disabled={isGenerating}
-                  data-testid="button-generate"
-                >
-                  <Sparkles className="h-4 w-4 mr-2" />
-                  {isGenerating ? 'Generiere...' : 'Generieren'}
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={handleSubmit}
-                  disabled={isGenerating || savePromptMutation.isPending}
-                  data-testid="button-submit"
-                >
-                  <Save className="h-4 w-4 mr-2" />
-                  {savePromptMutation.isPending ? 'Speichere...' : 'Speichern'}
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => setShowLoadDialog(true)}
-                  data-testid="button-load"
-                >
-                  <FolderOpen className="h-4 w-4 mr-2" />
-                  Laden
-                </Button>
               </div>
             </CardContent>
           </Card>
 
-        {/* Variables Panel */}
-        <Card className="flex flex-col">
+        {/* Variables & Actions Panel */}
+        <div className="flex flex-col gap-2">
+        <Card className="flex-1 flex flex-col">
             <CardHeader>
               <CardTitle className="text-base">Variablen</CardTitle>
             </CardHeader>
@@ -733,10 +730,10 @@ export default function PromptEditor() {
                                       </div>
                                       <div>
                                         <Label className="text-xs">Prompt-Wert</Label>
-                                        <Input
+                                        <Textarea
                                           value={option.promptValue}
                                           onChange={(e) => updateOption(variable.id, index, 'promptValue', e.target.value)}
-                                          className="h-8 text-sm mt-1"
+                                          className="min-h-[60px] text-sm mt-1 resize-y"
                                           placeholder="Prompt-Wert"
                                           data-testid={`input-option-prompt-${variable.id}-${index}`}
                                         />
@@ -766,7 +763,7 @@ export default function PromptEditor() {
                                     </div>
                                     <div>
                                       <Label className="text-xs">Prompt-Wert</Label>
-                                      <Input
+                                      <Textarea
                                         value={newOptionInput[variable.id]?.split('|||')[1] || ''}
                                         onChange={(e) => {
                                           const currentValue = newOptionInput[variable.id] || '|||';
@@ -776,14 +773,8 @@ export default function PromptEditor() {
                                             [variable.id]: `${parts[0] || ''}|||${e.target.value}`
                                           });
                                         }}
-                                        onKeyDown={(e) => {
-                                          if (e.key === 'Enter') {
-                                            e.preventDefault();
-                                            addOption(variable.id);
-                                          }
-                                        }}
-                                        placeholder="z.B. professional"
-                                        className="h-8 text-sm mt-1"
+                                        placeholder="z.B. professional, detailed"
+                                        className="min-h-[60px] text-sm mt-1 resize-y"
                                         data-testid={`input-new-option-prompt-${variable.id}`}
                                       />
                                     </div>
@@ -852,6 +843,18 @@ export default function PromptEditor() {
                               Pflichtfeld
                             </Label>
                           </div>
+                          
+                          <Button
+                            variant="default"
+                            size="sm"
+                            onClick={handleSubmit}
+                            disabled={savePromptMutation.isPending}
+                            className="w-full mt-2"
+                            data-testid={`button-save-variable-${variable.id}`}
+                          >
+                            <Save className="h-3 w-3 mr-1" />
+                            {savePromptMutation.isPending ? 'Speichere...' : 'Speichern'}
+                          </Button>
                         </AccordionContent>
                       </AccordionItem>
                     ))}
@@ -860,6 +863,43 @@ export default function PromptEditor() {
               </ScrollArea>
             </CardContent>
           </Card>
+          
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm">Aktionen</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              <Button
+                onClick={handleGenerate}
+                disabled={isGenerating}
+                className="w-full"
+                data-testid="button-generate"
+              >
+                <Sparkles className="h-4 w-4 mr-2" />
+                {isGenerating ? 'Generiere...' : 'Generieren'}
+              </Button>
+              <Button
+                variant="outline"
+                onClick={handleSubmit}
+                disabled={isGenerating || savePromptMutation.isPending}
+                className="w-full"
+                data-testid="button-submit"
+              >
+                <Save className="h-4 w-4 mr-2" />
+                {savePromptMutation.isPending ? 'Speichere...' : 'Speichern'}
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => setShowLoadDialog(true)}
+                className="w-full"
+                data-testid="button-load"
+              >
+                <FolderOpen className="h-4 w-4 mr-2" />
+                Laden
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
       </div>
 
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>

@@ -12,9 +12,9 @@ export default function Editor() {
       <Navbar />
       
       <main className="w-full px-6 lg:px-8 py-6">
-        <div className="mb-6 flex items-center gap-4">
+        <div className="mb-4 flex items-center gap-4">
           <Button 
-            variant="ghost" 
+            variant="outline" 
             size="sm" 
             onClick={() => setLocation('/')}
             data-testid="button-back"
@@ -23,8 +23,8 @@ export default function Editor() {
             Zurück
           </Button>
           <div>
-            <h1 className="text-2xl font-bold">Create Prompt Template</h1>
-            <p className="text-sm text-muted-foreground">
+            <h1 className="text-xl font-semibold text-foreground">Create Prompt Template</h1>
+            <p className="text-xs text-muted-foreground">
               Design reusable prompt templates with customizable variables
             </p>
           </div>
