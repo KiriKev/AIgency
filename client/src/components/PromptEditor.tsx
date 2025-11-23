@@ -99,16 +99,15 @@ export default function PromptEditor() {
   // Set cursor position after prompt updates
   useEffect(() => {
     if (pendingCursorPosition !== null && textareaRef.current) {
-      // Double RAF to ensure DOM is fully updated
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          if (textareaRef.current) {
-            textareaRef.current.focus();
-            textareaRef.current.setSelectionRange(pendingCursorPosition, pendingCursorPosition);
-          }
-        });
-      });
+      // Use setTimeout to ensure React has updated the DOM
+      const timer = setTimeout(() => {
+        if (textareaRef.current) {
+          textareaRef.current.focus();
+          textareaRef.current.setSelectionRange(pendingCursorPosition, pendingCursorPosition);
+        }
+      }, 10);
       setPendingCursorPosition(null);
+      return () => clearTimeout(timer);
     }
   }, [prompt, pendingCursorPosition]);
 
@@ -190,15 +189,7 @@ export default function PromptEditor() {
     
     // Position cursor right after the variable (after the space)
     const newCursorPos = selectionRange.start + varPlaceholder.length + 1;
-    
-    // Wait for React to update the textarea value, then set cursor
-    setTimeout(() => {
-      if (textareaRef.current) {
-        textareaRef.current.focus();
-        textareaRef.current.value = newPrompt; // Ensure value is updated
-        textareaRef.current.setSelectionRange(newCursorPos, newCursorPos);
-      }
-    }, 0);
+    setPendingCursorPosition(newCursorPos);
     
     setSelectedText("");
     setSelectionRange(null);
