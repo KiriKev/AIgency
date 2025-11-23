@@ -832,7 +832,7 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
               Variable
             </Button>
           </CardHeader>
-          <CardContent className="flex-1 min-h-0 flex flex-col gap-2 px-3 pb-3">
+          <CardContent className="flex-1 min-h-0 flex flex-col gap-2 px-3 pb-3 relative">
             <div className="relative flex-1">
               <div className="absolute inset-0 font-mono text-sm whitespace-pre-wrap break-words px-3 py-[11px] pointer-events-none overflow-hidden leading-[1.375rem] select-none">
                 {prompt.split(/(\[[^\]]+\])/).map((part, index) => {
@@ -919,28 +919,26 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
                 placeholder="Schreibe deinen Prompt hier... Nutze [VariableName] für Variablen"
                 data-testid="textarea-prompt"
               />
-              {selectedText && selectionRange && buttonPosition && (
-                <Button
-                  size="sm"
-                  onMouseDown={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    createVariableFromSelection();
-                  }}
-                  className="absolute z-[9999] shadow-lg pointer-events-auto cursor-pointer"
-                  style={{
-                    top: `${buttonPosition.top}px`,
-                    left: `${buttonPosition.left}px`,
-                    pointerEvents: 'auto',
-                    cursor: 'pointer'
-                  }}
-                  data-testid="button-create-variable"
-                >
-                  <Plus className="h-3 w-3 mr-1" />
-                  Variable
-                </Button>
-              )}
             </div>
+            {selectedText && selectionRange && buttonPosition && (
+              <Button
+                size="sm"
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  createVariableFromSelection();
+                }}
+                className="fixed z-[99999] shadow-lg cursor-pointer"
+                style={{
+                  top: `${buttonPosition.top}px`,
+                  left: `${buttonPosition.left}px`,
+                }}
+                data-testid="button-create-variable"
+              >
+                <Plus className="h-3 w-3 mr-1" />
+                Variable
+              </Button>
+            )}
             
             <div className="flex flex-wrap gap-1">
               {variables.length > 0 && (
