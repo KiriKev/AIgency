@@ -86,8 +86,8 @@ export default function PromptSettingsPanel({ settings, onUpdate }: PromptSettin
   };
 
   return (
-    <ScrollArea className="h-full">
-      <div className="space-y-2 p-3 pr-2">
+    <ScrollArea className="h-full bg-transparent">
+      <div className="space-y-2 p-3 pr-2 bg-transparent">
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm">Prompt Meta</CardTitle>

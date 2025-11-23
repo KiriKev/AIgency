@@ -606,16 +606,7 @@ export default function PromptEditor() {
           </CardHeader>
           <CardContent className="flex-1 flex flex-col gap-2 px-3 pb-3">
             <div className="relative flex-1">
-              <Textarea
-                ref={textareaRef}
-                value={prompt}
-                onChange={(e) => setPrompt(e.target.value)}
-                onSelect={handleTextSelection}
-                className="absolute inset-0 font-mono text-sm resize-none min-h-[200px] bg-transparent text-transparent caret-foreground z-10 selection:bg-primary/20"
-                placeholder="Schreibe deinen Prompt hier... Nutze [VariableName] für Variablen"
-                data-testid="textarea-prompt"
-              />
-              <div className="absolute inset-0 font-mono text-sm whitespace-pre-wrap break-words p-3 pointer-events-none overflow-hidden">
+              <div className="absolute inset-0 font-mono text-sm whitespace-pre-wrap break-words p-3 pointer-events-none overflow-hidden leading-5">
                 {prompt.split(/(\[[^\]]+\])/).map((part, index) => {
                   const match = part.match(/\[([^\]]+)\]/);
                   if (match) {
@@ -643,6 +634,15 @@ export default function PromptEditor() {
                   return <span key={index}>{part}</span>;
                 })}
               </div>
+              <Textarea
+                ref={textareaRef}
+                value={prompt}
+                onChange={(e) => setPrompt(e.target.value)}
+                onSelect={handleTextSelection}
+                className="absolute inset-0 font-mono text-sm resize-none min-h-[200px] bg-transparent text-transparent caret-foreground z-10 selection:bg-primary/20 leading-5"
+                placeholder="Schreibe deinen Prompt hier... Nutze [VariableName] für Variablen"
+                data-testid="textarea-prompt"
+              />
             </div>
             
             <div className="flex flex-wrap gap-1">
@@ -694,8 +694,8 @@ export default function PromptEditor() {
             <CardHeader className="pb-2 px-3">
               <CardTitle className="text-base">Variablen</CardTitle>
             </CardHeader>
-            <CardContent className="flex-1 overflow-hidden px-3 pb-3">
-              <ScrollArea className="h-full pr-4">
+            <CardContent className="flex-1 overflow-hidden px-3 pb-3 bg-transparent">
+              <ScrollArea className="h-full pr-4 bg-transparent">
                 {variables.length === 0 ? (
                   <p className="text-sm text-muted-foreground text-center py-8">
                     Keine Variablen vorhanden.
@@ -816,9 +816,9 @@ export default function PromptEditor() {
 
                           {(variable.type === 'multi-select' || variable.type === 'single-select') && (
                             <div className="space-y-1">
-                              <div className="flex items-center justify-between">
+                              <div className="grid grid-cols-2 gap-2">
                                 <Label className="text-xs">Optionen</Label>
-                                <Label className="text-xs text-muted-foreground">Default</Label>
+                                <Label className="text-xs text-muted-foreground text-right">Default</Label>
                               </div>
                               <div className="space-y-1">
                                 {variable.options?.map((option, index) => {
