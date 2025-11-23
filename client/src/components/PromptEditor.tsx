@@ -165,6 +165,10 @@ export default function PromptEditor() {
     
     setVariables([...variables, newVariable]);
     
+    // Open variable editor overlay on mobile
+    setEditingVariableId(varName);
+    setShowVariableEditor(true);
+    
     const newPrompt = 
       prompt.substring(0, selectionRange.start) + 
       varPlaceholder + 
@@ -1310,29 +1314,29 @@ export default function PromptEditor() {
             <Button
               variant={mobileTab === 'settings' ? 'default' : 'ghost'}
               onClick={() => setMobileTab('settings')}
-              className="flex flex-col h-auto py-2 gap-1"
+              className={`flex flex-col h-auto py-2 gap-1 ${mobileTab !== 'settings' ? 'text-foreground' : ''}`}
               data-testid="button-mobile-tab-settings"
             >
               <Settings className="h-5 w-5" />
-              <span className="text-xs">Settings</span>
+              <span className="text-xs font-medium">Settings</span>
             </Button>
             <Button
               variant={mobileTab === 'editor' ? 'default' : 'ghost'}
               onClick={() => setMobileTab('editor')}
-              className="flex flex-col h-auto py-2 gap-1"
+              className={`flex flex-col h-auto py-2 gap-1 ${mobileTab !== 'editor' ? 'text-foreground' : ''}`}
               data-testid="button-mobile-tab-editor"
             >
               <FileText className="h-5 w-5" />
-              <span className="text-xs">Prompt</span>
+              <span className="text-xs font-medium">Prompt</span>
             </Button>
             <Button
               variant={mobileTab === 'generation' ? 'default' : 'ghost'}
               onClick={() => setMobileTab('generation')}
-              className="flex flex-col h-auto py-2 gap-1"
+              className={`flex flex-col h-auto py-2 gap-1 ${mobileTab !== 'generation' ? 'text-foreground' : ''}`}
               data-testid="button-mobile-tab-generation"
             >
               <Sparkles className="h-5 w-5" />
-              <span className="text-xs">Generate</span>
+              <span className="text-xs font-medium">Generate</span>
             </Button>
           </div>
         </div>
@@ -1341,7 +1345,7 @@ export default function PromptEditor() {
         {showVariableEditor && (
           <div className="fixed inset-0 bg-background z-50 flex flex-col">
             <div className="shrink-0 flex items-center justify-between p-4 border-b">
-              <h2 className="text-lg font-semibold">Variablen</h2>
+              <h2 className="text-lg font-semibold text-foreground">Variablen</h2>
               <Button
                 variant="ghost"
                 size="icon"
@@ -1349,9 +1353,10 @@ export default function PromptEditor() {
                   setShowVariableEditor(false);
                   setEditingVariableId(null);
                 }}
+                className="text-foreground"
                 data-testid="button-close-variables"
               >
-                <X className="h-5 w-5" />
+                <X className="h-6 w-6" />
               </Button>
             </div>
             
@@ -1377,9 +1382,239 @@ export default function PromptEditor() {
                             <Badge variant="outline" className="text-xs">{variable.type}</Badge>
                           </div>
                         </AccordionTrigger>
-                        <AccordionContent className="px-1.5 pt-1 space-y-1">
-                          {/* Same variable editing content as desktop, shortened for brevity */}
-                          <div className="flex gap-2 mt-2">
+                        <AccordionContent className="px-1.5 pt-1 space-y-2">
+                          <div className="space-y-2">
+                            <Label className="text-xs">Label</Label>
+                            <Input
+                              value={variable.label}
+                              onChange={(e) => updateVariable(variable.id, { label: e.target.value })}
+                              className="h-8 text-sm"
+                              placeholder="Label"
+                              disabled={promptType === 'showcase'}
+                              data-testid={`input-label-${variable.id}`}
+                            />
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label className="text-xs">Beschreibung</Label>
+                            <Textarea
+                              value={variable.description}
+                              onChange={(e) => updateVariable(variable.id, { description: e.target.value })}
+                              placeholder="Beschreibung hinzufügen..."
+                              className="min-h-[60px] text-sm"
+                              disabled={promptType === 'showcase'}
+                              data-testid={`input-description-${variable.id}`}
+                            />
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label className="text-xs">Interner Name</Label>
+                            <Badge variant="secondary" className="text-xs font-mono">
+                              {variable.name}
+                            </Badge>
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label className="text-xs">Typ</Label>
+                            <Select
+                              value={variable.type}
+                              onValueChange={(value) => updateVariable(variable.id, { type: value as VariableType })}
+                              disabled={promptType === 'showcase'}
+                            >
+                              <SelectTrigger className="h-9 text-sm" data-testid={`select-type-${variable.id}`}>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="text">Text</SelectItem>
+                                <SelectItem value="checkbox">Checkbox</SelectItem>
+                                <SelectItem value="multi-select">Multi-Select</SelectItem>
+                                <SelectItem value="single-select">Single-Select</SelectItem>
+                                <SelectItem value="slider">Regler</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+
+                          {variable.type === 'text' && (
+                            <div className="space-y-2">
+                              <Label className="text-xs">Default-Wert</Label>
+                              <Textarea
+                                value={variable.defaultValue as string}
+                                onChange={(e) => updateVariable(variable.id, { defaultValue: e.target.value })}
+                                placeholder="Default-Wert"
+                                className="min-h-[80px] text-sm"
+                                disabled={promptType === 'showcase'}
+                                data-testid={`input-default-${variable.id}`}
+                              />
+                            </div>
+                          )}
+
+                          {variable.type === 'checkbox' && (
+                            <div className="flex items-center space-x-2">
+                              <Checkbox
+                                id={`checkbox-mobile-${variable.id}`}
+                                checked={variable.defaultValue as boolean}
+                                onCheckedChange={(checked) => updateVariable(variable.id, { defaultValue: checked })}
+                                disabled={promptType === 'showcase'}
+                                data-testid={`checkbox-default-${variable.id}`}
+                              />
+                              <Label htmlFor={`checkbox-mobile-${variable.id}`} className="text-sm">
+                                Standardmäßig aktiv
+                              </Label>
+                            </div>
+                          )}
+
+                          {(variable.type === 'multi-select' || variable.type === 'single-select') && (
+                            <div className="space-y-2">
+                              <Label className="text-xs">Optionen & Default</Label>
+                              <div className="space-y-2">
+                                {variable.options?.map((option, index) => {
+                                  const isDefault = (variable.defaultOptionIndex ?? 0) === index;
+                                  return (
+                                    <Card key={index} className={`p-2 ${isDefault ? 'border-teal-500/50 bg-teal-500/5' : ''}`}>
+                                      <div className="space-y-2">
+                                        <div className="flex items-center gap-2">
+                                          <Checkbox
+                                            checked={isDefault}
+                                            onCheckedChange={(checked) => {
+                                              if (checked) {
+                                                updateVariable(variable.id, { defaultOptionIndex: index });
+                                              }
+                                            }}
+                                            disabled={promptType === 'showcase'}
+                                            data-testid={`checkbox-default-option-${variable.id}-${index}`}
+                                          />
+                                          <Label className="text-xs font-medium">Default</Label>
+                                        </div>
+                                        <div className="space-y-1">
+                                          <Label className="text-xs">Anzeigename</Label>
+                                          <Input
+                                            value={option.visibleName}
+                                            onChange={(e) => {
+                                              const newOptions = [...(variable.options || [])];
+                                              newOptions[index] = { ...option, visibleName: e.target.value };
+                                              updateVariable(variable.id, { options: newOptions });
+                                            }}
+                                            placeholder="Anzeigename"
+                                            className="h-8 text-sm"
+                                            disabled={promptType === 'showcase'}
+                                            data-testid={`input-visible-name-${variable.id}-${index}`}
+                                          />
+                                        </div>
+                                        <div className="space-y-1">
+                                          <Label className="text-xs">Prompt-Wert</Label>
+                                          <Input
+                                            value={option.promptValue}
+                                            onChange={(e) => {
+                                              const newOptions = [...(variable.options || [])];
+                                              newOptions[index] = { ...option, promptValue: e.target.value };
+                                              updateVariable(variable.id, { options: newOptions });
+                                            }}
+                                            placeholder="Prompt-Wert"
+                                            className="h-8 text-sm"
+                                            disabled={promptType === 'showcase'}
+                                            data-testid={`input-prompt-value-${variable.id}-${index}`}
+                                          />
+                                        </div>
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          onClick={() => {
+                                            const newOptions = variable.options?.filter((_, i) => i !== index) || [];
+                                            updateVariable(variable.id, { options: newOptions });
+                                          }}
+                                          className="w-full text-destructive"
+                                          disabled={promptType === 'showcase'}
+                                          data-testid={`button-remove-option-${variable.id}-${index}`}
+                                        >
+                                          <Trash2 className="h-3 w-3 mr-1" />
+                                          Option entfernen
+                                        </Button>
+                                      </div>
+                                    </Card>
+                                  );
+                                })}
+                              </div>
+                              <div className="flex gap-2">
+                                <Input
+                                  value={newOptionInput[variable.id] || ''}
+                                  onChange={(e) => setNewOptionInput({ ...newOptionInput, [variable.id]: e.target.value })}
+                                  placeholder="Neue Option"
+                                  className="h-8 text-sm"
+                                  disabled={promptType === 'showcase'}
+                                  data-testid={`input-new-option-${variable.id}`}
+                                />
+                                <Button
+                                  size="sm"
+                                  onClick={() => {
+                                    const optionText = newOptionInput[variable.id];
+                                    if (!optionText) return;
+                                    const newOptions = [...(variable.options || []), { visibleName: optionText, promptValue: optionText }];
+                                    updateVariable(variable.id, { options: newOptions });
+                                    setNewOptionInput({ ...newOptionInput, [variable.id]: '' });
+                                  }}
+                                  disabled={promptType === 'showcase'}
+                                  data-testid={`button-add-option-${variable.id}`}
+                                >
+                                  <Plus className="h-3 w-3" />
+                                </Button>
+                              </div>
+                            </div>
+                          )}
+
+                          {variable.type === 'slider' && (
+                            <div className="space-y-2">
+                              <div className="grid grid-cols-2 gap-2">
+                                <div className="space-y-1">
+                                  <Label className="text-xs">Min</Label>
+                                  <Input
+                                    type="number"
+                                    value={variable.min || 0}
+                                    onChange={(e) => updateVariable(variable.id, { min: parseInt(e.target.value) || 0 })}
+                                    className="h-8 text-sm"
+                                    disabled={promptType === 'showcase'}
+                                    data-testid={`input-min-${variable.id}`}
+                                  />
+                                </div>
+                                <div className="space-y-1">
+                                  <Label className="text-xs">Max</Label>
+                                  <Input
+                                    type="number"
+                                    value={variable.max || 100}
+                                    onChange={(e) => updateVariable(variable.id, { max: parseInt(e.target.value) || 100 })}
+                                    className="h-8 text-sm"
+                                    disabled={promptType === 'showcase'}
+                                    data-testid={`input-max-${variable.id}`}
+                                  />
+                                </div>
+                              </div>
+                              <div className="space-y-1">
+                                <Label className="text-xs">Default-Wert</Label>
+                                <Input
+                                  type="number"
+                                  value={variable.defaultValue as number}
+                                  onChange={(e) => updateVariable(variable.id, { defaultValue: parseInt(e.target.value) || 0 })}
+                                  className="h-8 text-sm"
+                                  disabled={promptType === 'showcase'}
+                                  data-testid={`input-default-${variable.id}`}
+                                />
+                              </div>
+                            </div>
+                          )}
+
+                          <div className="flex items-center space-x-2">
+                            <Checkbox
+                              id={`required-mobile-${variable.id}`}
+                              checked={variable.required}
+                              onCheckedChange={(checked) => updateVariable(variable.id, { required: checked as boolean })}
+                              disabled={promptType === 'showcase'}
+                              data-testid={`checkbox-required-${variable.id}`}
+                            />
+                            <Label htmlFor={`required-mobile-${variable.id}`} className="text-sm">
+                              Pflichtfeld
+                            </Label>
+                          </div>
+
+                          <div className="flex gap-2 mt-4 pt-4 border-t">
                             <Button
                               onClick={() => {
                                 handleSubmit();
