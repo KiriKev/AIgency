@@ -157,24 +157,30 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
   const updateButtonPosition = () => {
     if (!textareaRef.current || !selectionRange) return;
     
-    // Get accurate caret position
+    // Get accurate caret position within textarea
     const coords = getCaretCoordinates(textareaRef.current, selectionRange.end);
     const textarea = textareaRef.current;
+    const textareaRect = textarea.getBoundingClientRect();
     
-    // Account for scroll and position button below selection
-    const buttonWidth = 200; // Approximate button width
+    // Calculate absolute position on screen
     const buttonHeight = 32; // Approximate button height (sm size)
     
-    // Calculate position with scroll offset
-    let top = coords.top + coords.height - textarea.scrollTop + 8;
-    let left = coords.left - textarea.scrollLeft;
+    // Position relative to viewport (for fixed positioning)
+    let top = textareaRect.top + coords.top + coords.height - textarea.scrollTop + 8;
+    let left = textareaRect.left + coords.left - textarea.scrollLeft;
     
-    // Clamp to visible area
-    const maxLeft = textarea.clientWidth - buttonWidth - 16; // 16px padding
-    const maxTop = textarea.clientHeight - buttonHeight - 16;
+    // Make sure button doesn't go off screen
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+    const buttonWidth = 100; // Approximate button width
     
-    left = Math.max(8, Math.min(left, maxLeft));
-    top = Math.max(8, Math.min(top, maxTop));
+    if (left + buttonWidth > viewportWidth) {
+      left = viewportWidth - buttonWidth - 16;
+    }
+    
+    if (top + buttonHeight > viewportHeight) {
+      top = textareaRect.top + coords.top - textarea.scrollTop - buttonHeight - 8;
+    }
     
     setButtonPosition({ top, left });
   };
