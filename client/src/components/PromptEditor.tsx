@@ -626,11 +626,6 @@ export default function PromptEditor() {
                         <span
                           key={index}
                           className="relative inline-block bg-teal-500/20 text-teal-700 dark:text-teal-300 rounded px-1 cursor-pointer pointer-events-auto hover-elevate select-none"
-                          style={{
-                            minWidth: `${varName.length * 0.6}em`,
-                            textAlign: 'center',
-                            verticalAlign: 'baseline'
-                          }}
                           onClick={(e) => {
                             e.preventDefault();
                             setOpenVariables([...openVariables, variable.id]);
@@ -642,7 +637,7 @@ export default function PromptEditor() {
                           onMouseDown={(e) => e.preventDefault()}
                           data-testid={`badge-inline-variable-${variable.id}`}
                         >
-                          {varName}
+                          {part}
                         </span>
                       );
                     }
