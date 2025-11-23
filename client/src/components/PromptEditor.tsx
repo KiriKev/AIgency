@@ -1140,39 +1140,38 @@ export default function PromptEditor() {
       </div>
 
       {/* Mobile View */}
-      <div className="lg:hidden flex flex-col h-screen">
-        {/* Content Area */}
-        <div className="flex-1 overflow-hidden pb-16">
-          {mobileTab === 'settings' && (
-            <div className="h-full">
-              <PromptSettingsPanel 
-                settings={settingsData}
-                onUpdate={handleSettingsUpdate}
-              />
-            </div>
-          )}
+      <div className="lg:hidden flex flex-col pb-16 overflow-x-hidden">
+        {mobileTab === 'settings' && (
+          <div className="overflow-y-auto">
+            <PromptSettingsPanel 
+              settings={settingsData}
+              onUpdate={handleSettingsUpdate}
+            />
+          </div>
+        )}
 
-          {mobileTab === 'editor' && (
-            <Card className="h-full flex flex-col overflow-hidden rounded-none border-0">
-              <CardContent className="flex-1 min-h-0 flex flex-col gap-2 px-3 pt-3 pb-3">
-                {/* Mobile Toolbar with Variables Button */}
-                <div className="flex items-center justify-end mb-2 -mt-1">
-                  <Button
-                    onClick={() => {
-                      setEditingVariableId(null);
-                      setShowVariableEditor(true);
-                    }}
-                    size="sm"
-                    variant="outline"
-                    className="bg-teal-500/10 text-teal-700 dark:text-teal-300 border-teal-500/20 hover:bg-teal-500/20"
-                    data-testid="button-show-variables"
-                  >
-                    <List className="h-4 w-4 mr-1" />
-                    Variablen
-                  </Button>
-                </div>
+        {mobileTab === 'editor' && (
+            <div className="flex flex-col">
+              {/* Sticky Toolbar with Variables Button */}
+              <div className="sticky top-0 z-10 bg-background border-b px-3 py-2 flex items-center justify-end">
+                <Button
+                  onClick={() => {
+                    setEditingVariableId(null);
+                    setShowVariableEditor(true);
+                  }}
+                  size="sm"
+                  variant="outline"
+                  className="bg-teal-500/10 text-teal-700 dark:text-teal-300 border-teal-500/20 hover:bg-teal-500/20"
+                  data-testid="button-show-variables"
+                >
+                  <List className="h-4 w-4 mr-1" />
+                  Variablen
+                </Button>
+              </div>
 
-                <div className="relative flex-1">
+              {/* Scrollable Content */}
+              <div className="px-3 pt-3 pb-3">
+                <div className="relative min-h-[500px]">
                   <div className="absolute inset-0 font-mono text-sm whitespace-pre-wrap break-words px-3 py-[11px] pointer-events-none overflow-hidden leading-[1.375rem] select-none">
                     {prompt.split(/(\[[^\]]+\])/).map((part, index) => {
                       const match = part.match(/\[([^\]]+)\]/);
@@ -1231,7 +1230,7 @@ export default function PromptEditor() {
                       }
                     }}
                     placeholder="Schreiben Sie Ihren Prompt... Markieren Sie Text und erstellen Sie Variablen oder nutzen Sie [VariablenName] Syntax."
-                    className="absolute inset-0 font-mono text-sm resize-none bg-transparent text-transparent caret-foreground focus:outline-none focus:ring-0 border-0 px-3 py-[11px] leading-[1.375rem] selection:bg-primary/20"
+                    className="absolute inset-0 w-full font-mono text-sm resize-none bg-transparent text-transparent caret-foreground focus:outline-none focus:ring-0 border-0 px-3 py-[11px] leading-[1.375rem] selection:bg-primary/20"
                     style={{
                       caretColor: 'var(--foreground)',
                     }}
@@ -1244,69 +1243,66 @@ export default function PromptEditor() {
                     onClick={createVariableFromSelection}
                     variant="secondary"
                     size="sm"
-                    className="shrink-0"
+                    className="shrink-0 mt-2"
                     data-testid="button-create-from-selection"
                   >
                     <Plus className="h-4 w-4 mr-2" />
                     Variable erstellen: "{selectedText.slice(0, 20)}{selectedText.length > 20 ? '...' : ''}"
                   </Button>
                 )}
-              </CardContent>
-            </Card>
-          )}
+              </div>
+            </div>
+        )}
 
-          {mobileTab === 'generation' && (
-            <Card className="h-full flex flex-col overflow-hidden rounded-none border-0">
-              <CardContent className="flex-1 min-h-0 flex flex-col gap-2 px-3 pt-3 pb-3">
-                {generatedImage ? (
-                  <div className="flex-1 flex flex-col">
-                    <img 
-                      src={generatedImage} 
-                      alt="Generated" 
-                      className="w-full h-auto rounded border object-contain"
-                      data-testid="img-generated"
-                    />
-                  </div>
-                ) : (
-                  <div className="flex-1 flex items-center justify-center text-muted-foreground text-sm">
-                    Noch kein Bild generiert
-                  </div>
-                )}
-              
-                <div className="space-y-2 mt-auto">
-                  <Button
-                    onClick={handleGenerate}
-                    disabled={isGenerating}
-                    className="w-full"
-                    data-testid="button-generate"
-                  >
-                    {isGenerating ? 'Generiere...' : 'Generieren'}
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={handleSubmit}
-                    disabled={isGenerating || savePromptMutation.isPending}
-                    className="w-full"
-                    data-testid="button-submit"
-                  >
-                    {savePromptMutation.isPending ? 'Releasing...' : 'Release'}
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={() => setShowLoadDialog(true)}
-                    className="w-full"
-                    data-testid="button-load"
-                  >
-                    <FolderOpen className="h-4 w-4 mr-2" />
-                    Laden
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-        </div>
+        {mobileTab === 'generation' && (
+          <div className="px-3 pt-3 pb-3 flex flex-col min-h-[500px]">
+            {generatedImage ? (
+              <div className="flex-1 flex flex-col">
+                <img 
+                  src={generatedImage} 
+                  alt="Generated" 
+                  className="w-full h-auto rounded border object-contain"
+                  data-testid="img-generated"
+                />
+              </div>
+            ) : (
+              <div className="flex-1 flex items-center justify-center text-muted-foreground text-sm">
+                Noch kein Bild generiert
+              </div>
+            )}
+          
+            <div className="space-y-2 mt-auto">
+              <Button
+                onClick={handleGenerate}
+                disabled={isGenerating}
+                className="w-full"
+                data-testid="button-generate"
+              >
+                {isGenerating ? 'Generiere...' : 'Generieren'}
+              </Button>
+              <Button
+                variant="outline"
+                onClick={handleSubmit}
+                disabled={isGenerating || savePromptMutation.isPending}
+                className="w-full"
+                data-testid="button-submit"
+              >
+                {savePromptMutation.isPending ? 'Releasing...' : 'Release'}
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => setShowLoadDialog(true)}
+                className="w-full"
+                data-testid="button-load"
+              >
+                <FolderOpen className="h-4 w-4 mr-2" />
+                Laden
+              </Button>
+            </div>
+          </div>
+        )}
 
-        {/* Editor Bottom Navigation */}
+      {/* Editor Bottom Navigation */}
         <div className="fixed bottom-0 left-0 right-0 z-40 border-t bg-card">
           <div className="grid grid-cols-3">
             <Button
