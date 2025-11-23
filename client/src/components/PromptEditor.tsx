@@ -940,10 +940,11 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
                     e.stopPropagation();
                     createVariableFromSelection();
                   }}
-                  className="absolute z-[100] shadow-xl cursor-pointer bg-primary text-primary-foreground border-2 border-background"
+                  className="absolute z-[100] shadow-xl cursor-pointer bg-primary text-primary-foreground border-2 border-background pointer-events-auto"
                   style={{
                     top: `${buttonPosition.top}px`,
                     left: `${buttonPosition.left}px`,
+                    pointerEvents: 'auto'
                   }}
                   data-testid="button-create-variable"
                 >
