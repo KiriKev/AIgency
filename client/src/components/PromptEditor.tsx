@@ -606,7 +606,7 @@ export default function PromptEditor() {
           </CardHeader>
           <CardContent className="flex-1 flex flex-col gap-2 px-3 pb-3">
             <div className="relative flex-1">
-              <div className="absolute inset-0 font-mono text-sm whitespace-pre-wrap break-words px-3 py-[11px] pointer-events-none overflow-hidden leading-[1.375rem] select-none">
+              <div className="absolute inset-0 font-mono text-sm whitespace-pre-wrap break-words p-3 pointer-events-none overflow-hidden leading-normal select-none">
                 {prompt.split(/(\[[^\]]+\])/).map((part, index) => {
                   const match = part.match(/\[([^\]]+)\]/);
                   if (match) {
@@ -682,7 +682,7 @@ export default function PromptEditor() {
                     }
                   }, 0);
                 }}
-                className="absolute inset-0 font-mono text-sm resize-none min-h-[200px] bg-transparent text-transparent caret-foreground z-10 selection:bg-foreground/20 leading-[1.375rem]"
+                className="absolute inset-0 font-mono text-sm resize-none min-h-[200px] bg-transparent text-transparent caret-foreground z-10 selection:bg-foreground/20 leading-normal"
                 placeholder="Schreibe deinen Prompt hier... Nutze [VariableName] für Variablen"
                 data-testid="textarea-prompt"
               />
@@ -859,10 +859,7 @@ export default function PromptEditor() {
 
                           {(variable.type === 'multi-select' || variable.type === 'single-select') && (
                             <div className="space-y-1">
-                              <div className="grid grid-cols-2 gap-2">
-                                <Label className="text-xs">Optionen</Label>
-                                <Label className="text-xs text-muted-foreground text-right">Default</Label>
-                              </div>
+                              <Label className="text-xs">Optionen</Label>
                               <div className="space-y-1">
                                 {variable.options?.map((option, index) => {
                                   const isDefault = (variable.defaultOptionIndex ?? 0) === index;
