@@ -47,7 +47,7 @@ export default function Navbar({ credits = 125, username = "Artist", onSearch }:
   }, []);
 
   return (
-    <header className={`fixed top-0 left-0 right-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 transition-transform duration-300 ${
+    <header className={`fixed top-0 left-0 right-0 z-50 w-full border-b bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80 transition-transform duration-300 ${
       showNav ? 'translate-y-0' : '-translate-y-full'
     }`}>
       <div className="w-full px-3 lg:px-8">
