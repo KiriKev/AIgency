@@ -11,8 +11,8 @@ export default function Editor() {
     <div className="min-h-screen bg-background">
       <Navbar />
       
-      <main className="w-full px-6 lg:px-8 py-6">
-        <div className="mb-4 flex items-center gap-4">
+      <main className="w-full py-6">
+        <div className="mb-4 flex items-center gap-4 px-6 lg:px-8">
           <Button 
             variant="outline" 
             size="sm" 
