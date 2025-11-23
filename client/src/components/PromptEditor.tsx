@@ -170,8 +170,7 @@ export default function PromptEditor() {
     setPrompt(newPrompt);
     
     // Move cursor to after the variable (right after the closing bracket)
-    // -1 because we want cursor right after ], not one character further
-    const newCursorPos = selectionRange.start + varPlaceholder.length - 1;
+    const newCursorPos = selectionRange.start + varPlaceholder.length;
     setTimeout(() => {
       if (textareaRef.current) {
         textareaRef.current.focus();
@@ -628,7 +627,7 @@ export default function PromptEditor() {
                           key={index}
                           className="relative inline-block bg-teal-500/20 text-teal-700 dark:text-teal-300 rounded px-1 cursor-pointer pointer-events-auto hover-elevate select-none"
                           style={{
-                            minWidth: `${varName.length * 0.6}em`,
+                            minWidth: `${(varName.length + 2) * 0.6}em`,
                             textAlign: 'center',
                             verticalAlign: 'baseline'
                           }}
