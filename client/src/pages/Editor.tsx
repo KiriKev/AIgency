@@ -8,10 +8,10 @@ export default function Editor() {
   const [, setLocation] = useLocation();
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen flex flex-col bg-background">
       <Navbar />
       
-      <main className="w-full py-6">
+      <main className="w-full py-6 flex-1 bg-background">
         <div className="mb-4 flex items-center gap-4 px-6 lg:px-8">
           <Button 
             variant="outline" 
