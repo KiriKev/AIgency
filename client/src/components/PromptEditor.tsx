@@ -570,7 +570,7 @@ export default function PromptEditor() {
                   data-testid="button-submit"
                 >
                   <Save className="h-4 w-4 mr-2" />
-                  {savePromptMutation.isPending ? 'Speichere...' : 'Submitten'}
+                  {savePromptMutation.isPending ? 'Speichere...' : 'Speichern'}
                 </Button>
                 <Button
                   variant="outline"
@@ -901,7 +901,7 @@ export default function PromptEditor() {
                     <div className="flex flex-col items-start">
                       <span className="font-medium">{p.title}</span>
                       <span className="text-xs text-muted-foreground">
-                        {new Date(p.createdAt).toLocaleDateString()}
+                        {p.createdAt ? new Date(p.createdAt).toLocaleDateString() : 'Kürzlich'}
                       </span>
                     </div>
                   </Button>
