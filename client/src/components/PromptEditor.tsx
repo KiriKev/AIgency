@@ -922,7 +922,7 @@ export default function PromptEditor() {
                             </div>
                           )}
 
-                          <div className="flex items-center space-x-2 pt-1 border-t">
+                          <div className="flex items-center space-x-2 pt-1">
                             <Checkbox
                               id={`required-${variable.id}`}
                               checked={variable.required}
