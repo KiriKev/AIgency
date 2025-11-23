@@ -684,8 +684,8 @@ export default function PromptEditor() {
                             <Badge variant="outline" className="text-xs">{variable.type}</Badge>
                           </div>
                         </AccordionTrigger>
-                        <AccordionContent className="px-1.5 pt-1.5 space-y-1.5">
-                          <div className="flex items-start gap-1.5">
+                        <AccordionContent className="px-1.5 pt-1 space-y-1">
+                          <div className="flex items-start gap-1">
                             <div className="flex-1">
                               <Label className="text-xs">Label</Label>
                               <Input
@@ -726,14 +726,14 @@ export default function PromptEditor() {
                             </Button>
                           </div>
 
-                          <div className="space-y-0.5">
+                          <div className="space-y-0">
                             <Label className="text-xs">Interner Name</Label>
                             <Badge variant="secondary" className="text-xs font-mono">
                               {variable.name}
                             </Badge>
                           </div>
 
-                          <div className="space-y-0.5">
+                          <div className="space-y-0">
                             <Label className="text-xs">Typ</Label>
                             <Select
                               value={variable.type}
@@ -754,7 +754,7 @@ export default function PromptEditor() {
                           </div>
 
                           {variable.type === 'text' && (
-                            <div className="space-y-0.5">
+                            <div className="space-y-0">
                               <Label className="text-xs">Default-Wert</Label>
                               <Textarea
                                 value={variable.defaultValue as string}
@@ -884,7 +884,7 @@ export default function PromptEditor() {
                           {variable.type === 'slider' && (
                             <div className="space-y-1">
                               <div className="grid grid-cols-2 gap-1.5">
-                                <div className="space-y-0.5">
+                                <div className="space-y-0">
                                   <Label className="text-xs">Min</Label>
                                   <Input
                                     type="number"
@@ -895,7 +895,7 @@ export default function PromptEditor() {
                                     data-testid={`input-min-${variable.id}`}
                                   />
                                 </div>
-                                <div className="space-y-0.5">
+                                <div className="space-y-0">
                                   <Label className="text-xs">Max</Label>
                                   <Input
                                     type="number"
@@ -907,7 +907,7 @@ export default function PromptEditor() {
                                   />
                                 </div>
                               </div>
-                              <div className="space-y-0.5">
+                              <div className="space-y-0">
                                 <Label className="text-xs">Default: {variable.defaultValue as number}</Label>
                                 <Slider
                                   value={[variable.defaultValue as number || 0]}
@@ -945,7 +945,6 @@ export default function PromptEditor() {
                             className="w-full mt-2"
                             data-testid={`button-save-variable-${variable.id}`}
                           >
-                            <Save className="h-3 w-3 mr-1" />
                             {savePromptMutation.isPending ? 'Speichere...' : 'Speichern'}
                           </Button>
                         </AccordionContent>
