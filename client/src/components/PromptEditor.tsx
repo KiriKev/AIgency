@@ -616,7 +616,12 @@ export default function PromptEditor() {
                       return (
                         <span
                           key={index}
-                          className="inline-block bg-teal-500/20 text-teal-700 dark:text-teal-300 border border-teal-500/30 rounded-full px-2 py-0.5 cursor-pointer pointer-events-auto hover-elevate select-none align-baseline"
+                          className="relative inline-block bg-teal-500/20 text-teal-700 dark:text-teal-300 border border-teal-500/30 rounded px-1 mx-[1px] cursor-pointer pointer-events-auto hover-elevate select-none"
+                          style={{
+                            minWidth: `${part.length * 0.6}em`,
+                            textAlign: 'center',
+                            verticalAlign: 'baseline'
+                          }}
                           onClick={(e) => {
                             e.preventDefault();
                             setOpenVariables([...openVariables, variable.id]);
@@ -682,7 +687,7 @@ export default function PromptEditor() {
                     }
                   }, 0);
                 }}
-                className="absolute inset-0 font-mono text-sm resize-none min-h-[200px] bg-transparent text-transparent caret-foreground z-10 selection:bg-foreground/20 leading-[1.375rem]"
+                className="absolute inset-0 font-mono text-sm resize-none min-h-[200px] bg-transparent text-foreground/10 caret-foreground z-10 selection:bg-primary/30 selection:text-foreground leading-[1.375rem]"
                 placeholder="Schreibe deinen Prompt hier... Nutze [VariableName] für Variablen"
                 data-testid="textarea-prompt"
               />
