@@ -676,11 +676,11 @@ export default function PromptEditor() {
                           {variable.type === 'text' && (
                             <div className="space-y-2">
                               <Label className="text-xs">Default-Wert</Label>
-                              <Input
+                              <Textarea
                                 value={variable.defaultValue as string}
                                 onChange={(e) => updateVariable(variable.id, { defaultValue: e.target.value })}
                                 placeholder="Default-Wert"
-                                className="h-8 text-sm"
+                                className="min-h-8 text-sm resize-y"
                                 data-testid={`input-default-${variable.id}`}
                               />
                             </div>
