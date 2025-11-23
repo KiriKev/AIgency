@@ -11,7 +11,7 @@ export default function Editor() {
     <div className="flex flex-col bg-background h-screen">
       <Navbar />
       
-      <main className="w-full bg-background flex-1 overflow-hidden">
+      <main className="w-full bg-background flex-1 overflow-auto">
         <PromptEditor onBack={() => setLocation('/')} />
       </main>
     </div>
