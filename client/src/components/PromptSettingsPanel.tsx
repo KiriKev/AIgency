@@ -9,6 +9,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { HelpCircle } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { X, Upload, Image as ImageIcon } from "lucide-react";
@@ -186,21 +194,47 @@ export default function PromptSettingsPanel({ settings, onUpdate }: PromptSettin
 
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm">Output Controls</CardTitle>
+            <div className="flex items-center gap-2">
+              <CardTitle className="text-sm">Output Controls</CardTitle>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <HelpCircle className="h-3.5 w-3.5 text-muted-foreground" />
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p className="text-xs max-w-xs">
+                      Diese Einstellungen kontrollieren wie der Prompt verwendet wird:
+                      <br />• Showcase: Für Galerie-Anzeige
+                      <br />• Create now: Sofort generieren
+                      <br />• Custom: Benutzerdefiniert
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="space-y-2">
-              <Label htmlFor="prompt-type" className="text-xs">Prompt Type</Label>
-              <Select value={settings.promptType} onValueChange={(value) => onUpdate({ promptType: value })}>
-                <SelectTrigger className="h-8 text-sm" data-testid="select-prompt-type">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="showcase">Showcase</SelectItem>
-                  <SelectItem value="create-now">Create now</SelectItem>
-                  <SelectItem value="custom">Custom</SelectItem>
-                </SelectContent>
-              </Select>
+              <Label className="text-xs">Prompt Type</Label>
+              <RadioGroup 
+                value={settings.promptType} 
+                onValueChange={(value) => onUpdate({ promptType: value })}
+                className="space-y-2"
+                data-testid="radio-prompt-type"
+              >
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="showcase" id="showcase" data-testid="radio-showcase" />
+                  <Label htmlFor="showcase" className="text-sm font-normal cursor-pointer">Showcase</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="create-now" id="create-now" data-testid="radio-create-now" />
+                  <Label htmlFor="create-now" className="text-sm font-normal cursor-pointer">Create now</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="custom" id="custom" data-testid="radio-custom" />
+                  <Label htmlFor="custom" className="text-sm font-normal cursor-pointer">Custom</Label>
+                </div>
+              </RadioGroup>
             </div>
 
             <div className="space-y-2">
@@ -225,7 +259,7 @@ export default function PromptSettingsPanel({ settings, onUpdate }: PromptSettin
           </CardContent>
         </Card>
 
-        {settings.aiModel === "gemini" && (
+        {settings.aiModel === "Gemini" && (
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm">Gemini Assets</CardTitle>
