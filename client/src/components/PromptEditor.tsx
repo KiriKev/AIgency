@@ -570,13 +570,13 @@ export default function PromptEditor() {
           <CardHeader className="pb-3">
             <CardTitle className="text-base">Prompt Editor</CardTitle>
           </CardHeader>
-          <CardContent className="flex-1 flex flex-col">
+          <CardContent className="flex-1 flex flex-col gap-2">
             <Textarea
               ref={textareaRef}
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
               onSelect={handleTextSelection}
-              className="flex-1 font-mono text-sm resize-none"
+              className="flex-1 font-mono text-sm resize-none min-h-[200px]"
               placeholder="Schreibe deinen Prompt hier... Nutze [VariableName] für Variablen"
               data-testid="textarea-prompt"
             />
@@ -585,13 +585,19 @@ export default function PromptEditor() {
               <Button
                 size="sm"
                 onClick={createVariableFromSelection}
-                className="mt-2"
                 data-testid="button-create-variable"
               >
                 <Plus className="h-3 w-3 mr-1" />
                 Variable
               </Button>
             )}
+
+            <Card className="p-2">
+              <h4 className="text-xs font-medium mb-1.5">Vorschau</h4>
+              <div className="font-mono text-xs whitespace-pre-wrap break-words text-muted-foreground">
+                {renderPreviewWithDefaults()}
+              </div>
+            </Card>
           </CardContent>
         </Card>
 
@@ -878,16 +884,8 @@ export default function PromptEditor() {
             </CardContent>
           </Card>
 
-        {/* Preview & Generation Panel */}
-        <div className="flex flex-col gap-2">
-          <Card className="p-3">
-            <h4 className="text-sm font-medium mb-2">Vorschau</h4>
-            <div className="font-mono text-sm whitespace-pre-wrap break-words text-muted-foreground max-h-[200px] overflow-y-auto">
-              {renderPreviewWithDefaults()}
-            </div>
-          </Card>
-
-          <Card className="flex-1 flex flex-col">
+        {/* Generation Panel */}
+        <Card className="flex flex-col">
             <CardHeader className="pb-3">
               <CardTitle className="text-sm">Generierung</CardTitle>
             </CardHeader>
@@ -941,7 +939,6 @@ export default function PromptEditor() {
               </div>
             </CardContent>
           </Card>
-        </div>
       </div>
 
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
