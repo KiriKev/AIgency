@@ -69,7 +69,7 @@ export default function Navbar({ credits = 125, username = "Artist", onSearch }:
                 <Button
                   variant="outline"
                   size="sm"
-                  className="gap-2"
+                  className="gap-2 text-white hover:text-white"
                   data-testid="button-nav-menu"
                 >
                   <Menu className="h-4 w-4" />

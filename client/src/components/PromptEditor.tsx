@@ -214,6 +214,41 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
     return false;
   };
 
+  const createNewEmptyVariable = () => {
+    const baseVarName = "NewVariable";
+    let counter = 1;
+    let varName = baseVarName;
+    
+    // Find a unique name
+    while (variables.some(v => v.name === varName)) {
+      varName = `${baseVarName}${counter}`;
+      counter++;
+    }
+    
+    const newVariable: Variable = {
+      id: varName,
+      name: varName,
+      label: varName,
+      description: '',
+      type: 'text',
+      defaultValue: '',
+      required: false,
+      position: variables.length
+    };
+    
+    setVariables([...variables, newVariable]);
+    setOpenVariables([varName]);
+    
+    // Open variable editor overlay on mobile
+    setEditingVariableId(varName);
+    setShowVariableEditor(true);
+    
+    toast({
+      title: "Variable erstellt",
+      description: `Variable "${varName}" wurde erstellt. Fügen Sie sie mit [${varName}] in Ihren Prompt ein.`,
+    });
+  };
+
   const createVariableFromSelection = () => {
     if (!selectedText || !selectionRange) return;
     
@@ -767,12 +802,7 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
           <CardHeader className="pb-2 px-3 shrink-0 flex flex-row items-center justify-between gap-2 space-y-0">
             <CardTitle className="text-base">Prompt Editor</CardTitle>
             <Button
-              onClick={() => {
-                const element = document.getElementById('desktop-variables-panel');
-                if (element) {
-                  element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                }
-              }}
+              onClick={createNewEmptyVariable}
               size="sm"
               variant="default"
               className="shrink-0"
@@ -872,8 +902,16 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
               {selectedText && selectionRange && buttonPosition && (
                 <Button
                   size="sm"
-                  onClick={createVariableFromSelection}
-                  className="absolute z-20 shadow-lg"
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                  }}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    createVariableFromSelection();
+                  }}
+                  className="absolute z-[9999] shadow-lg"
                   style={{
                     top: `${buttonPosition.top}px`,
                     left: `${buttonPosition.left}px`,

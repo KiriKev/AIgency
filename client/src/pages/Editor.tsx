@@ -8,10 +8,10 @@ export default function Editor() {
   const [, setLocation] = useLocation();
 
   return (
-    <div className="bg-background min-h-screen">
+    <div className="min-h-screen bg-background pt-16">
       <Navbar />
       
-      <main className="w-full bg-background mt-16 p-4">
+      <main className="w-full px-2 py-2">
         <PromptEditor onBack={() => setLocation('/')} />
       </main>
     </div>
