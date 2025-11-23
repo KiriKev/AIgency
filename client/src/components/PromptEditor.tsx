@@ -1142,7 +1142,7 @@ export default function PromptEditor() {
       {/* Mobile View */}
       <div className="lg:hidden flex flex-col h-screen">
         {/* Content Area */}
-        <div className="flex-1 overflow-hidden pt-16 pb-32">
+        <div className="flex-1 overflow-hidden pb-16">
           {mobileTab === 'settings' && (
             <div className="h-full">
               <PromptSettingsPanel 
@@ -1309,7 +1309,7 @@ export default function PromptEditor() {
         </div>
 
         {/* Editor Bottom Navigation */}
-        <div className="fixed bottom-16 left-0 right-0 z-40 border-t bg-card">
+        <div className="fixed bottom-0 left-0 right-0 z-40 border-t bg-card">
           <div className="grid grid-cols-3 gap-1 p-2">
             <Button
               variant={mobileTab === 'settings' ? 'default' : 'ghost'}

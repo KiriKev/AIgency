@@ -19,8 +19,8 @@ interface NavbarProps {
 }
 
 export default function Navbar({ credits = 125, username = "Artist", onSearch }: NavbarProps) {
-  const [location] = useLocation();
-  const [showBottomNav, setShowBottomNav] = useState(true);
+  const [location, setLocation] = useLocation();
+  const [showNav, setShowNav] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
 
   useEffect(() => {
@@ -28,9 +28,9 @@ export default function Navbar({ credits = 125, username = "Artist", onSearch }:
       const currentScrollY = window.scrollY;
       
       if (currentScrollY > lastScrollY && currentScrollY > 50) {
-        setShowBottomNav(false);
+        setShowNav(false);
       } else if (currentScrollY < lastScrollY) {
-        setShowBottomNav(true);
+        setShowNav(true);
       }
       
       setLastScrollY(currentScrollY);
@@ -41,10 +41,12 @@ export default function Navbar({ credits = 125, username = "Artist", onSearch }:
   }, [lastScrollY]);
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className={`fixed top-0 left-0 right-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 transition-transform duration-300 ${
+      showNav ? 'translate-y-0' : '-translate-y-full'
+    }`}>
       <div className="w-full px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between gap-6">
-          <div className="flex items-center gap-8">
+          <div className="flex items-center gap-4">
             <button 
               onClick={() => window.location.href = '/'}
               className="flex items-center gap-2 hover-elevate active-elevate-2 rounded-md px-2 py-2" 
@@ -55,18 +57,34 @@ export default function Navbar({ credits = 125, username = "Artist", onSearch }:
               </div>
             </button>
 
-            {/* Toggle Button for Bottom Nav */}
-            {!showBottomNav && (
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setShowBottomNav(true)}
-                className="bg-background/50 backdrop-blur"
-                data-testid="button-show-nav"
-              >
-                <Menu className="h-5 w-5" />
-              </Button>
-            )}
+            {/* Navigation Dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-2"
+                  data-testid="button-nav-menu"
+                >
+                  <Menu className="h-4 w-4" />
+                  <span className="hidden sm:inline">Navigation</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-48">
+                <DropdownMenuItem onClick={() => setLocation('/')} data-testid="menu-item-art-hub">
+                  <Home className="h-4 w-4 mr-2" />
+                  Art Hub
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setLocation('/showcase')} data-testid="menu-item-showroom">
+                  <Eye className="h-4 w-4 mr-2" />
+                  Showroom
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setLocation('/editor')} data-testid="menu-item-create">
+                  <FileEdit className="h-4 w-4 mr-2" />
+                  Create Prompt
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
 
           <div className="hidden lg:flex flex-1 max-w-md">
@@ -127,42 +145,6 @@ export default function Navbar({ credits = 125, username = "Artist", onSearch }:
         </div>
       </div>
 
-      {/* Global Bottom Navigation */}
-      <div 
-        className={`fixed bottom-0 left-0 right-0 z-50 border-t bg-card transition-transform duration-300 ${
-          showBottomNav ? 'translate-y-0' : 'translate-y-full'
-        }`}
-      >
-        <div className="grid grid-cols-3 gap-1 p-2">
-          <Button
-            variant="ghost"
-            onClick={() => window.location.href = '/'}
-            className={`flex flex-col h-auto py-2 gap-1 ${location === '/' ? 'text-foreground' : 'text-muted-foreground'}`}
-            data-testid="link-art-hub"
-          >
-            <Home className="h-5 w-5" />
-            <span className="text-xs font-medium">Art Hub</span>
-          </Button>
-          <Button
-            variant="ghost"
-            onClick={() => window.location.href = '/showcase'}
-            className={`flex flex-col h-auto py-2 gap-1 ${location === '/showcase' ? 'text-foreground' : 'text-muted-foreground'}`}
-            data-testid="link-showroom"
-          >
-            <Eye className="h-5 w-5" />
-            <span className="text-xs font-medium">Showroom</span>
-          </Button>
-          <Button
-            variant="ghost"
-            onClick={() => window.location.href = '/editor'}
-            className={`flex flex-col h-auto py-2 gap-1 ${location === '/editor' ? 'text-foreground' : 'text-muted-foreground'}`}
-            data-testid="link-create-prompt"
-          >
-            <FileEdit className="h-5 w-5" />
-            <span className="text-xs font-medium">Create</span>
-          </Button>
-        </div>
-      </div>
     </header>
   );
 }
