@@ -636,21 +636,25 @@ export default function PromptEditor() {
                     const variable = variables.find(v => v.name === varName);
                     if (variable) {
                       return (
-                        <span
-                          key={index}
-                          className="inline-block bg-teal-500/20 text-teal-700 dark:text-teal-300 border border-teal-500/30 rounded-full px-2 py-0.5 cursor-pointer pointer-events-auto hover-elevate select-none align-baseline"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            setOpenVariables([...openVariables, variable.id]);
-                            const element = document.getElementById(`variable-${variable.id}`);
-                            if (element) {
-                              element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                            }
-                          }}
-                          onMouseDown={(e) => e.preventDefault()}
-                          data-testid={`badge-inline-variable-${variable.id}`}
-                        >
-                          {part}
+                        <span key={index} className="relative inline-block">
+                          {/* Invisible placeholder to preserve width */}
+                          <span className="invisible select-none">{part}</span>
+                          {/* Styled badge positioned absolutely over placeholder */}
+                          <span
+                            className="absolute inset-0 flex items-center justify-center bg-teal-500/20 text-teal-700 dark:text-teal-300 border border-teal-500/30 rounded-full px-2 py-0.5 cursor-pointer pointer-events-auto hover-elevate select-none"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              setOpenVariables([...openVariables, variable.id]);
+                              const element = document.getElementById(`variable-${variable.id}`);
+                              if (element) {
+                                element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                              }
+                            }}
+                            onMouseDown={(e) => e.preventDefault()}
+                            data-testid={`badge-inline-variable-${variable.id}`}
+                          >
+                            {part}
+                          </span>
                         </span>
                       );
                     }
