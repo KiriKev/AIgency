@@ -2,6 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertPromptSchema, insertVariableSchema } from "@shared/schema";
+import { generateImage } from "./gemini";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/prompts", async (req, res) => {
@@ -101,6 +102,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(204).send();
     } catch (error) {
       res.status(500).json({ error: "Failed to delete variable" });
+    }
+  });
+
+  app.post("/api/generate-image", async (req, res) => {
+    try {
+      const { prompt } = req.body;
+      if (!prompt || typeof prompt !== 'string') {
+        return res.status(400).json({ error: "Prompt is required" });
+      }
+
+      const imageDataUrl = await generateImage(prompt);
+      res.json({ imageUrl: imageDataUrl });
+    } catch (error: any) {
+      console.error("Image generation error:", error);
+      res.status(500).json({ error: error.message || "Failed to generate image" });
     }
   });
 
