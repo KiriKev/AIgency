@@ -169,14 +169,14 @@ export default function PromptEditor() {
       prompt.substring(selectionRange.end);
     setPrompt(newPrompt);
     
-    // Move cursor to after the variable
+    // Move cursor to after the variable (right after the closing bracket)
     const newCursorPos = selectionRange.start + varPlaceholder.length;
     setTimeout(() => {
       if (textareaRef.current) {
         textareaRef.current.focus();
         textareaRef.current.setSelectionRange(newCursorPos, newCursorPos);
       }
-    }, 0);
+    }, 50);
     
     setSelectedText("");
     setSelectionRange(null);
