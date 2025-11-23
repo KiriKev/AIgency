@@ -155,7 +155,10 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
   };
 
   const updateButtonPosition = useCallback(() => {
+    console.log('updateButtonPosition called, selectionRange:', selectionRange);
+    
     if (!textareaRef.current || !selectionRange) {
+      console.log('No textarea or selectionRange');
       setButtonPosition(null);
       return;
     }
@@ -172,6 +175,8 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
     let top = textareaRect.top + coords.top + coords.height - textarea.scrollTop + 8;
     let left = textareaRect.left + coords.left - textarea.scrollLeft;
     
+    console.log('Calculated position:', { top, left, coords, textareaRect });
+    
     // Make sure button doesn't go off screen
     const viewportWidth = window.innerWidth;
     const viewportHeight = window.innerHeight;
@@ -185,6 +190,7 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
       top = textareaRect.top + coords.top - textarea.scrollTop - buttonHeight - 8;
     }
     
+    console.log('Final position:', { top, left });
     setButtonPosition({ top, left });
   }, [selectionRange]);
 
@@ -195,11 +201,15 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
     const end = textareaRef.current.selectionEnd;
     const selected = prompt.substring(start, end);
     
+    console.log('Text selected:', { selected, start, end });
+    
     if (selected && selected.trim().length > 0) {
       const isInsideVariable = checkIfInsideVariable(start, end);
+      console.log('isInsideVariable:', isInsideVariable);
       if (!isInsideVariable) {
         setSelectedText(selected);
         setSelectionRange({ start, end });
+        console.log('Selection set, will trigger updateButtonPosition');
       }
     } else {
       setSelectedText("");
@@ -937,7 +947,7 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
                   e.stopPropagation();
                   createVariableFromSelection();
                 }}
-                className="fixed z-[99999] shadow-lg cursor-pointer"
+                className="fixed z-[99999] shadow-lg cursor-pointer bg-primary text-white border-2 border-white"
                 style={{
                   top: `${buttonPosition.top}px`,
                   left: `${buttonPosition.left}px`,
@@ -948,6 +958,8 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
                 Variable
               </Button>
             )}
+            {/* Debug info */}
+            {console.log('Render check:', { selectedText, selectionRange, buttonPosition })}
             
             <div className="flex flex-wrap gap-1">
               {variables.length > 0 && (
