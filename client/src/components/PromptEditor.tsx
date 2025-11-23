@@ -92,6 +92,7 @@ export default function PromptEditor() {
   const [newTag, setNewTag] = useState("");
   const [resolution, setResolution] = useState<string | null>(null);
   const [showValidationDialog, setShowValidationDialog] = useState(false);
+  const [buttonPosition, setButtonPosition] = useState<{ top: number; left: number } | null>(null);
   
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -101,6 +102,78 @@ export default function PromptEditor() {
     queryKey: ['/api/prompts'],
     enabled: showLoadDialog
   });
+
+  const getCaretCoordinates = (element: HTMLTextAreaElement, position: number) => {
+    // Create mirror div
+    const div = document.createElement('div');
+    const style = window.getComputedStyle(element);
+    const properties = [
+      'fontFamily', 'fontSize', 'fontWeight', 'letterSpacing', 'lineHeight',
+      'padding', 'paddingTop', 'paddingRight', 'paddingBottom', 'paddingLeft',
+      'borderWidth', 'borderStyle', 'borderLeftWidth', 'borderRightWidth',
+      'borderTopWidth', 'borderBottomWidth', 'boxSizing', 'wordWrap', 
+      'whiteSpace', 'width', 'height'
+    ];
+    
+    properties.forEach(prop => {
+      div.style[prop as any] = style[prop as any];
+    });
+    
+    div.style.position = 'absolute';
+    div.style.visibility = 'hidden';
+    div.style.top = '0';
+    div.style.left = '0';
+    div.style.whiteSpace = 'pre-wrap';
+    div.style.wordWrap = 'break-word';
+    div.style.overflowWrap = 'break-word';
+    div.style.overflow = 'hidden';
+    
+    document.body.appendChild(div);
+    
+    // Set text up to caret position
+    const textBeforeCaret = element.value.substring(0, position);
+    div.textContent = textBeforeCaret;
+    
+    // Add a span to measure caret position
+    const span = document.createElement('span');
+    span.textContent = '|';
+    div.appendChild(span);
+    
+    const coordinates = {
+      top: span.offsetTop,
+      left: span.offsetLeft,
+      height: span.offsetHeight
+    };
+    
+    document.body.removeChild(div);
+    
+    return coordinates;
+  };
+
+  const updateButtonPosition = () => {
+    if (!textareaRef.current || !selectionRange) return;
+    
+    // Get accurate caret position
+    const coords = getCaretCoordinates(textareaRef.current, selectionRange.end);
+    const textarea = textareaRef.current;
+    
+    // Account for scroll and position button below selection
+    const buttonWidth = 200; // Approximate button width
+    const buttonHeight = 32; // Approximate button height (sm size)
+    
+    // Calculate position with scroll offset
+    let top = coords.top + coords.height - textarea.scrollTop + 8;
+    let left = coords.left - textarea.scrollLeft;
+    
+    // Clamp to visible area
+    const maxLeft = textarea.clientWidth - buttonWidth - 16; // 16px padding
+    const maxTop = textarea.clientHeight - buttonHeight - 16;
+    
+    left = Math.max(8, Math.min(left, maxLeft));
+    top = Math.max(8, Math.min(top, maxTop));
+    
+    setButtonPosition({ top, left });
+  };
 
   const handleTextSelection = () => {
     if (!textareaRef.current) return;
@@ -118,6 +191,7 @@ export default function PromptEditor() {
     } else {
       setSelectedText("");
       setSelectionRange(null);
+      setButtonPosition(null);
     }
   };
 
@@ -231,6 +305,28 @@ export default function PromptEditor() {
     
     return () => clearTimeout(timeoutId);
   }, [prompt]);
+
+  // Update button position when selection changes
+  useEffect(() => {
+    if (selectionRange && textareaRef.current) {
+      updateButtonPosition();
+    }
+  }, [selectionRange]);
+
+  // Update button position on scroll
+  useEffect(() => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+    
+    const handleScroll = () => {
+      if (selectionRange) {
+        updateButtonPosition();
+      }
+    };
+    
+    textarea.addEventListener('scroll', handleScroll);
+    return () => textarea.removeEventListener('scroll', handleScroll);
+  }, [selectionRange]);
 
   const deleteVariable = (varId: string) => {
     setVariableToDelete(varId);
@@ -720,20 +816,24 @@ export default function PromptEditor() {
                 placeholder="Schreibe deinen Prompt hier... Nutze [VariableName] für Variablen"
                 data-testid="textarea-prompt"
               />
-            </div>
-            
-            <div className="flex flex-wrap gap-1">
-              {selectedText && selectionRange && (
+              {selectedText && selectionRange && buttonPosition && (
                 <Button
                   size="sm"
                   onClick={createVariableFromSelection}
+                  className="absolute z-20 shadow-lg"
+                  style={{
+                    top: `${buttonPosition.top}px`,
+                    left: `${buttonPosition.left}px`,
+                  }}
                   data-testid="button-create-variable"
                 >
                   <Plus className="h-3 w-3 mr-1" />
                   Variable
                 </Button>
               )}
-              
+            </div>
+            
+            <div className="flex flex-wrap gap-1">
               {variables.length > 0 && (
                 <div className="flex flex-wrap gap-1 items-center">
                   <span className="text-xs text-muted-foreground">Variablen:</span>
@@ -1236,20 +1336,23 @@ export default function PromptEditor() {
                     }}
                     data-testid="textarea-prompt"
                   />
+                  {selectedText && selectionRange && buttonPosition && (
+                    <Button
+                      onClick={createVariableFromSelection}
+                      variant="secondary"
+                      size="sm"
+                      className="absolute z-20 shadow-lg"
+                      style={{
+                        top: `${buttonPosition.top}px`,
+                        left: `${buttonPosition.left}px`,
+                      }}
+                      data-testid="button-create-from-selection"
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Variable erstellen: "{selectedText.slice(0, 20)}{selectedText.length > 20 ? '...' : ''}"
+                    </Button>
+                  )}
                 </div>
-
-                {selectedText && (
-                  <Button
-                    onClick={createVariableFromSelection}
-                    variant="secondary"
-                    size="sm"
-                    className="shrink-0 mt-2"
-                    data-testid="button-create-from-selection"
-                  >
-                    <Plus className="h-4 w-4 mr-2" />
-                    Variable erstellen: "{selectedText.slice(0, 20)}{selectedText.length > 20 ? '...' : ''}"
-                  </Button>
-                )}
               </div>
             </div>
         )}
