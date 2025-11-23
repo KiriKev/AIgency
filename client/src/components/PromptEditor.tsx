@@ -36,7 +36,7 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Plus, Trash2, HelpCircle, X, FolderOpen } from "lucide-react";
+import { Plus, Trash2, HelpCircle, X, FolderOpen, Save } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -663,7 +663,7 @@ export default function PromptEditor() {
               <CardTitle className="text-base">Variablen</CardTitle>
             </CardHeader>
             <CardContent className="flex-1 overflow-hidden">
-              <ScrollArea className="h-full pr-4">
+              <ScrollArea className="h-full pr-2">
                 {variables.length === 0 ? (
                   <p className="text-sm text-muted-foreground text-center py-8">
                     Keine Variablen vorhanden.
