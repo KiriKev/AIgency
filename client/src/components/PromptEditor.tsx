@@ -1249,7 +1249,7 @@ export default function PromptEditor() {
         )}
 
         {mobileTab === 'editor' && (
-            <div className="flex flex-col h-full w-full max-w-full overflow-hidden">
+            <div className="flex flex-col h-full w-full max-w-full">
               {/* Sticky Toolbar with Variables Button */}
               <div className="sticky top-0 z-10 bg-background border-b px-3 py-2 flex items-center justify-end w-full max-w-full">
                 <Button
@@ -1268,8 +1268,8 @@ export default function PromptEditor() {
               </div>
 
               {/* Scrollable Content */}
-              <div className="px-3 pt-3 pb-3 w-full max-w-full overflow-y-auto flex-1">
-                <div className="relative min-h-[500px] w-full max-w-full">
+              <div className="px-3 pt-3 pb-3 w-full max-w-full overflow-y-auto overflow-x-hidden flex-1">
+                <div className="relative min-h-[500px] w-full max-w-full overflow-visible">
                   <div className="absolute inset-0 font-mono text-sm whitespace-pre-wrap break-words px-3 py-[11px] pointer-events-none overflow-hidden leading-[1.375rem] select-none text-white">
                     {prompt.split(/(\[[^\]]+\])/).map((part, index) => {
                       const match = part.match(/\[([^\]]+)\]/);
@@ -1308,7 +1308,23 @@ export default function PromptEditor() {
                     value={prompt}
                     onChange={(e) => setPrompt(e.target.value)}
                     onSelect={handleTextSelection}
-                    onClick={handleTextSelection}
+                    onClick={(e) => {
+                      handleTextSelection();
+                      setTimeout(() => {
+                        const pos = textareaRef.current?.selectionStart ?? 0;
+                        const regex = /\[([^\]]+)\]/g;
+                        let match;
+                        while ((match = regex.exec(prompt)) !== null) {
+                          if (pos > match.index && pos < match.index + match[0].length) {
+                            const newPos = match.index + match[0].length;
+                            if (textareaRef.current) {
+                              textareaRef.current.setSelectionRange(newPos, newPos);
+                            }
+                            break;
+                          }
+                        }
+                      }, 0);
+                    }}
                     onKeyUp={(e) => {
                       if (e.key === 'ArrowLeft' || e.key === 'ArrowRight' || e.key === 'ArrowUp' || e.key === 'ArrowDown') {
                         const pos = textareaRef.current?.selectionStart ?? 0;
