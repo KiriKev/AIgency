@@ -1310,11 +1310,11 @@ export default function PromptEditor() {
 
         {/* Editor Bottom Navigation */}
         <div className="fixed bottom-0 left-0 right-0 z-40 border-t bg-card">
-          <div className="grid grid-cols-3 gap-1 p-2">
+          <div className="grid grid-cols-3">
             <Button
               variant={mobileTab === 'settings' ? 'default' : 'ghost'}
               onClick={() => setMobileTab('settings')}
-              className={`flex flex-col h-auto py-2 gap-1 ${mobileTab !== 'settings' ? 'text-foreground' : ''}`}
+              className={`flex flex-col h-auto py-3 gap-1 rounded-none border-0 ${mobileTab !== 'settings' ? 'text-foreground' : ''}`}
               data-testid="button-mobile-tab-settings"
             >
               <Settings className="h-5 w-5" />
@@ -1323,7 +1323,7 @@ export default function PromptEditor() {
             <Button
               variant={mobileTab === 'editor' ? 'default' : 'ghost'}
               onClick={() => setMobileTab('editor')}
-              className={`flex flex-col h-auto py-2 gap-1 ${mobileTab !== 'editor' ? 'text-foreground' : ''}`}
+              className={`flex flex-col h-auto py-3 gap-1 rounded-none border-0 ${mobileTab !== 'editor' ? 'text-foreground' : ''}`}
               data-testid="button-mobile-tab-editor"
             >
               <FileText className="h-5 w-5" />
@@ -1332,7 +1332,7 @@ export default function PromptEditor() {
             <Button
               variant={mobileTab === 'generation' ? 'default' : 'ghost'}
               onClick={() => setMobileTab('generation')}
-              className={`flex flex-col h-auto py-2 gap-1 ${mobileTab !== 'generation' ? 'text-foreground' : ''}`}
+              className={`flex flex-col h-auto py-3 gap-1 rounded-none border-0 ${mobileTab !== 'generation' ? 'text-foreground' : ''}`}
               data-testid="button-mobile-tab-generation"
             >
               <Sparkles className="h-5 w-5" />

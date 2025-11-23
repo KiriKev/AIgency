@@ -50,8 +50,8 @@ export default function Navbar({ credits = 125, username = "Artist", onSearch }:
     <header className={`fixed top-0 left-0 right-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 transition-transform duration-300 ${
       showNav ? 'translate-y-0' : '-translate-y-full'
     }`}>
-      <div className="w-full px-6 lg:px-8">
-        <div className="flex h-16 items-center justify-between gap-6">
+      <div className="w-full px-3 lg:px-8">
+        <div className="flex h-16 items-center justify-between gap-2 lg:gap-6">
           <div className="flex items-center gap-4">
             <button 
               onClick={() => setLocation('/')}
@@ -106,14 +106,16 @@ export default function Navbar({ credits = 125, username = "Artist", onSearch }:
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-accent/50 border border-accent-border">
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 px-2 lg:px-3 py-1.5 rounded-md bg-accent/50 border border-accent-border">
               <Coins className="h-4 w-4 text-primary" />
               <span className="font-mono text-sm font-semibold text-foreground" data-testid="text-credits">{credits}</span>
             </div>
 
-            <Button variant="default" size="sm" data-testid="button-buy-credits">
-              Buy Credits
+            <Button variant="default" size="sm" className="gap-1.5" data-testid="button-buy-credits">
+              <Plus className="h-4 w-4" />
+              <Coins className="h-4 w-4" />
+              <span className="hidden sm:inline">Buy Credits</span>
             </Button>
 
             <DropdownMenu>
