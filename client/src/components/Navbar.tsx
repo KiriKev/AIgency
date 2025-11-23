@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { Search, Coins, User, Plus, Home, Eye, FileEdit } from "lucide-react";
+import { Search, Coins, User, Plus, Home, Eye, FileEdit, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -10,6 +10,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { useState, useEffect } from "react";
 
 interface NavbarProps {
   credits?: number;
@@ -19,6 +20,25 @@ interface NavbarProps {
 
 export default function Navbar({ credits = 125, username = "Artist", onSearch }: NavbarProps) {
   const [location] = useLocation();
+  const [showBottomNav, setShowBottomNav] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      
+      if (currentScrollY > lastScrollY && currentScrollY > 50) {
+        setShowBottomNav(false);
+      } else if (currentScrollY < lastScrollY) {
+        setShowBottomNav(true);
+      }
+      
+      setLastScrollY(currentScrollY);
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [lastScrollY]);
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -34,6 +54,19 @@ export default function Navbar({ credits = 125, username = "Artist", onSearch }:
                 <span className="text-white font-bold text-sm">P</span>
               </div>
             </button>
+
+            {/* Toggle Button for Bottom Nav */}
+            {!showBottomNav && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setShowBottomNav(true)}
+                className="bg-background/50 backdrop-blur"
+                data-testid="button-show-nav"
+              >
+                <Menu className="h-5 w-5" />
+              </Button>
+            )}
           </div>
 
           <div className="hidden lg:flex flex-1 max-w-md">
@@ -95,7 +128,11 @@ export default function Navbar({ credits = 125, username = "Artist", onSearch }:
       </div>
 
       {/* Global Bottom Navigation */}
-      <div className="fixed bottom-0 left-0 right-0 z-50 border-t bg-card">
+      <div 
+        className={`fixed bottom-0 left-0 right-0 z-50 border-t bg-card transition-transform duration-300 ${
+          showBottomNav ? 'translate-y-0' : 'translate-y-full'
+        }`}
+      >
         <div className="grid grid-cols-3 gap-1 p-2">
           <Button
             variant="ghost"
