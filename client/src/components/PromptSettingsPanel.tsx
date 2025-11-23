@@ -32,6 +32,7 @@ interface PromptSettings {
   photoCount: number;
   promptType: string;
   uploadedPhotos: string[];
+  resolution: string | null;
 }
 
 interface PromptSettingsPanelProps {
@@ -274,6 +275,38 @@ export default function PromptSettingsPanel({ settings, onUpdate }: PromptSettin
                   <SelectItem value="9:16">9:16 Portrait</SelectItem>
                   <SelectItem value="4:3">4:3 Standard</SelectItem>
                   <SelectItem value="3:4">3:4 Vertical</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex items-center gap-1">
+                <Label htmlFor="resolution" className="text-xs">Resolution</Label>
+                <TooltipProvider>
+                  <Tooltip delayDuration={0}>
+                    <TooltipTrigger asChild>
+                      <HelpCircle className="h-3 w-3 text-muted-foreground cursor-help" />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p className="text-xs max-w-xs">
+                        Auflösung des generierten Bildes
+                      </p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
+              <Select 
+                value={settings.resolution || "none"} 
+                onValueChange={(value) => onUpdate({ resolution: value === "none" ? null : value })}
+              >
+                <SelectTrigger className="h-8 text-sm" data-testid="select-resolution">
+                  <SelectValue placeholder="Optional" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">None (Optional)</SelectItem>
+                  <SelectItem value="1K">1K</SelectItem>
+                  <SelectItem value="2K">2K</SelectItem>
+                  <SelectItem value="4K">4K</SelectItem>
                 </SelectContent>
               </Select>
             </div>

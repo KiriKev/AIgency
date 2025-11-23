@@ -67,7 +67,7 @@ interface Variable {
 
 export default function PromptEditor() {
   const [currentPromptId, setCurrentPromptId] = useState<string | null>(null);
-  const [promptTitle, setPromptTitle] = useState("Untitled Prompt");
+  const [promptTitle, setPromptTitle] = useState("");
   const [prompt, setPrompt] = useState("");
   const [variables, setVariables] = useState<Variable[]>([]);
   const [selectedText, setSelectedText] = useState("");
@@ -90,6 +90,8 @@ export default function PromptEditor() {
   const [promptType, setPromptType] = useState("create-now");
   const [uploadedPhotos, setUploadedPhotos] = useState<string[]>([]);
   const [newTag, setNewTag] = useState("");
+  const [resolution, setResolution] = useState<string | null>(null);
+  const [showValidationDialog, setShowValidationDialog] = useState(false);
   
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -432,7 +434,8 @@ export default function PromptEditor() {
         aspectRatio,
         photoCount,
         promptType,
-        uploadedPhotos
+        uploadedPhotos,
+        resolution
       };
       
       if (currentPromptId) {
@@ -489,6 +492,11 @@ export default function PromptEditor() {
   });
 
   const handleSubmit = () => {
+    // Validate required fields
+    if (!promptTitle.trim() || !category.trim() || tags.length === 0 || !aspectRatio) {
+      setShowValidationDialog(true);
+      return;
+    }
     savePromptMutation.mutate();
   };
 
@@ -509,6 +517,7 @@ export default function PromptEditor() {
       setPrice((promptData.price || 1) / 10000);
       setAspectRatio(promptData.aspectRatio || null);
       setPhotoCount(promptData.photoCount || 1);
+      setResolution(promptData.resolution || null);
       setPromptType(promptData.promptType || 'create-now');
       setUploadedPhotos(promptData.uploadedPhotos || []);
       
@@ -544,7 +553,7 @@ export default function PromptEditor() {
 
   const newPrompt = () => {
     setCurrentPromptId(null);
-    setPromptTitle("Untitled Prompt");
+    setPromptTitle("");
     setPrompt("");
     setVariables([]);
     setOpenVariables([]);
@@ -559,7 +568,8 @@ export default function PromptEditor() {
     aspectRatio,
     photoCount,
     promptType,
-    uploadedPhotos
+    uploadedPhotos,
+    resolution
   };
 
   const handleSettingsUpdate = (updates: Partial<typeof settingsData>) => {
@@ -572,6 +582,7 @@ export default function PromptEditor() {
     if (updates.photoCount !== undefined) setPhotoCount(updates.photoCount);
     if (updates.promptType !== undefined) setPromptType(updates.promptType);
     if (updates.uploadedPhotos !== undefined) setUploadedPhotos(updates.uploadedPhotos);
+    if (updates.resolution !== undefined) setResolution(updates.resolution);
   };
 
   const renderPreviewWithDefaults = () => {
@@ -1053,7 +1064,7 @@ export default function PromptEditor() {
                             className="w-full mt-2"
                             data-testid={`button-save-variable-${variable.id}`}
                           >
-                            {savePromptMutation.isPending ? 'Speichere...' : 'Speichern'}
+                            {savePromptMutation.isPending ? 'Releasing...' : 'Release'}
                           </Button>
                         </AccordionContent>
                       </AccordionItem>
@@ -1103,7 +1114,7 @@ export default function PromptEditor() {
                   className="w-full"
                   data-testid="button-submit"
                 >
-                  {savePromptMutation.isPending ? 'Speichere...' : 'Speichern'}
+                  {savePromptMutation.isPending ? 'Releasing...' : 'Release'}
                 </Button>
                 <Button
                   variant="outline"
@@ -1148,6 +1159,22 @@ export default function PromptEditor() {
             <AlertDialogCancel data-testid="button-cancel-generate">Abbrechen</AlertDialogCancel>
             <AlertDialogAction onClick={proceedWithGenerate} data-testid="button-proceed-generate">
               Generieren
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={showValidationDialog} onOpenChange={setShowValidationDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Fehlende Informationen</AlertDialogTitle>
+            <AlertDialogDescription>
+              Bitte füllen Sie alle erforderlichen Felder aus: Title, Category, Tags und Aspect Ratio.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={() => setShowValidationDialog(false)} data-testid="button-validation-ok">
+              OK
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

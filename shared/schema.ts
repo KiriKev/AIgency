@@ -30,6 +30,7 @@ export const prompts = pgTable("prompts", {
   photoCount: integer("photo_count").default(1),
   promptType: text("prompt_type").default("create-now"),
   uploadedPhotos: jsonb("uploaded_photos"),
+  resolution: text("resolution"),
 });
 
 export const insertPromptSchema = createInsertSchema(prompts).omit({

@@ -18,6 +18,7 @@ export default function Editor() {
             size="sm" 
             onClick={() => setLocation('/')}
             data-testid="button-back"
+            className="text-foreground"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
             Zurück
