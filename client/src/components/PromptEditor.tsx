@@ -155,10 +155,7 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
   };
 
   const updateButtonPosition = useCallback(() => {
-    console.log('updateButtonPosition called, selectionRange:', selectionRange);
-    
     if (!textareaRef.current || !selectionRange) {
-      console.log('No textarea or selectionRange');
       setButtonPosition(null);
       return;
     }
@@ -172,17 +169,20 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
     let top = coords.top + coords.height + 11 + 8; // +8 for spacing below text
     let left = coords.left + 12; // Account for px-3 padding
     
-    console.log('Calculated position (relative):', { top, left, coords });
-    
-    // Make sure button doesn't overflow the textarea container
+    // Make sure button doesn't overflow the container
     const containerWidth = textarea.clientWidth;
-    const buttonWidth = 100;
+    const buttonWidth = 120; // Increased for "+ Variable" text
     
-    if (left + buttonWidth > containerWidth) {
+    // Keep button within bounds with padding
+    if (left + buttonWidth > containerWidth - 12) {
       left = Math.max(12, containerWidth - buttonWidth - 12);
     }
     
-    console.log('Final position (relative):', { top, left });
+    // Also check if it goes off left edge
+    if (left < 12) {
+      left = 12;
+    }
+    
     setButtonPosition({ top, left });
   }, [selectionRange]);
 
@@ -193,15 +193,11 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
     const end = textareaRef.current.selectionEnd;
     const selected = prompt.substring(start, end);
     
-    console.log('Text selected:', { selected, start, end });
-    
     if (selected && selected.trim().length > 0) {
       const isInsideVariable = checkIfInsideVariable(start, end);
-      console.log('isInsideVariable:', isInsideVariable);
       if (!isInsideVariable) {
         setSelectedText(selected);
         setSelectionRange({ start, end });
-        console.log('Selection set, will trigger updateButtonPosition');
       }
     } else {
       setSelectedText("");
@@ -952,13 +948,12 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
                   Variable
                 </Button>
               )}
-              {console.log('Render check:', { selectedText, selectionRange, buttonPosition })}
             </div>
             
             <div className="flex flex-wrap gap-1">
               {variables.length > 0 && (
                 <div className="flex flex-wrap gap-1 items-center">
-                  <span className="text-xs text-muted-foreground">Variablen:</span>
+                  <span className="text-xs text-foreground">Variablen:</span>
                   {variables.map((variable) => (
                     <Badge
                       key={variable.id}
@@ -981,7 +976,7 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
 
             <Card className="p-2">
               <h4 className="text-xs font-medium mb-1.5">Vorschau</h4>
-              <div className="font-mono text-xs whitespace-pre-wrap break-words text-muted-foreground">
+              <div className="font-mono text-xs whitespace-pre-wrap break-words text-foreground">
                 {renderPreviewWithDefaults()}
               </div>
             </Card>
@@ -996,7 +991,7 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
             <CardContent className="flex-1 min-h-0 px-3 pb-3">
               <ScrollArea className="h-full pr-4">
                 {variables.length === 0 ? (
-                  <p className="text-sm text-muted-foreground text-center py-8">
+                  <p className="text-sm text-foreground text-center py-8">
                     Keine Variablen vorhanden.
                     <br />
                     Markiere Text oder nutze [Name]
@@ -1320,7 +1315,7 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
                   />
                 </div>
               ) : (
-                <div className="flex-1 flex items-center justify-center text-center text-muted-foreground text-sm">
+                <div className="flex-1 flex items-center justify-center text-center text-foreground text-sm">
                   Kein generiertes Bild vorhanden.
                   <br />
                   Klicke auf Generieren.
@@ -1377,7 +1372,7 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
           )}
           <div className="flex-1 min-w-0">
             <h1 className="text-lg font-semibold text-foreground truncate">Create Prompt Template</h1>
-            <p className="text-xs text-muted-foreground truncate">
+            <p className="text-xs text-foreground truncate">
               Design reusable prompt templates with customizable variables
             </p>
           </div>
@@ -1528,7 +1523,7 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
                 />
               </div>
             ) : (
-              <div className="flex-1 flex items-center justify-center text-muted-foreground text-sm">
+              <div className="flex-1 flex items-center justify-center text-foreground text-sm">
                 Noch kein Bild generiert
               </div>
             )}
@@ -1619,7 +1614,7 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
             <ScrollArea className="flex-1 w-full max-w-full overflow-x-hidden">
               <div className="p-4 space-y-2 w-full max-w-full overflow-x-hidden">
                 {variables.length === 0 ? (
-                  <p className="text-sm text-muted-foreground text-center py-8">
+                  <p className="text-sm text-foreground text-center py-8">
                     Keine Variablen vorhanden.
                     <br />
                     Markiere Text oder nutze [Name]
@@ -1973,14 +1968,14 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
                   >
                     <div className="flex flex-col items-start">
                       <span className="font-medium">{p.title}</span>
-                      <span className="text-xs text-muted-foreground">
+                      <span className="text-xs text-foreground">
                         {p.createdAt ? new Date(p.createdAt).toLocaleDateString() : 'Kürzlich'}
                       </span>
                     </div>
                   </Button>
                 ))
               ) : (
-                <p className="text-sm text-muted-foreground text-center py-4">
+                <p className="text-sm text-foreground text-center py-4">
                   Keine gespeicherten Prompts gefunden.
                 </p>
               )}
