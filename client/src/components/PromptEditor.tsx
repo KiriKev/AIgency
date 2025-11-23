@@ -1140,9 +1140,9 @@ export default function PromptEditor() {
       </div>
 
       {/* Mobile View */}
-      <div className="lg:hidden flex flex-col pb-16 overflow-x-hidden">
+      <div className="lg:hidden flex flex-col pb-16 overflow-x-hidden w-full max-w-full">
         {mobileTab === 'settings' && (
-          <div className="overflow-y-auto">
+          <div className="overflow-y-auto w-full max-w-full">
             <PromptSettingsPanel 
               settings={settingsData}
               onUpdate={handleSettingsUpdate}
@@ -1151,9 +1151,9 @@ export default function PromptEditor() {
         )}
 
         {mobileTab === 'editor' && (
-            <div className="flex flex-col">
+            <div className="flex flex-col w-full max-w-full">
               {/* Sticky Toolbar with Variables Button */}
-              <div className="sticky top-0 z-10 bg-background border-b px-3 py-2 flex items-center justify-end">
+              <div className="sticky top-0 z-10 bg-background border-b px-3 py-2 flex items-center justify-end w-full max-w-full">
                 <Button
                   onClick={() => {
                     setEditingVariableId(null);
@@ -1170,9 +1170,9 @@ export default function PromptEditor() {
               </div>
 
               {/* Scrollable Content */}
-              <div className="px-3 pt-3 pb-3">
-                <div className="relative min-h-[500px]">
-                  <div className="absolute inset-0 font-mono text-sm whitespace-pre-wrap break-words px-3 py-[11px] pointer-events-none overflow-hidden leading-[1.375rem] select-none">
+              <div className="px-3 pt-3 pb-3 w-full max-w-full">
+                <div className="relative min-h-[500px] w-full max-w-full">
+                  <div className="absolute inset-0 font-mono text-sm whitespace-pre-wrap break-words px-3 py-[11px] pointer-events-none overflow-hidden leading-[1.375rem] select-none text-white">
                     {prompt.split(/(\[[^\]]+\])/).map((part, index) => {
                       const match = part.match(/\[([^\]]+)\]/);
                       if (match) {
@@ -1230,9 +1230,9 @@ export default function PromptEditor() {
                       }
                     }}
                     placeholder="Schreiben Sie Ihren Prompt... Markieren Sie Text und erstellen Sie Variablen oder nutzen Sie [VariablenName] Syntax."
-                    className="absolute inset-0 w-full font-mono text-sm resize-none bg-transparent text-transparent caret-foreground focus:outline-none focus:ring-0 border-0 px-3 py-[11px] leading-[1.375rem] selection:bg-primary/20"
+                    className="absolute inset-0 w-full font-mono text-sm resize-none bg-transparent text-transparent caret-white focus:outline-none focus:ring-0 border-0 px-3 py-[11px] leading-[1.375rem] selection:bg-primary/20"
                     style={{
-                      caretColor: 'var(--foreground)',
+                      caretColor: 'white',
                     }}
                     data-testid="textarea-prompt"
                   />
@@ -1255,7 +1255,7 @@ export default function PromptEditor() {
         )}
 
         {mobileTab === 'generation' && (
-          <div className="px-3 pt-3 pb-3 flex flex-col min-h-[500px]">
+          <div className="px-3 pt-3 pb-3 flex flex-col min-h-[500px] w-full max-w-full">
             {generatedImage ? (
               <div className="flex-1 flex flex-col">
                 <img 
@@ -1303,8 +1303,8 @@ export default function PromptEditor() {
         )}
 
       {/* Editor Bottom Navigation */}
-        <div className="fixed bottom-0 left-0 right-0 z-40 border-t bg-card">
-          <div className="grid grid-cols-3">
+        <div className="fixed bottom-0 left-0 right-0 z-40 border-t bg-card w-full max-w-full">
+          <div className="grid grid-cols-3 w-full max-w-full">
             <Button
               variant={mobileTab === 'settings' ? 'default' : 'ghost'}
               onClick={() => setMobileTab('settings')}
