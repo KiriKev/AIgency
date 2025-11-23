@@ -117,7 +117,7 @@ export default function PromptSettingsPanel({ settings, onUpdate }: PromptSettin
                   <RadioGroupItem value="showcase" id="showcase" data-testid="radio-showcase" />
                   <Label htmlFor="showcase" className="text-sm font-normal cursor-pointer flex-1">Showcase</Label>
                   <TooltipProvider>
-                    <Tooltip>
+                    <Tooltip delayDuration={0}>
                       <TooltipTrigger asChild>
                         <HelpCircle className="h-3 w-3 text-muted-foreground cursor-help" />
                       </TooltipTrigger>
@@ -133,7 +133,7 @@ export default function PromptSettingsPanel({ settings, onUpdate }: PromptSettin
                   <RadioGroupItem value="create-now" id="create-now" data-testid="radio-create-now" />
                   <Label htmlFor="create-now" className="text-sm font-normal cursor-pointer flex-1">Create now</Label>
                   <TooltipProvider>
-                    <Tooltip>
+                    <Tooltip delayDuration={0}>
                       <TooltipTrigger asChild>
                         <HelpCircle className="h-3 w-3 text-muted-foreground cursor-help" />
                       </TooltipTrigger>

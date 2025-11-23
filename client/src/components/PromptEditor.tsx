@@ -590,7 +590,7 @@ export default function PromptEditor() {
 
   return (
     <TooltipProvider>
-      <div className="h-[calc(100vh-10rem)] grid grid-cols-[minmax(200px,_0.75fr)_minmax(350px,_2fr)_minmax(250px,_1.25fr)_minmax(280px,_1.5fr)] gap-2">
+      <div className="h-[calc(100vh-10rem)] grid grid-cols-[minmax(200px,_0.75fr)_minmax(350px,_2fr)_minmax(250px,_1.25fr)_minmax(280px,_1.5fr)] gap-1">
         {/* Settings Panel */}
         <PromptSettingsPanel 
           settings={settingsData}
@@ -599,16 +599,16 @@ export default function PromptEditor() {
 
         {/* Editor Panel */}
         <Card className="flex flex-col">
-          <CardHeader className="pb-3">
+          <CardHeader className="pb-2 px-3">
             <CardTitle className="text-base">Prompt Editor</CardTitle>
           </CardHeader>
-          <CardContent className="flex-1 flex flex-col gap-2">
+          <CardContent className="flex-1 flex flex-col gap-2 px-3 pb-3">
             <Textarea
               ref={textareaRef}
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
               onSelect={handleTextSelection}
-              className="flex-1 font-mono text-sm resize-none min-h-[200px]"
+              className="flex-1 font-mono text-sm resize-none min-h-[200px] bg-teal-500/5"
               placeholder="Schreibe deinen Prompt hier... Nutze [VariableName] für Variablen"
               data-testid="textarea-prompt"
             />
@@ -659,10 +659,10 @@ export default function PromptEditor() {
 
         {/* Variables Panel */}
         <Card className="flex flex-col">
-            <CardHeader>
+            <CardHeader className="pb-2 px-3">
               <CardTitle className="text-base">Variablen</CardTitle>
             </CardHeader>
-            <CardContent className="flex-1 overflow-hidden">
+            <CardContent className="flex-1 overflow-hidden px-3 pb-3">
               <ScrollArea className="h-full pr-4">
                 {variables.length === 0 ? (
                   <p className="text-sm text-muted-foreground text-center py-8">
@@ -790,6 +790,20 @@ export default function PromptEditor() {
                                   <Card key={index} className="p-1.5">
                                     <div className="space-y-1">
                                       <div className="flex items-center gap-1">
+                                        <Checkbox
+                                          checked={index === 0}
+                                          onCheckedChange={(checked) => {
+                                            if (checked && index !== 0) {
+                                              const newOptions = [...(variable.options || [])];
+                                              const [movedOption] = newOptions.splice(index, 1);
+                                              newOptions.unshift(movedOption);
+                                              updateVariable(variable.id, { options: newOptions });
+                                            }
+                                          }}
+                                          disabled={promptType === 'showcase'}
+                                          className="mt-4"
+                                          data-testid={`checkbox-default-option-${variable.id}-${index}`}
+                                        />
                                         <div className="flex-1">
                                           <Label className="text-xs">Sichtbarer Name</Label>
                                           <Input
@@ -958,10 +972,10 @@ export default function PromptEditor() {
 
         {/* Generation Panel */}
         <Card className="flex flex-col">
-            <CardHeader className="pb-3">
+            <CardHeader className="pb-2 px-3">
               <CardTitle className="text-sm">Generierung</CardTitle>
             </CardHeader>
-            <CardContent className="flex-1 flex flex-col gap-2">
+            <CardContent className="flex-1 flex flex-col gap-2 px-3 pb-3">
               {generatedImage ? (
                 <div className="flex-1 flex flex-col">
                   <img 
