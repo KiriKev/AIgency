@@ -80,7 +80,6 @@ export default function PromptEditor() {
   const [openVariables, setOpenVariables] = useState<string[]>([]);
   const [newOptionInput, setNewOptionInput] = useState<Record<string, string>>({});
   const [showLoadDialog, setShowLoadDialog] = useState(false);
-  const [pendingCursorPosition, setPendingCursorPosition] = useState<number | null>(null);
   
   const [category, setCategory] = useState("");
   const [tags, setTags] = useState<string[]>([]);
@@ -95,21 +94,6 @@ export default function PromptEditor() {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
-
-  // Set cursor position after prompt updates
-  useEffect(() => {
-    if (pendingCursorPosition !== null && textareaRef.current) {
-      // Use setTimeout to ensure React has updated the DOM
-      const timer = setTimeout(() => {
-        if (textareaRef.current) {
-          textareaRef.current.focus();
-          textareaRef.current.setSelectionRange(pendingCursorPosition, pendingCursorPosition);
-        }
-      }, 10);
-      setPendingCursorPosition(null);
-      return () => clearTimeout(timer);
-    }
-  }, [prompt, pendingCursorPosition]);
 
   const { data: savedPrompts = [] } = useQuery<any[]>({
     queryKey: ['/api/prompts'],
@@ -179,17 +163,11 @@ export default function PromptEditor() {
     
     setVariables([...variables, newVariable]);
     
-    // Add space after variable for cursor positioning
     const newPrompt = 
       prompt.substring(0, selectionRange.start) + 
-      varPlaceholder + ' ' +
+      varPlaceholder + 
       prompt.substring(selectionRange.end);
-    
     setPrompt(newPrompt);
-    
-    // Position cursor right after the variable (after the space)
-    const newCursorPos = selectionRange.start + varPlaceholder.length + 1;
-    setPendingCursorPosition(newCursorPos);
     
     setSelectedText("");
     setSelectionRange(null);
@@ -628,7 +606,7 @@ export default function PromptEditor() {
           </CardHeader>
           <CardContent className="flex-1 flex flex-col gap-2 px-3 pb-3">
             <div className="relative flex-1">
-              <div className="absolute inset-0 font-mono text-sm whitespace-pre-wrap break-words p-3 pointer-events-none overflow-hidden leading-normal select-none">
+              <div className="absolute inset-0 font-mono text-sm whitespace-pre-wrap break-words px-3 py-[11px] pointer-events-none overflow-hidden leading-[1.375rem] select-none">
                 {prompt.split(/(\[[^\]]+\])/).map((part, index) => {
                   const match = part.match(/\[([^\]]+)\]/);
                   if (match) {
@@ -636,25 +614,21 @@ export default function PromptEditor() {
                     const variable = variables.find(v => v.name === varName);
                     if (variable) {
                       return (
-                        <span key={index} className="relative inline-block align-baseline">
-                          {/* Invisible placeholder to preserve exact width */}
-                          <span className="invisible">{part}</span>
-                          {/* Styled badge positioned absolutely over placeholder */}
-                          <span
-                            className="absolute top-0 left-0 bg-teal-500/20 text-teal-700 dark:text-teal-300 border border-teal-500/30 rounded-full px-2 py-0.5 cursor-pointer pointer-events-auto hover-elevate whitespace-nowrap"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              setOpenVariables([...openVariables, variable.id]);
-                              const element = document.getElementById(`variable-${variable.id}`);
-                              if (element) {
-                                element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                              }
-                            }}
-                            onMouseDown={(e) => e.preventDefault()}
-                            data-testid={`badge-inline-variable-${variable.id}`}
-                          >
-                            {part}
-                          </span>
+                        <span
+                          key={index}
+                          className="inline-block bg-teal-500/20 text-teal-700 dark:text-teal-300 border border-teal-500/30 rounded-full px-2 py-0.5 cursor-pointer pointer-events-auto hover-elevate select-none align-baseline"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            setOpenVariables([...openVariables, variable.id]);
+                            const element = document.getElementById(`variable-${variable.id}`);
+                            if (element) {
+                              element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            }
+                          }}
+                          onMouseDown={(e) => e.preventDefault()}
+                          data-testid={`badge-inline-variable-${variable.id}`}
+                        >
+                          {part}
                         </span>
                       );
                     }
@@ -708,7 +682,7 @@ export default function PromptEditor() {
                     }
                   }, 0);
                 }}
-                className="absolute inset-0 font-mono text-sm resize-none min-h-[200px] bg-transparent text-transparent caret-foreground z-10 selection:bg-foreground/20 leading-normal"
+                className="absolute inset-0 font-mono text-sm resize-none min-h-[200px] bg-transparent text-transparent caret-foreground z-10 selection:bg-foreground/20 leading-[1.375rem]"
                 placeholder="Schreibe deinen Prompt hier... Nutze [VariableName] für Variablen"
                 data-testid="textarea-prompt"
               />
@@ -885,7 +859,10 @@ export default function PromptEditor() {
 
                           {(variable.type === 'multi-select' || variable.type === 'single-select') && (
                             <div className="space-y-1">
-                              <Label className="text-xs">Optionen</Label>
+                              <div className="grid grid-cols-2 gap-2">
+                                <Label className="text-xs">Optionen</Label>
+                                <Label className="text-xs text-muted-foreground text-right">Default</Label>
+                              </div>
                               <div className="space-y-1">
                                 {variable.options?.map((option, index) => {
                                   const isDefault = (variable.defaultOptionIndex ?? 0) === index;
