@@ -72,7 +72,7 @@ interface PromptEditorProps {
 export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
   const [currentPromptId, setCurrentPromptId] = useState<string | null>(null);
   const [promptTitle, setPromptTitle] = useState("");
-  const [prompt, setPrompt] = useState("Schreiben Sie Ihren Prompt hier...\n\n[style] [subject] in einem [setting].\n\nDie Szene sollte [mood] sein mit [lighting] Beleuchtung.\n\nZusätzliche Details:\n- [detail1]\n- [detail2]\n- [detail3]\n\nKameraeinstellungen: [camera_angle] mit [lens_type] Objektiv.\n\nFarbpalette: [color_scheme]\n\nStimmung: [atmosphere]\n\nQualität: [quality_level]");
+  const [prompt, setPrompt] = useState("");
   const [variables, setVariables] = useState<Variable[]>([]);
   const [selectedText, setSelectedText] = useState("");
   const [selectionRange, setSelectionRange] = useState<{ start: number; end: number } | null>(null);
@@ -755,7 +755,7 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
   return (
     <TooltipProvider>
       {/* Desktop View */}
-      <div className="hidden lg:grid h-[calc(100vh-10rem)] grid-cols-[minmax(200px,_0.75fr)_minmax(350px,_2fr)_minmax(250px,_1.25fr)_minmax(280px,_1.5fr)] gap-1">
+      <div className="hidden lg:grid h-full grid-cols-[minmax(200px,_0.75fr)_minmax(350px,_2fr)_minmax(250px,_1.25fr)_minmax(280px,_1.5fr)] gap-1 p-1">
         {/* Settings Panel */}
         <PromptSettingsPanel 
           settings={settingsData}
@@ -1481,12 +1481,12 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
         )}
 
       {/* Editor Bottom Navigation */}
-        <div className="fixed bottom-0 left-0 right-0 z-40 border-t bg-card w-full max-w-full">
+        <div className="fixed bottom-0 left-0 right-0 z-40 border-t bg-background w-full max-w-full">
           <div className="grid grid-cols-3 w-full max-w-full">
             <Button
               variant={mobileTab === 'settings' ? 'default' : 'ghost'}
               onClick={() => setMobileTab('settings')}
-              className={`flex flex-col h-auto py-3 gap-1 rounded-none border-0 ${mobileTab !== 'settings' ? 'text-foreground' : ''}`}
+              className="flex flex-col h-auto py-3 gap-1 rounded-none no-default-hover-elevate"
               data-testid="button-mobile-tab-settings"
             >
               <Settings className="h-5 w-5" />
@@ -1495,7 +1495,7 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
             <Button
               variant={mobileTab === 'editor' ? 'default' : 'ghost'}
               onClick={() => setMobileTab('editor')}
-              className={`flex flex-col h-auto py-3 gap-1 rounded-none border-0 ${mobileTab !== 'editor' ? 'text-foreground' : ''}`}
+              className="flex flex-col h-auto py-3 gap-1 rounded-none no-default-hover-elevate"
               data-testid="button-mobile-tab-editor"
             >
               <FileText className="h-5 w-5" />
@@ -1504,7 +1504,7 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
             <Button
               variant={mobileTab === 'generation' ? 'default' : 'ghost'}
               onClick={() => setMobileTab('generation')}
-              className={`flex flex-col h-auto py-3 gap-1 rounded-none border-0 ${mobileTab !== 'generation' ? 'text-foreground' : ''}`}
+              className="flex flex-col h-auto py-3 gap-1 rounded-none no-default-hover-elevate"
               data-testid="button-mobile-tab-generation"
             >
               <Sparkles className="h-5 w-5" />
