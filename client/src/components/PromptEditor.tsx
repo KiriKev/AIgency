@@ -37,7 +37,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Plus, Trash2, HelpCircle, X, FolderOpen, Settings, FileText, Sparkles, List, ArrowLeft } from "lucide-react";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
@@ -154,8 +154,11 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
     return coordinates;
   };
 
-  const updateButtonPosition = () => {
-    if (!textareaRef.current || !selectionRange) return;
+  const updateButtonPosition = useCallback(() => {
+    if (!textareaRef.current || !selectionRange) {
+      setButtonPosition(null);
+      return;
+    }
     
     // Get accurate caret position within textarea
     const coords = getCaretCoordinates(textareaRef.current, selectionRange.end);
@@ -183,7 +186,7 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
     }
     
     setButtonPosition({ top, left });
-  };
+  }, [selectionRange]);
 
   const handleTextSelection = () => {
     if (!textareaRef.current) return;
@@ -376,7 +379,7 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
     if (selectionRange && textareaRef.current) {
       updateButtonPosition();
     }
-  }, [selectionRange]);
+  }, [selectionRange, updateButtonPosition]);
 
   // Update button position on scroll
   useEffect(() => {
@@ -391,7 +394,7 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
     
     textarea.addEventListener('scroll', handleScroll);
     return () => textarea.removeEventListener('scroll', handleScroll);
-  }, [selectionRange]);
+  }, [selectionRange, updateButtonPosition]);
 
   const deleteVariable = (varId: string) => {
     setVariableToDelete(varId);
