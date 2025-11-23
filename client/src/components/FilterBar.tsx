@@ -59,12 +59,9 @@ export default function FilterBar({ onFilterChange }: FilterBarProps) {
   };
 
   return (
-    <>
-      {/* Spacer that collapses when filters hide */}
-      <div className={`transition-all duration-300 ${showFilters ? 'h-[60px]' : 'h-0'}`} />
-      <div className={`fixed top-16 left-0 right-0 z-30 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 transition-transform duration-300 ${
-        showFilters ? 'translate-y-0' : '-translate-y-full'
-      }`}>
+    <div className={`sticky top-16 z-30 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 transition-transform duration-300 ${
+      showFilters ? 'translate-y-0' : '-translate-y-full'
+    }`}>
       <div className="w-full px-6 lg:px-8 py-3">
         <div className="flex flex-wrap items-center gap-3">
           <div className="flex items-center gap-2">
@@ -155,6 +152,5 @@ export default function FilterBar({ onFilterChange }: FilterBarProps) {
         </div>
       </div>
     </div>
-    </>
   );
 }

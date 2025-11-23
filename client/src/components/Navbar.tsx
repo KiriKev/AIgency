@@ -152,9 +152,6 @@ export default function Navbar({ credits = 125, username = "Artist", onSearch }:
           </div>
         </div>
       </div>
-
-      {/* Spacer that collapses when navbar hides */}
-      <div className={`transition-all duration-300 ${showNav ? 'h-16' : 'h-0'}`} />
     </header>
   );
 }

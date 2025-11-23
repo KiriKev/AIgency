@@ -1140,9 +1140,9 @@ export default function PromptEditor() {
       </div>
 
       {/* Mobile View */}
-      <div className="lg:hidden flex flex-col h-screen pt-16">
+      <div className="lg:hidden flex flex-col h-screen">
         {/* Content Area */}
-        <div className="flex-1 overflow-hidden pb-16 -mt-16">
+        <div className="flex-1 overflow-hidden pb-16">
           {mobileTab === 'settings' && (
             <div className="h-full">
               <PromptSettingsPanel 
