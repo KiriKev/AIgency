@@ -99,7 +99,7 @@ export default function Gallery() {
   ];
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pb-16 md:pb-0">
       <Navbar />
       <FilterBar onFilterChange={(f) => console.log('Filters:', f)} />
       

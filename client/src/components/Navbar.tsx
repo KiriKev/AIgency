@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { Search, Coins, User, Plus } from "lucide-react";
+import { Search, Coins, User, Plus, Home, Eye, FileEdit } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -107,6 +107,39 @@ export default function Navbar({ credits = 125, username = "Artist", onSearch }:
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
+        </div>
+      </div>
+
+      {/* Mobile Bottom Navigation */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 border-t bg-card">
+        <div className="grid grid-cols-3 gap-1 p-2">
+          <Button
+            variant="ghost"
+            onClick={() => window.location.href = '/'}
+            className={`flex flex-col h-auto py-2 gap-1 ${location === '/' ? 'text-foreground' : 'text-muted-foreground'}`}
+            data-testid="mobile-link-art-hub"
+          >
+            <Home className="h-5 w-5" />
+            <span className="text-xs font-medium">Art Hub</span>
+          </Button>
+          <Button
+            variant="ghost"
+            onClick={() => window.location.href = '/showcase'}
+            className={`flex flex-col h-auto py-2 gap-1 ${location === '/showcase' ? 'text-foreground' : 'text-muted-foreground'}`}
+            data-testid="mobile-link-showroom"
+          >
+            <Eye className="h-5 w-5" />
+            <span className="text-xs font-medium">Showroom</span>
+          </Button>
+          <Button
+            variant="ghost"
+            onClick={() => window.location.href = '/editor'}
+            className={`flex flex-col h-auto py-2 gap-1 ${location === '/editor' ? 'text-foreground' : 'text-muted-foreground'}`}
+            data-testid="mobile-link-create-prompt"
+          >
+            <FileEdit className="h-5 w-5" />
+            <span className="text-xs font-medium">Create</span>
+          </Button>
         </div>
       </div>
     </header>
