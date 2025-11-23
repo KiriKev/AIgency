@@ -939,26 +939,7 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
                 data-testid="textarea-prompt"
               />
             </div>
-            {selectedText && selectionRange && buttonPosition && (
-              <Button
-                size="sm"
-                onMouseDown={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  createVariableFromSelection();
-                }}
-                className="fixed z-[99999] shadow-lg cursor-pointer bg-primary text-white border-2 border-white"
-                style={{
-                  top: `${buttonPosition.top}px`,
-                  left: `${buttonPosition.left}px`,
-                }}
-                data-testid="button-create-variable"
-              >
-                <Plus className="h-3 w-3 mr-1" />
-                Variable
-              </Button>
-            )}
-            {/* Debug info */}
+            {/* Button moved to end of component to avoid overflow-hidden issues */}
             {console.log('Render check:', { selectedText, selectionRange, buttonPosition })}
             
             <div className="flex flex-wrap gap-1">
@@ -1997,6 +1978,27 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Floating "+ Variable" button - rendered outside all Cards to avoid overflow-hidden clipping */}
+      {selectedText && selectionRange && buttonPosition && (
+        <Button
+          size="sm"
+          onMouseDown={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            createVariableFromSelection();
+          }}
+          className="fixed z-[99999] shadow-xl cursor-pointer bg-primary text-white border-2 border-white hover:scale-105"
+          style={{
+            top: `${buttonPosition.top}px`,
+            left: `${buttonPosition.left}px`,
+          }}
+          data-testid="button-create-variable"
+        >
+          <Plus className="h-3 w-3 mr-1" />
+          Variable
+        </Button>
+      )}
     </TooltipProvider>
   );
 }
