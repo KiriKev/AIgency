@@ -41,6 +41,7 @@ import { useState, useRef, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
+import PromptSettingsPanel from "./PromptSettingsPanel";
 
 type VariableType = 'text' | 'checkbox' | 'multi-select' | 'single-select' | 'slider';
 
@@ -91,7 +92,7 @@ export default function PromptEditor() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
-  const { data: savedPrompts } = useQuery({
+  const { data: savedPrompts = [] } = useQuery<any[]>({
     queryKey: ['/api/prompts'],
     enabled: showLoadDialog
   });
@@ -198,7 +199,16 @@ export default function PromptEditor() {
 
   useEffect(() => {
     const timeoutId = setTimeout(() => {
+      const currentPlaceholders = new Set<string>();
+      const regex = /\[([^\]]+)\]/g;
+      let match;
+      while ((match = regex.exec(prompt)) !== null) {
+        currentPlaceholders.add(match[1]);
+      }
+      
       detectBracketVariables(prompt);
+      
+      setVariables(prev => prev.filter(v => currentPlaceholders.has(v.name)));
     }, 500);
     
     return () => clearTimeout(timeoutId);
@@ -293,12 +303,18 @@ export default function PromptEditor() {
     const input = newOptionInput[varId] || '';
     if (!input.trim()) return;
 
+    const parts = input.split('|||');
+    const visibleName = parts[0]?.trim() || '';
+    const promptValue = parts[1]?.trim() || '';
+
+    if (!visibleName || !promptValue) return;
+
     const variable = variables.find(v => v.id === varId);
     if (!variable) return;
 
     const newOption: SelectOption = {
-      visibleName: input.trim(),
-      promptValue: input.trim()
+      visibleName,
+      promptValue
     };
 
     updateVariable(varId, {
@@ -340,12 +356,21 @@ export default function PromptEditor() {
     mutationFn: async () => {
       let savedPrompt;
       
+      const promptData = {
+        title: promptTitle,
+        content: prompt,
+        userId: null,
+        category,
+        tags,
+        aiModel,
+        price: Math.round(price * 10000),
+        aspectRatio,
+        photoCount,
+        promptType,
+        uploadedPhotos
+      };
+      
       if (currentPromptId) {
-        const promptData = {
-          title: promptTitle,
-          content: prompt,
-          userId: null
-        };
         const response = await apiRequest('PATCH', `/api/prompts/${currentPromptId}`, promptData);
         savedPrompt = await response.json();
         
@@ -356,11 +381,6 @@ export default function PromptEditor() {
           await apiRequest('DELETE', `/api/variables/${existingVar.id}`, {});
         }
       } else {
-        const promptData = {
-          title: promptTitle,
-          content: prompt,
-          userId: null
-        };
         const response = await apiRequest('POST', '/api/prompts', promptData);
         savedPrompt = await response.json();
       }
@@ -418,6 +438,15 @@ export default function PromptEditor() {
       setCurrentPromptId(promptId);
       setPromptTitle(promptData.title);
       setPrompt(promptData.content);
+      setCategory(promptData.category || '');
+      setTags(promptData.tags || []);
+      setAiModel(promptData.aiModel || 'gemini');
+      setPrice((promptData.price || 1) / 10000);
+      setAspectRatio(promptData.aspectRatio || null);
+      setPhotoCount(promptData.photoCount || 1);
+      setPromptType(promptData.promptType || 'create-now');
+      setUploadedPhotos(promptData.uploadedPhotos || []);
+      
       setVariables(variablesData.map((v: any) => ({
         id: v.id,
         name: v.name,
@@ -456,31 +485,45 @@ export default function PromptEditor() {
     setOpenVariables([]);
   };
 
+  const settingsData = {
+    title: promptTitle,
+    category,
+    tags,
+    aiModel,
+    price,
+    aspectRatio,
+    photoCount,
+    promptType,
+    uploadedPhotos
+  };
+
+  const handleSettingsUpdate = (updates: Partial<typeof settingsData>) => {
+    if (updates.title !== undefined) setPromptTitle(updates.title);
+    if (updates.category !== undefined) setCategory(updates.category);
+    if (updates.tags !== undefined) setTags(updates.tags);
+    if (updates.aiModel !== undefined) setAiModel(updates.aiModel);
+    if (updates.price !== undefined) setPrice(updates.price);
+    if (updates.aspectRatio !== undefined) setAspectRatio(updates.aspectRatio);
+    if (updates.photoCount !== undefined) setPhotoCount(updates.photoCount);
+    if (updates.promptType !== undefined) setPromptType(updates.promptType);
+    if (updates.uploadedPhotos !== undefined) setUploadedPhotos(updates.uploadedPhotos);
+  };
+
   return (
     <TooltipProvider>
-      <div className="space-y-4">
-        <Card>
-          <CardHeader>
-            <div className="flex items-center gap-4">
-              <div className="flex-1">
-                <Input
-                  value={promptTitle}
-                  onChange={(e) => setPromptTitle(e.target.value)}
-                  className="text-xl font-semibold border-none p-0 h-auto focus-visible:ring-0"
-                  placeholder="Prompt Titel eingeben..."
-                  data-testid="input-prompt-title"
-                />
-              </div>
-            </div>
-          </CardHeader>
-        </Card>
+      <div className="h-[calc(100vh-10rem)] grid grid-cols-[minmax(250px,_1fr)_minmax(400px,_2.75fr)_minmax(250px,_1.25fr)] gap-4">
+        {/* Settings Panel */}
+        <PromptSettingsPanel 
+          settings={settingsData}
+          onUpdate={handleSettingsUpdate}
+        />
 
-        <div className="grid grid-cols-[3fr_1fr] gap-4 h-[calc(100vh-16rem)]">
-          <Card className="flex flex-col">
-            <CardHeader>
-              <CardTitle className="text-base">Prompt Editor</CardTitle>
-            </CardHeader>
-            <CardContent className="flex-1 flex flex-col gap-4">
+        {/* Editor Panel */}
+        <Card className="flex flex-col">
+          <CardHeader>
+            <CardTitle className="text-base">Prompt Editor</CardTitle>
+          </CardHeader>
+          <CardContent className="flex-1 flex flex-col gap-4">
               <div className="flex-1 space-y-2">
                 <Textarea
                   ref={textareaRef}
@@ -541,7 +584,8 @@ export default function PromptEditor() {
             </CardContent>
           </Card>
 
-          <Card className="flex flex-col">
+        {/* Variables Panel */}
+        <Card className="flex flex-col">
             <CardHeader>
               <CardTitle className="text-base">Variablen</CardTitle>
             </CardHeader>
@@ -701,28 +745,60 @@ export default function PromptEditor() {
                                   </Card>
                                 ))}
                                 
-                                <div className="flex gap-2">
-                                  <Input
-                                    value={newOptionInput[variable.id] || ''}
-                                    onChange={(e) => setNewOptionInput({ ...newOptionInput, [variable.id]: e.target.value })}
-                                    onKeyDown={(e) => {
-                                      if (e.key === 'Enter') {
-                                        e.preventDefault();
-                                        addOption(variable.id);
-                                      }
-                                    }}
-                                    placeholder="Neue Option (Enter drücken)"
-                                    className="h-8 text-sm"
-                                    data-testid={`input-new-option-${variable.id}`}
-                                  />
-                                  <Button
-                                    size="sm"
-                                    onClick={() => addOption(variable.id)}
-                                    data-testid={`button-add-option-${variable.id}`}
-                                  >
-                                    <Plus className="h-4 w-4" />
-                                  </Button>
-                                </div>
+                                <Card className="p-2 bg-muted/50">
+                                  <div className="space-y-2">
+                                    <div>
+                                      <Label className="text-xs">Sichtbarer Name</Label>
+                                      <Input
+                                        value={newOptionInput[variable.id]?.split('|||')[0] || ''}
+                                        onChange={(e) => {
+                                          const currentValue = newOptionInput[variable.id] || '|||';
+                                          const parts = currentValue.split('|||');
+                                          setNewOptionInput({
+                                            ...newOptionInput,
+                                            [variable.id]: `${e.target.value}|||${parts[1] || ''}`
+                                          });
+                                        }}
+                                        placeholder="z.B. Professional"
+                                        className="h-8 text-sm mt-1"
+                                        data-testid={`input-new-option-visible-${variable.id}`}
+                                      />
+                                    </div>
+                                    <div>
+                                      <Label className="text-xs">Prompt-Wert</Label>
+                                      <Input
+                                        value={newOptionInput[variable.id]?.split('|||')[1] || ''}
+                                        onChange={(e) => {
+                                          const currentValue = newOptionInput[variable.id] || '|||';
+                                          const parts = currentValue.split('|||');
+                                          setNewOptionInput({
+                                            ...newOptionInput,
+                                            [variable.id]: `${parts[0] || ''}|||${e.target.value}`
+                                          });
+                                        }}
+                                        onKeyDown={(e) => {
+                                          if (e.key === 'Enter') {
+                                            e.preventDefault();
+                                            addOption(variable.id);
+                                          }
+                                        }}
+                                        placeholder="z.B. professional"
+                                        className="h-8 text-sm mt-1"
+                                        data-testid={`input-new-option-prompt-${variable.id}`}
+                                      />
+                                    </div>
+                                    <Button
+                                      size="sm"
+                                      onClick={() => addOption(variable.id)}
+                                      className="w-full"
+                                      disabled={!newOptionInput[variable.id]?.split('|||').every(p => p.trim())}
+                                      data-testid={`button-add-option-${variable.id}`}
+                                    >
+                                      <Plus className="h-4 w-4 mr-1" />
+                                      Option hinzufügen
+                                    </Button>
+                                  </div>
+                                </Card>
                               </div>
                             </div>
                           )}
@@ -784,7 +860,6 @@ export default function PromptEditor() {
               </ScrollArea>
             </CardContent>
           </Card>
-        </div>
       </div>
 
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
