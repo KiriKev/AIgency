@@ -259,7 +259,7 @@ export default function PromptSettingsPanel({ settings, onUpdate }: PromptSettin
           </CardContent>
         </Card>
 
-        {settings.aiModel === "Gemini" && (
+        {settings.aiModel === "gemini" && (
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm">Gemini Assets</CardTitle>
