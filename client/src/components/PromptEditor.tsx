@@ -840,7 +840,7 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
             </Button>
           </CardHeader>
           <CardContent className="flex-1 min-h-0 flex flex-col gap-2 px-3 pb-3">
-            <div className="relative flex-1 overflow-visible">
+            <div className="relative flex-1 overflow-visible" onClick={() => textareaRef.current?.focus()}>
               <div className="absolute inset-0 font-mono text-sm whitespace-pre-wrap break-words px-3 py-[11px] pointer-events-none overflow-hidden leading-[1.375rem] select-none">
                 {prompt.split(/(\[[^\]]+\])/).map((part, index) => {
                   const match = part.match(/\[([^\]]+)\]/);
@@ -922,7 +922,8 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
                     }
                   }, 0);
                 }}
-                className="absolute inset-0 font-mono text-sm resize-none min-h-[200px] bg-transparent text-transparent caret-foreground z-10 selection:bg-primary/30 leading-[1.375rem]"
+                className="absolute inset-0 font-mono text-sm resize-none min-h-[200px] bg-transparent text-transparent caret-foreground z-10 selection:bg-primary/30 leading-[1.375rem] pointer-events-auto"
+                style={{ pointerEvents: selectedText && selectionRange && buttonPosition ? 'none' : 'auto' }}
                 placeholder="Schreibe deinen Prompt hier... Nutze [VariableName] für Variablen"
                 data-testid="textarea-prompt"
               />
@@ -931,16 +932,20 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
               {selectedText && selectionRange && buttonPosition && (
                 <Button
                   size="sm"
-                  onMouseDown={(e) => {
+                  onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
                     createVariableFromSelection();
                   }}
-                  className="absolute z-[100] shadow-xl cursor-pointer bg-primary text-primary-foreground border-2 border-background pointer-events-auto"
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                  }}
+                  className="absolute z-[9999] shadow-xl cursor-pointer bg-primary text-primary-foreground border-2 border-background"
                   style={{
                     top: `${buttonPosition.top}px`,
                     left: `${buttonPosition.left}px`,
-                    pointerEvents: 'auto'
+                    pointerEvents: 'all'
                   }}
                   data-testid="button-create-variable"
                 >
