@@ -581,16 +581,41 @@ export default function PromptEditor() {
               data-testid="textarea-prompt"
             />
             
-            {selectedText && selectionRange && (
-              <Button
-                size="sm"
-                onClick={createVariableFromSelection}
-                data-testid="button-create-variable"
-              >
-                <Plus className="h-3 w-3 mr-1" />
-                Variable
-              </Button>
-            )}
+            <div className="flex flex-wrap gap-1">
+              {selectedText && selectionRange && (
+                <Button
+                  size="sm"
+                  onClick={createVariableFromSelection}
+                  data-testid="button-create-variable"
+                >
+                  <Plus className="h-3 w-3 mr-1" />
+                  Variable
+                </Button>
+              )}
+              
+              {variables.length > 0 && (
+                <div className="flex flex-wrap gap-1 items-center">
+                  <span className="text-xs text-muted-foreground">Variablen:</span>
+                  {variables.map((variable) => (
+                    <Badge
+                      key={variable.id}
+                      variant="secondary"
+                      className="text-xs cursor-pointer hover-elevate"
+                      onClick={() => {
+                        setOpenVariables([...openVariables, variable.id]);
+                        const element = document.getElementById(`variable-${variable.id}`);
+                        if (element) {
+                          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        }
+                      }}
+                      data-testid={`badge-variable-link-${variable.id}`}
+                    >
+                      [{variable.name}]
+                    </Badge>
+                  ))}
+                </div>
+              )}
+            </div>
 
             <Card className="p-2">
               <h4 className="text-xs font-medium mb-1.5">Vorschau</h4>
@@ -628,22 +653,22 @@ export default function PromptEditor() {
                             <Badge variant="outline" className="text-xs">{variable.type}</Badge>
                           </div>
                         </AccordionTrigger>
-                        <AccordionContent className="px-2 pt-3 space-y-3">
-                          <div className="flex items-start gap-2">
+                        <AccordionContent className="px-1.5 pt-1.5 space-y-1.5">
+                          <div className="flex items-start gap-1.5">
                             <div className="flex-1">
                               <Label className="text-xs">Label</Label>
                               <Input
                                 value={variable.label}
                                 onChange={(e) => updateVariable(variable.id, { label: e.target.value })}
-                                className="h-8 text-sm mt-1"
+                                className="h-7 text-xs mt-0.5"
                                 placeholder="Label"
                                 data-testid={`input-label-${variable.id}`}
                               />
                             </div>
                             <Tooltip>
                               <TooltipTrigger asChild>
-                                <Button variant="ghost" size="icon" className="h-8 w-8 mt-5">
-                                  <HelpCircle className="h-4 w-4" />
+                                <Button variant="ghost" size="icon" className="h-7 w-7 mt-4">
+                                  <HelpCircle className="h-3.5 w-3.5" />
                                 </Button>
                               </TooltipTrigger>
                               <TooltipContent side="left" className="w-64">
@@ -651,7 +676,7 @@ export default function PromptEditor() {
                                   value={variable.description}
                                   onChange={(e) => updateVariable(variable.id, { description: e.target.value })}
                                   placeholder="Beschreibung hinzufügen..."
-                                  className="min-h-[80px]"
+                                  className="min-h-[60px] text-xs"
                                   data-testid={`input-description-${variable.id}`}
                                 />
                               </TooltipContent>
@@ -659,28 +684,40 @@ export default function PromptEditor() {
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="h-8 w-8 mt-5"
+                              className="h-7 w-7 mt-4"
                               onClick={() => deleteVariable(variable.id)}
                               data-testid={`button-delete-${variable.id}`}
                             >
-                              <Trash2 className="h-4 w-4 text-destructive" />
+                              <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 mt-4"
+                              onClick={() => {
+                                handleSubmit();
+                                setOpenVariables(openVariables.filter(id => id !== variable.id));
+                              }}
+                              data-testid={`button-save-collapse-${variable.id}`}
+                            >
+                              <Save className="h-3.5 w-3.5" />
                             </Button>
                           </div>
 
-                          <div className="space-y-2">
+                          <div className="space-y-0.5">
                             <Label className="text-xs">Interner Name</Label>
                             <Badge variant="secondary" className="text-xs font-mono">
                               {variable.name}
                             </Badge>
                           </div>
 
-                          <div className="space-y-2">
+                          <div className="space-y-0.5">
                             <Label className="text-xs">Typ</Label>
                             <Select
                               value={variable.type}
                               onValueChange={(value) => updateVariable(variable.id, { type: value as VariableType })}
                             >
-                              <SelectTrigger className="h-8 text-sm" data-testid={`select-type-${variable.id}`}>
+                              <SelectTrigger className="h-7 text-xs" data-testid={`select-type-${variable.id}`}>
                                 <SelectValue />
                               </SelectTrigger>
                               <SelectContent>
@@ -694,13 +731,13 @@ export default function PromptEditor() {
                           </div>
 
                           {variable.type === 'text' && (
-                            <div className="space-y-2">
+                            <div className="space-y-0.5">
                               <Label className="text-xs">Default-Wert</Label>
                               <Textarea
                                 value={variable.defaultValue as string}
                                 onChange={(e) => updateVariable(variable.id, { defaultValue: e.target.value })}
                                 placeholder="Default-Wert"
-                                className="min-h-8 text-sm resize-y"
+                                className="min-h-8 text-xs resize-y"
                                 data-testid={`input-default-${variable.id}`}
                               />
                             </div>
@@ -714,26 +751,26 @@ export default function PromptEditor() {
                                 onCheckedChange={(checked) => updateVariable(variable.id, { defaultValue: checked })}
                                 data-testid={`checkbox-default-${variable.id}`}
                               />
-                              <Label htmlFor={`checkbox-${variable.id}`} className="text-sm">
+                              <Label htmlFor={`checkbox-${variable.id}`} className="text-xs">
                                 Standardmäßig aktiv
                               </Label>
                             </div>
                           )}
 
                           {(variable.type === 'multi-select' || variable.type === 'single-select') && (
-                            <div className="space-y-2">
+                            <div className="space-y-1">
                               <Label className="text-xs">Optionen</Label>
-                              <div className="space-y-2">
+                              <div className="space-y-1">
                                 {variable.options?.map((option, index) => (
-                                  <Card key={index} className="p-2">
-                                    <div className="space-y-2">
-                                      <div className="flex items-center gap-2">
+                                  <Card key={index} className="p-1.5">
+                                    <div className="space-y-1">
+                                      <div className="flex items-center gap-1">
                                         <div className="flex-1">
                                           <Label className="text-xs">Sichtbarer Name</Label>
                                           <Input
                                             value={option.visibleName}
                                             onChange={(e) => updateOption(variable.id, index, 'visibleName', e.target.value)}
-                                            className="h-8 text-sm mt-1"
+                                            className="h-7 text-xs mt-0.5"
                                             placeholder="Sichtbarer Name"
                                             data-testid={`input-option-visible-${variable.id}-${index}`}
                                           />
@@ -741,11 +778,11 @@ export default function PromptEditor() {
                                         <Button
                                           variant="ghost"
                                           size="icon"
-                                          className="h-8 w-8 mt-5"
+                                          className="h-7 w-7 mt-4"
                                           onClick={() => removeOption(variable.id, index)}
                                           data-testid={`button-remove-option-${variable.id}-${index}`}
                                         >
-                                          <X className="h-4 w-4" />
+                                          <X className="h-3.5 w-3.5" />
                                         </Button>
                                       </div>
                                       <div>
@@ -753,7 +790,7 @@ export default function PromptEditor() {
                                         <Textarea
                                           value={option.promptValue}
                                           onChange={(e) => updateOption(variable.id, index, 'promptValue', e.target.value)}
-                                          className="min-h-[60px] text-sm mt-1 resize-y"
+                                          className="min-h-[50px] text-xs mt-0.5 resize-y"
                                           placeholder="Prompt-Wert"
                                           data-testid={`input-option-prompt-${variable.id}-${index}`}
                                         />
@@ -762,8 +799,8 @@ export default function PromptEditor() {
                                   </Card>
                                 ))}
                                 
-                                <Card className="p-2 bg-muted/50">
-                                  <div className="space-y-2">
+                                <Card className="p-1.5 bg-muted/50">
+                                  <div className="space-y-1">
                                     <div>
                                       <Label className="text-xs">Sichtbarer Name</Label>
                                       <Input
@@ -777,7 +814,7 @@ export default function PromptEditor() {
                                           });
                                         }}
                                         placeholder="z.B. Professional"
-                                        className="h-8 text-sm mt-1"
+                                        className="h-7 text-xs mt-0.5"
                                         data-testid={`input-new-option-visible-${variable.id}`}
                                       />
                                     </div>
@@ -794,7 +831,7 @@ export default function PromptEditor() {
                                           });
                                         }}
                                         placeholder="z.B. professional, detailed"
-                                        className="min-h-[60px] text-sm mt-1 resize-y"
+                                        className="min-h-[50px] text-xs mt-0.5 resize-y"
                                         data-testid={`input-new-option-prompt-${variable.id}`}
                                       />
                                     </div>
@@ -815,30 +852,30 @@ export default function PromptEditor() {
                           )}
 
                           {variable.type === 'slider' && (
-                            <div className="space-y-3">
-                              <div className="grid grid-cols-2 gap-2">
-                                <div className="space-y-1">
+                            <div className="space-y-1">
+                              <div className="grid grid-cols-2 gap-1.5">
+                                <div className="space-y-0.5">
                                   <Label className="text-xs">Min</Label>
                                   <Input
                                     type="number"
                                     value={variable.min || 0}
                                     onChange={(e) => updateVariable(variable.id, { min: parseInt(e.target.value) })}
-                                    className="h-8 text-sm"
+                                    className="h-7 text-xs"
                                     data-testid={`input-min-${variable.id}`}
                                   />
                                 </div>
-                                <div className="space-y-1">
+                                <div className="space-y-0.5">
                                   <Label className="text-xs">Max</Label>
                                   <Input
                                     type="number"
                                     value={variable.max || 100}
                                     onChange={(e) => updateVariable(variable.id, { max: parseInt(e.target.value) })}
-                                    className="h-8 text-sm"
+                                    className="h-7 text-xs"
                                     data-testid={`input-max-${variable.id}`}
                                   />
                                 </div>
                               </div>
-                              <div className="space-y-1">
+                              <div className="space-y-0.5">
                                 <Label className="text-xs">Default: {variable.defaultValue as number}</Label>
                                 <Slider
                                   value={[variable.defaultValue as number || 0]}
@@ -852,7 +889,7 @@ export default function PromptEditor() {
                             </div>
                           )}
 
-                          <div className="flex items-center space-x-2 pt-2 border-t">
+                          <div className="flex items-center space-x-2 pt-1 border-t">
                             <Checkbox
                               id={`required-${variable.id}`}
                               checked={variable.required}
@@ -863,18 +900,6 @@ export default function PromptEditor() {
                               Pflichtfeld
                             </Label>
                           </div>
-                          
-                          <Button
-                            variant="default"
-                            size="sm"
-                            onClick={handleSubmit}
-                            disabled={savePromptMutation.isPending}
-                            className="w-full mt-2"
-                            data-testid={`button-save-variable-${variable.id}`}
-                          >
-                            <Save className="h-3 w-3 mr-1" />
-                            {savePromptMutation.isPending ? 'Speichere...' : 'Speichern'}
-                          </Button>
                         </AccordionContent>
                       </AccordionItem>
                     ))}
