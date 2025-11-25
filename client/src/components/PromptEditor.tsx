@@ -848,12 +848,11 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
           </CardHeader>
           <CardContent className="flex-1 min-h-0 flex flex-col gap-2 px-3 pb-3">
             <div 
-              className="relative flex-1 border border-border rounded-md min-h-[200px] max-h-[400px]" 
+              className="relative flex-1 border border-border rounded-md min-h-[200px] max-h-[400px] overflow-auto" 
               onClick={() => textareaRef.current?.focus()}
-              style={{ resize: 'vertical', overflow: 'auto' }}
             >
               <div 
-                className="font-mono text-sm whitespace-pre-wrap pointer-events-none select-none min-h-full"
+                className="absolute inset-0 font-mono text-sm whitespace-pre-wrap pointer-events-none select-none"
                 style={{ 
                   wordBreak: 'break-word', 
                   overflowWrap: 'anywhere',
@@ -892,6 +891,10 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
                 onSelect={handleTextSelection}
+                onMouseUp={handleTextSelection}
+                onKeyUp={(e) => {
+                  if (e.shiftKey) handleTextSelection();
+                }}
                 onKeyDown={(e) => {
                   if (!textareaRef.current) return;
                   const pos = textareaRef.current.selectionStart;
@@ -940,8 +943,7 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
                   resize: 'none',
                   padding: '8px 12px',
                   lineHeight: '1.625',
-                  boxSizing: 'border-box',
-                  pointerEvents: selectedText && selectionRange && buttonPosition ? 'none' : 'auto'
+                  boxSizing: 'border-box'
                 }}
                 placeholder="Schreibe deinen Prompt hier... Nutze [VariableName] für Variablen"
                 data-testid="textarea-prompt"
