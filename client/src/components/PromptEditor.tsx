@@ -193,17 +193,23 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
     const end = textareaRef.current.selectionEnd;
     const selected = prompt.substring(start, end);
     
-    if (selected && selected.trim().length > 0) {
+    if (selected && selected.trim().length > 0 && start !== end) {
       const isInsideVariable = checkIfInsideVariable(start, end);
       if (!isInsideVariable) {
         setSelectedText(selected);
         setSelectionRange({ start, end });
+      } else {
+        clearSelection();
       }
     } else {
-      setSelectedText("");
-      setSelectionRange(null);
-      setButtonPosition(null);
+      clearSelection();
     }
+  };
+  
+  const clearSelection = () => {
+    setSelectedText("");
+    setSelectionRange(null);
+    setButtonPosition(null);
   };
 
   const checkIfInsideVariable = (start: number, end: number): boolean => {
@@ -907,6 +913,14 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
                 }}
                 onClick={(e) => {
                   if (!textareaRef.current) return;
+                  
+                  // Clear selection on single click
+                  const start = textareaRef.current.selectionStart;
+                  const end = textareaRef.current.selectionEnd;
+                  if (start === end) {
+                    clearSelection();
+                  }
+                  
                   setTimeout(() => {
                     if (!textareaRef.current) return;
                     const pos = textareaRef.current.selectionStart;
@@ -926,6 +940,14 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
                       textareaRef.current.setSelectionRange(newPos, newPos);
                     }
                   }, 0);
+                }}
+                onBlur={() => {
+                  // Small delay to allow button click to register
+                  setTimeout(() => {
+                    if (!buttonPosition) {
+                      clearSelection();
+                    }
+                  }, 150);
                 }}
                 className="absolute inset-0 font-mono text-sm bg-transparent text-transparent caret-foreground z-10 selection:bg-primary/30 whitespace-pre-wrap overflow-hidden border-0 shadow-none ring-0 focus:ring-0 focus:outline-none focus-visible:ring-0 rounded-none"
                 style={{ 
