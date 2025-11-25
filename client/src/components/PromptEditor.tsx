@@ -849,13 +849,7 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
           <CardContent className="flex-1 min-h-0 flex flex-col gap-2 px-3 pb-3">
             <div 
               className="relative flex-1 border border-border rounded-md min-h-[200px]" 
-              onClick={(e) => {
-                // If clicking on the container (not the button), clear selection and focus textarea
-                if (e.target === e.currentTarget || (e.target as HTMLElement).tagName !== 'BUTTON') {
-                  clearSelection();
-                  textareaRef.current?.focus();
-                }
-              }}
+              onClick={() => textareaRef.current?.focus()}
               style={{ resize: 'vertical', overflow: 'hidden' }}
             >
               <div 
@@ -962,7 +956,8 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
                   resize: 'none',
                   padding: '8px 12px',
                   lineHeight: '1.625',
-                  boxSizing: 'border-box'
+                  boxSizing: 'border-box',
+                  pointerEvents: selectedText && selectionRange && buttonPosition ? 'none' : 'auto'
                 }}
                 placeholder="Schreibe deinen Prompt hier... Nutze [VariableName] für Variablen"
                 data-testid="textarea-prompt"
