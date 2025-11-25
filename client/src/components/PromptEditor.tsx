@@ -841,11 +841,20 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
           </CardHeader>
           <CardContent className="flex-1 min-h-0 flex flex-col gap-2 px-3 pb-3">
             <div 
-              className="relative flex-1 overflow-visible border border-border rounded-md min-h-[200px]" 
+              className="relative flex-1 border border-border rounded-md min-h-[200px]" 
               onClick={() => textareaRef.current?.focus()}
-              style={{ resize: 'vertical', overflow: 'auto' }}
+              style={{ resize: 'vertical', overflow: 'hidden' }}
             >
-              <div className="absolute inset-0 font-mono text-sm whitespace-pre-wrap px-3 py-2 pointer-events-none overflow-hidden leading-relaxed select-none" style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
+              <div 
+                className="absolute inset-0 font-mono text-sm whitespace-pre-wrap pointer-events-none overflow-hidden select-none"
+                style={{ 
+                  wordBreak: 'break-word', 
+                  overflowWrap: 'anywhere',
+                  padding: '8px 12px',
+                  lineHeight: '1.625',
+                  boxSizing: 'border-box'
+                }}
+              >
                 {prompt.split(/(\[[^\]]+\])/).map((part, index) => {
                   const match = part.match(/\[([^\]]+)\]/);
                   if (match) {
@@ -917,11 +926,14 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
                     }
                   }, 0);
                 }}
-                className="absolute inset-0 font-mono text-sm bg-transparent text-transparent caret-foreground z-10 selection:bg-primary/30 leading-relaxed whitespace-pre-wrap px-3 py-2 pointer-events-auto overflow-hidden"
+                className="absolute inset-0 font-mono text-sm bg-transparent text-transparent caret-foreground z-10 selection:bg-primary/30 whitespace-pre-wrap overflow-hidden border-0 shadow-none ring-0 focus:ring-0 focus:outline-none focus-visible:ring-0 rounded-none"
                 style={{ 
                   wordBreak: 'break-word', 
                   overflowWrap: 'anywhere',
                   resize: 'none',
+                  padding: '8px 12px',
+                  lineHeight: '1.625',
+                  boxSizing: 'border-box',
                   pointerEvents: selectedText && selectionRange && buttonPosition ? 'none' : 'auto'
                 }}
                 placeholder="Schreibe deinen Prompt hier... Nutze [VariableName] für Variablen"
@@ -1414,8 +1426,17 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
 
               {/* Scrollable Content */}
               <div className="px-3 pt-3 pb-3 w-full max-w-full overflow-x-hidden">
-                <div className="relative min-h-[500px] w-full max-w-full overflow-visible">
-                  <div className="absolute inset-0 font-mono text-sm whitespace-pre-wrap px-3 py-2 pointer-events-none overflow-hidden leading-relaxed select-none text-white" style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
+                <div className="relative min-h-[500px] w-full max-w-full overflow-visible border border-border rounded-md">
+                  <div 
+                    className="absolute inset-0 font-mono text-sm whitespace-pre-wrap pointer-events-none overflow-hidden select-none text-white"
+                    style={{ 
+                      wordBreak: 'break-word', 
+                      overflowWrap: 'anywhere',
+                      padding: '8px 12px',
+                      lineHeight: '1.625',
+                      boxSizing: 'border-box'
+                    }}
+                  >
                     {prompt.split(/(\[[^\]]+\])/).map((part, index) => {
                       const match = part.match(/\[([^\]]+)\]/);
                       if (match) {
@@ -1480,11 +1501,14 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
                       }
                     }}
                     placeholder="Schreiben Sie Ihren Prompt... Markieren Sie Text und erstellen Sie Variablen oder nutzen Sie [VariablenName] Syntax."
-                    className="absolute inset-0 w-full font-mono text-sm resize-none bg-transparent text-transparent caret-white focus:outline-none focus:ring-0 border-0 px-3 py-2 leading-relaxed whitespace-pre-wrap overflow-hidden selection:bg-primary/20"
+                    className="absolute inset-0 w-full font-mono text-sm resize-none bg-transparent text-transparent caret-white focus:outline-none focus:ring-0 border-0 shadow-none ring-0 focus-visible:ring-0 rounded-none whitespace-pre-wrap overflow-hidden selection:bg-primary/20"
                     style={{ 
                       wordBreak: 'break-word', 
                       overflowWrap: 'anywhere',
-                      caretColor: 'white'
+                      caretColor: 'white',
+                      padding: '8px 12px',
+                      lineHeight: '1.625',
+                      boxSizing: 'border-box'
                     }}
                     data-testid="textarea-prompt"
                   />
