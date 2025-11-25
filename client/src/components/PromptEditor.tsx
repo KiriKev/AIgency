@@ -853,25 +853,18 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
                     const variable = variables.find(v => v.name === varName);
                     if (variable) {
                       return (
-                        <span key={index} className="select-none">
-                          <span className="select-none">[</span>
-                          <span
-                            className="bg-teal-500/20 text-teal-700 dark:text-teal-300 rounded-sm cursor-pointer pointer-events-auto hover-elevate select-none"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              setOpenVariables([...openVariables, variable.id]);
-                              const element = document.getElementById(`variable-${variable.id}`);
-                              if (element) {
-                                element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                              }
-                            }}
-                            onMouseDown={(e) => e.preventDefault()}
-                            data-testid={`badge-inline-variable-${variable.id}`}
-                          >
-                            {varName}
-                          </span>
-                          <span className="select-none">]</span>
-                        </span>
+                        <span key={index} className="select-none text-teal-400 dark:text-teal-300 cursor-pointer pointer-events-auto"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            setOpenVariables([...openVariables, variable.id]);
+                            const element = document.getElementById(`variable-${variable.id}`);
+                            if (element) {
+                              element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            }
+                          }}
+                          onMouseDown={(e) => e.preventDefault()}
+                          data-testid={`badge-inline-variable-${variable.id}`}
+                        >[{varName}]</span>
                       );
                     }
                   }
@@ -1430,22 +1423,15 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
                         const variable = variables.find(v => v.name === varName);
                         if (variable) {
                           return (
-                            <span key={index} className="select-none">
-                              <span className="select-none">[</span>
-                              <span
-                                className="bg-teal-500/20 text-teal-700 dark:text-teal-300 rounded-sm cursor-pointer pointer-events-auto hover-elevate select-none"
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  setEditingVariableId(variable.id);
-                                  setShowVariableEditor(true);
-                                }}
-                                onMouseDown={(e) => e.preventDefault()}
-                                data-testid={`badge-inline-variable-${variable.id}`}
-                              >
-                                {varName}
-                              </span>
-                              <span className="select-none">]</span>
-                            </span>
+                            <span key={index} className="select-none text-teal-400 dark:text-teal-300 cursor-pointer pointer-events-auto"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                setEditingVariableId(variable.id);
+                                setShowVariableEditor(true);
+                              }}
+                              onMouseDown={(e) => e.preventDefault()}
+                              data-testid={`badge-inline-variable-${variable.id}`}
+                            >[{varName}]</span>
                           );
                         }
                       }
