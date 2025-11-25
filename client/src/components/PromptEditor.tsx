@@ -841,7 +841,7 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
           </CardHeader>
           <CardContent className="flex-1 min-h-0 flex flex-col gap-2 px-3 pb-3">
             <div className="relative flex-1 overflow-visible" onClick={() => textareaRef.current?.focus()}>
-              <div className="absolute inset-0 font-mono text-sm whitespace-pre-wrap break-words px-3 py-[11px] pointer-events-none overflow-hidden leading-[1.375rem] select-none">
+              <div className="absolute inset-0 font-mono text-sm whitespace-pre-wrap break-all px-3 py-2 pointer-events-none overflow-hidden leading-relaxed select-none">
                 {prompt.split(/(\[[^\]]+\])/).map((part, index) => {
                   const match = part.match(/\[([^\]]+)\]/);
                   if (match) {
@@ -920,7 +920,7 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
                     }
                   }, 0);
                 }}
-                className="absolute inset-0 font-mono text-sm resize-none min-h-[200px] bg-transparent text-transparent caret-foreground z-10 selection:bg-primary/30 leading-[1.375rem] pointer-events-auto"
+                className="absolute inset-0 font-mono text-sm resize-none bg-transparent text-transparent caret-foreground z-10 selection:bg-primary/30 leading-relaxed whitespace-pre-wrap break-all px-3 py-2 pointer-events-auto overflow-hidden"
                 style={{ pointerEvents: selectedText && selectionRange && buttonPosition ? 'none' : 'auto' }}
                 placeholder="Schreibe deinen Prompt hier... Nutze [VariableName] für Variablen"
                 data-testid="textarea-prompt"
@@ -1413,7 +1413,7 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
               {/* Scrollable Content */}
               <div className="px-3 pt-3 pb-3 w-full max-w-full overflow-x-hidden">
                 <div className="relative min-h-[500px] w-full max-w-full overflow-visible">
-                  <div className="absolute inset-0 font-mono text-sm whitespace-pre-wrap break-words px-3 py-[11px] pointer-events-none overflow-hidden leading-[1.375rem] select-none text-white">
+                  <div className="absolute inset-0 font-mono text-sm whitespace-pre-wrap break-all px-3 py-2 pointer-events-none overflow-hidden leading-relaxed select-none text-white">
                     {prompt.split(/(\[[^\]]+\])/).map((part, index) => {
                       const match = part.match(/\[([^\]]+)\]/);
                       if (match) {
@@ -1485,7 +1485,7 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
                       }
                     }}
                     placeholder="Schreiben Sie Ihren Prompt... Markieren Sie Text und erstellen Sie Variablen oder nutzen Sie [VariablenName] Syntax."
-                    className="absolute inset-0 w-full font-mono text-sm resize-none bg-transparent text-transparent caret-white focus:outline-none focus:ring-0 border-0 px-3 py-[11px] leading-[1.375rem] selection:bg-primary/20"
+                    className="absolute inset-0 w-full font-mono text-sm resize-none bg-transparent text-transparent caret-white focus:outline-none focus:ring-0 border-0 px-3 py-2 leading-relaxed whitespace-pre-wrap break-all overflow-hidden selection:bg-primary/20"
                     style={{
                       caretColor: 'white',
                     }}
