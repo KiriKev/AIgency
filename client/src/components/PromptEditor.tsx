@@ -193,12 +193,18 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
     const end = textareaRef.current.selectionEnd;
     const selected = prompt.substring(start, end);
     
-    if (selected && selected.trim().length > 0) {
-      const isInsideVariable = checkIfInsideVariable(start, end);
-      if (!isInsideVariable) {
-        setSelectedText(selected);
-        setSelectionRange({ start, end });
-      }
+    // Always clear previous selection first
+    if (!selected || selected.trim().length === 0 || start === end) {
+      setSelectedText("");
+      setSelectionRange(null);
+      setButtonPosition(null);
+      return;
+    }
+    
+    const isInsideVariable = checkIfInsideVariable(start, end);
+    if (!isInsideVariable) {
+      setSelectedText(selected);
+      setSelectionRange({ start, end });
     } else {
       setSelectedText("");
       setSelectionRange(null);
@@ -842,12 +848,12 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
           </CardHeader>
           <CardContent className="flex-1 min-h-0 flex flex-col gap-2 px-3 pb-3">
             <div 
-              className="relative flex-1 border border-border rounded-md min-h-[200px]" 
+              className="relative flex-1 border border-border rounded-md min-h-[200px] max-h-[400px]" 
               onClick={() => textareaRef.current?.focus()}
-              style={{ resize: 'vertical', overflow: 'hidden' }}
+              style={{ resize: 'vertical', overflow: 'auto' }}
             >
               <div 
-                className="absolute inset-0 font-mono text-sm whitespace-pre-wrap pointer-events-none overflow-hidden select-none"
+                className="font-mono text-sm whitespace-pre-wrap pointer-events-none select-none min-h-full"
                 style={{ 
                   wordBreak: 'break-word', 
                   overflowWrap: 'anywhere',
@@ -927,7 +933,7 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
                     }
                   }, 0);
                 }}
-                className="absolute inset-0 font-mono text-sm bg-transparent text-transparent caret-foreground z-10 selection:bg-primary/30 whitespace-pre-wrap overflow-hidden border-0 shadow-none ring-0 focus:ring-0 focus:outline-none focus-visible:ring-0 rounded-none"
+                className="absolute inset-0 font-mono text-sm bg-transparent text-transparent caret-foreground z-10 selection:bg-primary/30 whitespace-pre-wrap border-0 shadow-none ring-0 focus:ring-0 focus:outline-none focus-visible:ring-0 rounded-none"
                 style={{ 
                   wordBreak: 'break-word', 
                   overflowWrap: 'anywhere',
