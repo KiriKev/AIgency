@@ -840,8 +840,12 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
             </Button>
           </CardHeader>
           <CardContent className="flex-1 min-h-0 flex flex-col gap-2 px-3 pb-3">
-            <div className="relative flex-1 overflow-visible" onClick={() => textareaRef.current?.focus()}>
-              <div className="absolute inset-0 font-mono text-sm whitespace-pre-wrap break-all px-3 py-2 pointer-events-none overflow-hidden leading-relaxed select-none">
+            <div 
+              className="relative flex-1 overflow-visible border border-border rounded-md min-h-[200px]" 
+              onClick={() => textareaRef.current?.focus()}
+              style={{ resize: 'vertical', overflow: 'auto' }}
+            >
+              <div className="absolute inset-0 font-mono text-sm whitespace-pre-wrap px-3 py-2 pointer-events-none overflow-hidden leading-relaxed select-none" style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
                 {prompt.split(/(\[[^\]]+\])/).map((part, index) => {
                   const match = part.match(/\[([^\]]+)\]/);
                   if (match) {
@@ -920,8 +924,13 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
                     }
                   }, 0);
                 }}
-                className="absolute inset-0 font-mono text-sm resize-none bg-transparent text-transparent caret-foreground z-10 selection:bg-primary/30 leading-relaxed whitespace-pre-wrap break-all px-3 py-2 pointer-events-auto overflow-hidden"
-                style={{ pointerEvents: selectedText && selectionRange && buttonPosition ? 'none' : 'auto' }}
+                className="absolute inset-0 font-mono text-sm bg-transparent text-transparent caret-foreground z-10 selection:bg-primary/30 leading-relaxed whitespace-pre-wrap px-3 py-2 pointer-events-auto overflow-hidden"
+                style={{ 
+                  wordBreak: 'break-word', 
+                  overflowWrap: 'anywhere',
+                  resize: 'none',
+                  pointerEvents: selectedText && selectionRange && buttonPosition ? 'none' : 'auto'
+                }}
                 placeholder="Schreibe deinen Prompt hier... Nutze [VariableName] für Variablen"
                 data-testid="textarea-prompt"
               />
@@ -977,9 +986,9 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
               )}
             </div>
 
-            <Card className="p-2">
+            <Card className="p-2 shrink-0">
               <h4 className="text-xs font-medium mb-1.5">Vorschau</h4>
-              <div className="font-mono text-xs whitespace-pre-wrap break-words text-foreground">
+              <div className="font-mono text-xs whitespace-pre-wrap break-words text-foreground max-h-[150px] overflow-y-auto">
                 {renderPreviewWithDefaults()}
               </div>
             </Card>
@@ -1413,7 +1422,7 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
               {/* Scrollable Content */}
               <div className="px-3 pt-3 pb-3 w-full max-w-full overflow-x-hidden">
                 <div className="relative min-h-[500px] w-full max-w-full overflow-visible">
-                  <div className="absolute inset-0 font-mono text-sm whitespace-pre-wrap break-all px-3 py-2 pointer-events-none overflow-hidden leading-relaxed select-none text-white">
+                  <div className="absolute inset-0 font-mono text-sm whitespace-pre-wrap px-3 py-2 pointer-events-none overflow-hidden leading-relaxed select-none text-white" style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
                     {prompt.split(/(\[[^\]]+\])/).map((part, index) => {
                       const match = part.match(/\[([^\]]+)\]/);
                       if (match) {
@@ -1485,9 +1494,11 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
                       }
                     }}
                     placeholder="Schreiben Sie Ihren Prompt... Markieren Sie Text und erstellen Sie Variablen oder nutzen Sie [VariablenName] Syntax."
-                    className="absolute inset-0 w-full font-mono text-sm resize-none bg-transparent text-transparent caret-white focus:outline-none focus:ring-0 border-0 px-3 py-2 leading-relaxed whitespace-pre-wrap break-all overflow-hidden selection:bg-primary/20"
-                    style={{
-                      caretColor: 'white',
+                    className="absolute inset-0 w-full font-mono text-sm resize-none bg-transparent text-transparent caret-white focus:outline-none focus:ring-0 border-0 px-3 py-2 leading-relaxed whitespace-pre-wrap overflow-hidden selection:bg-primary/20"
+                    style={{ 
+                      wordBreak: 'break-word', 
+                      overflowWrap: 'anywhere',
+                      caretColor: 'white'
                     }}
                     data-testid="textarea-prompt"
                   />
