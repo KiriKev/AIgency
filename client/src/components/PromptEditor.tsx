@@ -770,7 +770,8 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
         defaultDisplay = String(variable.defaultValue || variable.min || 0);
       }
       
-      previewText = previewText.replace(new RegExp(`\\[${variable.name}\\]`, 'g'), defaultDisplay);
+      // Use split/join instead of RegExp to avoid issues with special characters in variable names
+      previewText = previewText.split(placeholder).join(defaultDisplay);
     });
     
     return previewText;
