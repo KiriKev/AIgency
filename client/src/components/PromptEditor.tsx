@@ -850,9 +850,14 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
             <div 
               className="relative flex-1 border border-border rounded-md min-h-[200px]" 
               onClick={(e) => {
-                // If clicking on the container (not the button), clear selection and focus
+                // If clicking on the container (not the button), check if it's a real click (no selection)
                 if ((e.target as HTMLElement).tagName !== 'BUTTON') {
-                  clearSelection();
+                  // Only clear if no text is selected in the textarea
+                  const start = textareaRef.current?.selectionStart ?? 0;
+                  const end = textareaRef.current?.selectionEnd ?? 0;
+                  if (start === end) {
+                    clearSelection();
+                  }
                   textareaRef.current?.focus();
                 }
               }}
@@ -1459,7 +1464,11 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
                   className="relative min-h-[500px] w-full max-w-full overflow-visible border border-border rounded-md"
                   onClick={(e) => {
                     if ((e.target as HTMLElement).tagName !== 'BUTTON') {
-                      clearSelection();
+                      const start = textareaRef.current?.selectionStart ?? 0;
+                      const end = textareaRef.current?.selectionEnd ?? 0;
+                      if (start === end) {
+                        clearSelection();
+                      }
                       textareaRef.current?.focus();
                     }
                   }}
