@@ -2163,16 +2163,18 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
           setLinkOrCreateDialog({ open: false, varName: '', selectedText: '', selectionRange: null });
         }
       }}>
-        <AlertDialogContent className="max-w-md">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="absolute right-2 top-2 h-6 w-6 rounded-sm opacity-70 hover:opacity-100"
-            onClick={() => setLinkOrCreateDialog({ open: false, varName: '', selectedText: '', selectionRange: null })}
-            data-testid="button-close-link-dialog"
-          >
-            <X className="h-4 w-4" />
-          </Button>
+        <AlertDialogContent className="max-w-md relative">
+          <div className="absolute right-2 top-2 z-10">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6 rounded-sm opacity-70 hover:opacity-100"
+              onClick={() => setLinkOrCreateDialog({ open: false, varName: '', selectedText: '', selectionRange: null })}
+              data-testid="button-close-link-dialog"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
           <AlertDialogHeader>
             <AlertDialogTitle>Variable existiert bereits</AlertDialogTitle>
             <AlertDialogDescription>
