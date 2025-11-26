@@ -4,7 +4,11 @@ import {
   type Prompt, 
   type InsertPrompt,
   type Variable,
-  type InsertVariable
+  type InsertVariable,
+  type Artist,
+  type InsertArtist,
+  type Artwork,
+  type InsertArtwork
 } from "@shared/schema";
 import { randomUUID } from "crypto";
 
@@ -24,17 +28,114 @@ export interface IStorage {
   updateVariable(id: string, variable: Partial<InsertVariable>): Promise<Variable | undefined>;
   deleteVariable(id: string): Promise<boolean>;
   deleteVariablesByPromptId(promptId: string): Promise<void>;
+  
+  // Artist methods
+  getArtist(id: string): Promise<Artist | undefined>;
+  getArtistByUsername(username: string): Promise<Artist | undefined>;
+  getAllArtists(): Promise<Artist[]>;
+  createArtist(artist: InsertArtist): Promise<Artist>;
+  updateArtist(id: string, artist: Partial<InsertArtist>): Promise<Artist | undefined>;
+  
+  // Artwork methods
+  getArtwork(id: string): Promise<Artwork | undefined>;
+  getArtworksByArtistId(artistId: string): Promise<Artwork[]>;
+  getAllArtworks(): Promise<Artwork[]>;
+  getPublicArtworks(): Promise<Artwork[]>;
+  createArtwork(artwork: InsertArtwork): Promise<Artwork>;
+  updateArtwork(id: string, artwork: Partial<InsertArtwork>): Promise<Artwork | undefined>;
+  deleteArtwork(id: string): Promise<boolean>;
 }
 
 export class MemStorage implements IStorage {
   private users: Map<string, User>;
   private prompts: Map<string, Prompt>;
   private variables: Map<string, Variable>;
+  private artists: Map<string, Artist>;
+  private artworks: Map<string, Artwork>;
 
   constructor() {
     this.users = new Map();
     this.prompts = new Map();
     this.variables = new Map();
+    this.artists = new Map();
+    this.artworks = new Map();
+    
+    // Create default artist for demo
+    const defaultArtistId = "default-artist";
+    this.artists.set(defaultArtistId, {
+      id: defaultArtistId,
+      username: "artist",
+      displayName: "Artist",
+      bio: "Digital artist and AI enthusiast",
+      avatarUrl: null,
+      coverImageUrl: null,
+      followerCount: 42,
+      followingCount: 12
+    });
+    
+    // Add some sample artworks
+    const sampleArtworks = [
+      { title: "Cosmic Dreams", description: "A surreal journey through space", promptUsed: "cosmic nebula with stars" },
+      { title: "Forest Spirit", description: "Mystical creature in enchanted woods", promptUsed: "magical forest spirit glowing" },
+      { title: "Neon City", description: "Futuristic cyberpunk cityscape", promptUsed: "neon lit cyberpunk city at night" },
+      { title: "Ocean Depths", description: "Deep sea wonders", promptUsed: "underwater bioluminescent creatures" },
+      { title: "Mountain Serenity", description: "Peaceful mountain landscape", promptUsed: "serene mountain lake sunset" },
+    ];
+    
+    sampleArtworks.forEach((art, index) => {
+      const id = `artwork-${index + 1}`;
+      this.artworks.set(id, {
+        id,
+        artistId: defaultArtistId,
+        title: art.title,
+        description: art.description,
+        imageUrl: `https://picsum.photos/seed/${index + 1}/400/400`,
+        promptUsed: art.promptUsed,
+        promptId: null,
+        likes: Math.floor(Math.random() * 100) + 10,
+        views: Math.floor(Math.random() * 500) + 50,
+        isPublic: true,
+        tags: ["ai-art", "digital"],
+        createdAt: new Date().toISOString()
+      });
+    });
+    
+    // Add another artist with artworks
+    const artist2Id = "artist-2";
+    this.artists.set(artist2Id, {
+      id: artist2Id,
+      username: "creative_mind",
+      displayName: "Creative Mind",
+      bio: "Exploring the boundaries of AI art",
+      avatarUrl: null,
+      coverImageUrl: null,
+      followerCount: 128,
+      followingCount: 45
+    });
+    
+    const artist2Artworks = [
+      { title: "Abstract Flow", description: "Fluid abstract patterns" },
+      { title: "Digital Garden", description: "Virtual nature" },
+      { title: "Retro Future", description: "80s inspired scifi" },
+    ];
+    
+    artist2Artworks.forEach((art, index) => {
+      const id = `artwork-a2-${index + 1}`;
+      this.artworks.set(id, {
+        id,
+        artistId: artist2Id,
+        title: art.title,
+        description: art.description,
+        imageUrl: `https://picsum.photos/seed/a2${index + 10}/400/400`,
+        promptUsed: null,
+        promptId: null,
+        likes: Math.floor(Math.random() * 100) + 10,
+        views: Math.floor(Math.random() * 500) + 50,
+        isPublic: true,
+        tags: ["ai-art"],
+        createdAt: new Date().toISOString()
+      });
+    });
   }
 
   async getUser(id: string): Promise<User | undefined> {
@@ -127,6 +228,98 @@ export class MemStorage implements IStorage {
       .map(([id]) => id);
     
     toDelete.forEach(id => this.variables.delete(id));
+  }
+
+  // Artist methods
+  async getArtist(id: string): Promise<Artist | undefined> {
+    return this.artists.get(id);
+  }
+
+  async getArtistByUsername(username: string): Promise<Artist | undefined> {
+    return Array.from(this.artists.values()).find(
+      (artist) => artist.username === username,
+    );
+  }
+
+  async getAllArtists(): Promise<Artist[]> {
+    return Array.from(this.artists.values());
+  }
+
+  async createArtist(insertArtist: InsertArtist): Promise<Artist> {
+    const id = randomUUID();
+    const artist: Artist = {
+      ...insertArtist,
+      id,
+      bio: insertArtist.bio ?? null,
+      avatarUrl: insertArtist.avatarUrl ?? null,
+      coverImageUrl: insertArtist.coverImageUrl ?? null,
+      followerCount: insertArtist.followerCount ?? 0,
+      followingCount: insertArtist.followingCount ?? 0
+    };
+    this.artists.set(id, artist);
+    return artist;
+  }
+
+  async updateArtist(id: string, update: Partial<InsertArtist>): Promise<Artist | undefined> {
+    const artist = this.artists.get(id);
+    if (!artist) return undefined;
+    
+    const updated = { ...artist, ...update };
+    this.artists.set(id, updated);
+    return updated;
+  }
+
+  // Artwork methods
+  async getArtwork(id: string): Promise<Artwork | undefined> {
+    return this.artworks.get(id);
+  }
+
+  async getArtworksByArtistId(artistId: string): Promise<Artwork[]> {
+    return Array.from(this.artworks.values())
+      .filter((a) => a.artistId === artistId)
+      .sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
+  }
+
+  async getAllArtworks(): Promise<Artwork[]> {
+    return Array.from(this.artworks.values())
+      .sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
+  }
+
+  async getPublicArtworks(): Promise<Artwork[]> {
+    return Array.from(this.artworks.values())
+      .filter((a) => a.isPublic)
+      .sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
+  }
+
+  async createArtwork(insertArtwork: InsertArtwork): Promise<Artwork> {
+    const id = randomUUID();
+    const artwork: Artwork = {
+      ...insertArtwork,
+      id,
+      description: insertArtwork.description ?? null,
+      promptUsed: insertArtwork.promptUsed ?? null,
+      promptId: insertArtwork.promptId ?? null,
+      likes: insertArtwork.likes ?? 0,
+      views: insertArtwork.views ?? 0,
+      isPublic: insertArtwork.isPublic ?? true,
+      tags: insertArtwork.tags ?? null,
+      createdAt: new Date().toISOString()
+    };
+    this.artworks.set(id, artwork);
+    return artwork;
+  }
+
+  async updateArtwork(id: string, update: Partial<InsertArtwork>): Promise<Artwork | undefined> {
+    const artwork = this.artworks.get(id);
+    if (!artwork) return undefined;
+    
+    const updated = { ...artwork, ...update };
+    this.artworks.set(id, updated);
+    return updated;
+  }
+
+  async deleteArtwork(id: string): Promise<boolean> {
+    return this.artworks.delete(id);
   }
 }
 

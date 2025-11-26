@@ -62,3 +62,45 @@ export const insertVariableSchema = createInsertSchema(variables).omit({
 
 export type InsertVariable = z.infer<typeof insertVariableSchema>;
 export type Variable = typeof variables.$inferSelect;
+
+// Artists table for user profiles
+export const artists = pgTable("artists", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  username: text("username").notNull().unique(),
+  displayName: text("display_name").notNull(),
+  bio: text("bio"),
+  avatarUrl: text("avatar_url"),
+  coverImageUrl: text("cover_image_url"),
+  followerCount: integer("follower_count").default(0),
+  followingCount: integer("following_count").default(0),
+});
+
+export const insertArtistSchema = createInsertSchema(artists).omit({
+  id: true,
+});
+
+export type InsertArtist = z.infer<typeof insertArtistSchema>;
+export type Artist = typeof artists.$inferSelect;
+
+// Artworks table for generated images
+export const artworks = pgTable("artworks", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  artistId: varchar("artist_id").notNull(),
+  title: text("title").notNull(),
+  description: text("description"),
+  imageUrl: text("image_url").notNull(),
+  promptUsed: text("prompt_used"),
+  promptId: varchar("prompt_id"),
+  likes: integer("likes").default(0),
+  views: integer("views").default(0),
+  isPublic: boolean("is_public").default(true),
+  tags: jsonb("tags"),
+  createdAt: text("created_at").default(sql`now()`),
+});
+
+export const insertArtworkSchema = createInsertSchema(artworks).omit({
+  id: true,
+});
+
+export type InsertArtwork = z.infer<typeof insertArtworkSchema>;
+export type Artwork = typeof artworks.$inferSelect;
