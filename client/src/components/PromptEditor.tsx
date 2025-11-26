@@ -97,8 +97,6 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
   const [resolution, setResolution] = useState<string | null>(null);
   const [showValidationDialog, setShowValidationDialog] = useState(false);
   const [buttonPosition, setButtonPosition] = useState<{ top: number; left: number } | null>(null);
-  const [duplicateVariableDialog, setDuplicateVariableDialog] = useState(false);
-  const [pendingVariableData, setPendingVariableData] = useState<{ varName: string; selectedText: string; selectionRange: { start: number; end: number } } | null>(null);
   
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -314,46 +312,19 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
     if (!selectedText || !selectionRange) return;
     
     const varName = selectedText.replace(/\s+/g, '_').replace(/[^\w-]/g, '');
+    const varPlaceholder = `[${varName}]`;
+    
     const existingVariable = variables.find(v => v.name === varName);
-    
-    if (existingVariable) {
-      // Variable already exists - show dialog to ask user what to do
-      setPendingVariableData({ varName, selectedText, selectionRange });
-      setDuplicateVariableDialog(true);
-    } else {
-      // Create new variable directly
-      executeVariableCreation(varName, selectedText, selectionRange, false);
-    }
-  };
-  
-  const executeVariableCreation = (
-    varName: string, 
-    originalText: string, 
-    range: { start: number; end: number },
-    createNew: boolean
-  ) => {
-    let finalVarName = varName;
-    
-    if (createNew) {
-      // Find a unique name by appending a number
-      let counter = 2;
-      while (variables.some(v => v.name === finalVarName)) {
-        finalVarName = `${varName}${counter}`;
-        counter++;
-      }
-    }
-    
-    const varPlaceholder = `[${finalVarName}]`;
     
     // Replace selected text with the variable placeholder
     const newPrompt = 
-      prompt.substring(0, range.start) + 
+      prompt.substring(0, selectionRange.start) + 
       varPlaceholder + 
-      prompt.substring(range.end);
+      prompt.substring(selectionRange.end);
     setPrompt(newPrompt);
     
     // Move cursor to after the variable
-    const newCursorPos = range.start + varPlaceholder.length;
+    const newCursorPos = selectionRange.start + varPlaceholder.length;
     setTimeout(() => {
       if (textareaRef.current) {
         textareaRef.current.focus();
@@ -364,53 +335,38 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
     setSelectedText("");
     setSelectionRange(null);
     
-    if (createNew || !variables.some(v => v.name === finalVarName)) {
+    if (existingVariable) {
+      // Variable already exists - just reference it
+      toast({
+        title: "Variable verknüpft",
+        description: `Bestehende Variable "${varName}" wurde eingefügt.`,
+      });
+      setOpenVariables([existingVariable.id]);
+      setEditingVariableId(existingVariable.id);
+      setShowVariableEditor(true);
+    } else {
       // Create new variable
       const newVariable: Variable = {
-        id: finalVarName,
-        name: finalVarName,
-        label: originalText,
+        id: varName,
+        name: varName,
+        label: selectedText,
         description: '',
         type: 'text',
-        defaultValue: originalText,
+        defaultValue: selectedText,
         required: false,
         position: variables.length
       };
       
       setVariables([...variables, newVariable]);
-      setOpenVariables([finalVarName]);
-      setEditingVariableId(finalVarName);
+      setOpenVariables([varName]);
+      setEditingVariableId(varName);
       setShowVariableEditor(true);
       
       toast({
         title: "Variable erstellt",
-        description: `Neue Variable "${finalVarName}" wurde erstellt.`,
+        description: `Neue Variable "${varName}" wurde erstellt.`,
       });
-    } else {
-      // Reference existing variable
-      const existingVar = variables.find(v => v.name === finalVarName);
-      if (existingVar) {
-        setOpenVariables([existingVar.id]);
-        setEditingVariableId(existingVar.id);
-        setShowVariableEditor(true);
-        
-        toast({
-          title: "Variable verknüpft",
-          description: `Bestehende Variable "${finalVarName}" wurde eingefügt.`,
-        });
-      }
     }
-  };
-  
-  const handleDuplicateDialogChoice = (useExisting: boolean) => {
-    if (!pendingVariableData) return;
-    
-    const { varName, selectedText: origText, selectionRange: range } = pendingVariableData;
-    
-    setDuplicateVariableDialog(false);
-    setPendingVariableData(null);
-    
-    executeVariableCreation(varName, origText, range, !useExisting);
   };
 
   useEffect(() => {
@@ -2096,41 +2052,6 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
           <AlertDialogFooter>
             <AlertDialogAction onClick={() => setShowValidationDialog(false)} data-testid="button-validation-ok">
               OK
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      <AlertDialog open={duplicateVariableDialog} onOpenChange={setDuplicateVariableDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Variable existiert bereits</AlertDialogTitle>
-            <AlertDialogDescription>
-              Eine Variable mit dem Namen "{pendingVariableData?.varName}" existiert bereits. Möchten Sie den Text zur bestehenden Variable verknüpfen oder eine neue Variable erstellen?
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter className="flex-col sm:flex-row gap-2">
-            <AlertDialogCancel 
-              onClick={() => {
-                setDuplicateVariableDialog(false);
-                setPendingVariableData(null);
-              }}
-              data-testid="button-cancel-duplicate"
-            >
-              Abbrechen
-            </AlertDialogCancel>
-            <AlertDialogAction 
-              onClick={() => handleDuplicateDialogChoice(true)}
-              data-testid="button-use-existing"
-            >
-              Bestehende verwenden
-            </AlertDialogAction>
-            <AlertDialogAction 
-              onClick={() => handleDuplicateDialogChoice(false)}
-              className="bg-secondary text-secondary-foreground hover:bg-secondary/80"
-              data-testid="button-create-new"
-            >
-              Neue erstellen
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
