@@ -997,8 +997,9 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
                     const varName = match[1];
                     const variable = variables.find(v => v.name === varName);
                     if (variable) {
+                      const isOpen = openVariables.includes(variable.id);
                       return (
-                        <span key={index} className="select-none text-teal-400 dark:text-teal-300 cursor-pointer pointer-events-auto"
+                        <span key={index} className={`select-none cursor-pointer pointer-events-auto ${isOpen ? 'text-orange-400 dark:text-orange-300' : 'text-teal-400 dark:text-teal-300'}`}
                           onClick={(e) => {
                             e.preventDefault();
                             setOpenVariables([...openVariables, variable.id]);
@@ -1592,8 +1593,9 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
                         const varName = match[1];
                         const variable = variables.find(v => v.name === varName);
                         if (variable) {
+                          const isOpen = editingVariableId === variable.id || openVariables.includes(variable.id);
                           return (
-                            <span key={index} className="select-none text-teal-400 dark:text-teal-300 cursor-pointer pointer-events-auto"
+                            <span key={index} className={`select-none cursor-pointer pointer-events-auto ${isOpen ? 'text-orange-400 dark:text-orange-300' : 'text-teal-400 dark:text-teal-300'}`}
                               onClick={(e) => {
                                 e.preventDefault();
                                 setEditingVariableId(variable.id);
