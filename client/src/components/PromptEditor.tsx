@@ -187,23 +187,26 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
   }, [selectionRange]);
 
   const handleTextSelection = () => {
-    if (!textareaRef.current) return;
-    
-    const start = textareaRef.current.selectionStart;
-    const end = textareaRef.current.selectionEnd;
-    const selected = prompt.substring(start, end);
-    
-    if (selected && selected.trim().length > 0 && start !== end) {
-      const isInsideVariable = checkIfInsideVariable(start, end);
-      if (!isInsideVariable) {
-        setSelectedText(selected);
-        setSelectionRange({ start, end });
+    // Use requestAnimationFrame to get the final selection after browser updates
+    requestAnimationFrame(() => {
+      if (!textareaRef.current) return;
+      
+      const start = textareaRef.current.selectionStart;
+      const end = textareaRef.current.selectionEnd;
+      const selected = prompt.substring(start, end);
+      
+      if (selected && selected.trim().length > 0 && start !== end) {
+        const isInsideVariable = checkIfInsideVariable(start, end);
+        if (!isInsideVariable) {
+          setSelectedText(selected);
+          setSelectionRange({ start, end });
+        } else {
+          clearSelection();
+        }
       } else {
         clearSelection();
       }
-    } else {
-      clearSelection();
-    }
+    });
   };
   
   const clearSelection = () => {
@@ -211,6 +214,29 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
     setSelectionRange(null);
     setButtonPosition(null);
   };
+  
+  // Ref for the button to detect outside clicks
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const editorContainerRef = useRef<HTMLDivElement>(null);
+  
+  // Global mousedown listener to clear selection when clicking outside
+  useEffect(() => {
+    const handleOutsideClick = (e: MouseEvent) => {
+      // Don't clear if clicking on the button
+      if (buttonRef.current?.contains(e.target as Node)) {
+        return;
+      }
+      // Don't clear if clicking inside the editor container
+      if (editorContainerRef.current?.contains(e.target as Node)) {
+        return;
+      }
+      // Clear selection for clicks outside
+      clearSelection();
+    };
+    
+    document.addEventListener('mousedown', handleOutsideClick);
+    return () => document.removeEventListener('mousedown', handleOutsideClick);
+  }, []);
 
   const checkIfInsideVariable = (start: number, end: number): boolean => {
     const regex = /\[([^\]]+)\]/g;
@@ -848,14 +874,9 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
           </CardHeader>
           <CardContent className="flex-1 min-h-0 flex flex-col gap-2 px-3 pb-3">
             <div 
+              ref={editorContainerRef}
               className="relative flex-1 border border-border rounded-md min-h-[200px]" 
-              onClick={(e) => {
-                // If clicking on the container (not the button), clear selection and focus
-                if ((e.target as HTMLElement).tagName !== 'BUTTON') {
-                  clearSelection();
-                  textareaRef.current?.focus();
-                }
-              }}
+              onClick={() => textareaRef.current?.focus()}
               style={{ resize: 'vertical', overflow: 'hidden' }}
             >
               <div 
@@ -947,14 +968,6 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
                     }
                   }, 0);
                 }}
-                onBlur={() => {
-                  // Small delay to allow button click to register
-                  setTimeout(() => {
-                    if (!buttonPosition) {
-                      clearSelection();
-                    }
-                  }, 150);
-                }}
                 className="absolute inset-0 font-mono text-sm bg-transparent text-transparent caret-foreground z-10 selection:bg-primary/30 whitespace-pre-wrap overflow-hidden border-0 shadow-none ring-0 focus:ring-0 focus:outline-none focus-visible:ring-0 rounded-none"
                 style={{ 
                   wordBreak: 'break-word', 
@@ -962,9 +975,10 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
                   resize: 'none',
                   padding: '8px 12px',
                   lineHeight: '1.625',
-                  boxSizing: 'border-box',
-                  pointerEvents: selectedText && selectionRange && buttonPosition ? 'none' : 'auto'
+                  boxSizing: 'border-box'
                 }}
+                onMouseUp={handleTextSelection}
+                onKeyUp={handleTextSelection}
                 placeholder="Schreibe deinen Prompt hier... Nutze [VariableName] für Variablen"
                 data-testid="textarea-prompt"
               />
@@ -972,6 +986,7 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
               {/* Floating "+ Variable" button - positioned relative to textarea */}
               {selectedText && selectionRange && buttonPosition && (
                 <Button
+                  ref={buttonRef}
                   size="sm"
                   onClick={(e) => {
                     e.preventDefault();
@@ -986,7 +1001,6 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
                   style={{
                     top: `${buttonPosition.top}px`,
                     left: `${buttonPosition.left}px`,
-                    pointerEvents: 'all'
                   }}
                   data-testid="button-create-variable"
                 >
@@ -1457,12 +1471,7 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
               <div className="px-3 pt-3 pb-3 w-full max-w-full overflow-x-hidden">
                 <div 
                   className="relative min-h-[500px] w-full max-w-full overflow-visible border border-border rounded-md"
-                  onClick={(e) => {
-                    if ((e.target as HTMLElement).tagName !== 'BUTTON') {
-                      clearSelection();
-                      textareaRef.current?.focus();
-                    }
-                  }}
+                  onClick={() => textareaRef.current?.focus()}
                 >
                   <div 
                     className="absolute inset-0 font-mono text-sm whitespace-pre-wrap pointer-events-none overflow-hidden select-none text-white"
