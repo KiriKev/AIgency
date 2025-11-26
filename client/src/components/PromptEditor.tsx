@@ -1000,7 +1000,7 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
                     }
                   }, 0);
                 }}
-                className="absolute inset-0 font-mono text-sm bg-transparent text-transparent caret-foreground z-10 selection:bg-primary/30 whitespace-pre-wrap overflow-hidden border-0 shadow-none ring-0 focus:ring-0 focus:outline-none focus-visible:ring-0 rounded-none"
+                className="absolute inset-0 font-mono text-sm bg-transparent text-transparent caret-foreground z-[1] selection:bg-primary/30 whitespace-pre-wrap overflow-hidden border-0 shadow-none ring-0 focus:ring-0 focus:outline-none focus-visible:ring-0 rounded-none"
                 style={{ 
                   wordBreak: 'break-word', 
                   overflowWrap: 'anywhere',
@@ -1015,33 +1015,33 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
                 data-testid="textarea-prompt"
               />
               
+              {/* Floating "+ Variable" button - inside container with higher z-index */}
+              {selectedText && selectionRange && buttonPosition && (
+                <Button
+                  ref={buttonRef}
+                  size="sm"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    createVariableFromSelection();
+                  }}
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                  }}
+                  className="absolute shadow-xl cursor-pointer bg-primary text-primary-foreground border-2 border-background pointer-events-auto"
+                  style={{
+                    top: `${buttonPosition.top}px`,
+                    left: `${buttonPosition.left}px`,
+                    zIndex: 50,
+                  }}
+                  data-testid="button-create-variable"
+                >
+                  <Plus className="h-3 w-3 mr-1" />
+                  Variable
+                </Button>
+              )}
             </div>
-            
-            {/* Floating "+ Variable" button - positioned OUTSIDE container for click handling */}
-            {selectedText && selectionRange && buttonPosition && (
-              <Button
-                ref={buttonRef}
-                size="sm"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  createVariableFromSelection();
-                }}
-                onMouseDown={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                }}
-                className="absolute z-[9999] shadow-xl cursor-pointer bg-primary text-primary-foreground border-2 border-background pointer-events-auto"
-                style={{
-                  top: `${buttonPosition.top + 8}px`,
-                  left: `${buttonPosition.left + 8}px`,
-                }}
-                data-testid="button-create-variable"
-              >
-                <Plus className="h-3 w-3 mr-1" />
-                Variable
-              </Button>
-            )}
             
             <div className="flex flex-wrap gap-1">
               {variables.length > 0 && (
