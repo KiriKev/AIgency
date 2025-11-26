@@ -2167,7 +2167,7 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
           <Button
             variant="ghost"
             size="icon"
-            className="absolute right-2 top-2 h-6 w-6 rounded-sm opacity-70 hover:opacity-100"
+            className="absolute right-4 top-4 h-6 w-6 rounded-sm opacity-70 hover:opacity-100"
             onClick={() => setLinkOrCreateDialog({ open: false, varName: '', selectedText: '', selectionRange: null })}
             data-testid="button-close-link-dialog"
           >
