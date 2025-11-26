@@ -106,13 +106,22 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
   // Global click handler to clear selection when clicking outside
   useEffect(() => {
     const handleGlobalClick = (e: MouseEvent) => {
-      // If we have a selection and click is outside the editor container
+      // If we have a selection
       if (selectedText && selectionRange && buttonPosition) {
         const target = e.target as HTMLElement;
-        const isInsideEditor = editorContainerRef.current?.contains(target);
-        const isButton = target.tagName === 'BUTTON' || target.closest('button');
         
-        if (!isInsideEditor && !isButton) {
+        // Check if clicking on the variable button or inside it
+        const isVariableButton = target.closest('[data-testid="button-create-variable"]') ||
+                                  target.closest('[data-testid="button-create-from-selection"]');
+        
+        // Don't clear if clicking on the variable button
+        if (isVariableButton) {
+          return;
+        }
+        
+        const isInsideEditor = editorContainerRef.current?.contains(target);
+        
+        if (!isInsideEditor) {
           setSelectedText("");
           setSelectionRange(null);
           setButtonPosition(null);
