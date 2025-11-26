@@ -447,6 +447,38 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
   };
 
   const updateVariable = (varId: string, updates: Partial<Variable>) => {
+    // Check for duplicate name if name is being updated
+    if (updates.name !== undefined) {
+      const newName = updates.name;
+      const currentVar = variables.find(v => v.id === varId);
+      
+      // Check if this name already exists (excluding the current variable)
+      const duplicateExists = variables.some(v => v.id !== varId && v.name === newName);
+      
+      if (duplicateExists && currentVar && currentVar.name !== newName) {
+        toast({
+          title: "Fehler",
+          description: `Eine Variable mit dem Namen "${newName}" existiert bereits. Bitte wähle einen anderen Namen.`,
+          variant: "destructive"
+        });
+        return; // Don't update
+      }
+      
+      // Also update the prompt to reflect the name change
+      if (currentVar && currentVar.name !== newName) {
+        const oldPlaceholder = `[${currentVar.name}]`;
+        const newPlaceholder = `[${newName}]`;
+        const newPrompt = prompt.split(oldPlaceholder).join(newPlaceholder);
+        setPrompt(newPrompt);
+        
+        // Update the variable ID as well since it's based on name
+        setVariables(variables.map(v => 
+          v.id === varId ? { ...v, ...updates, id: newName } : v
+        ));
+        return;
+      }
+    }
+    
     setVariables(variables.map(v => 
       v.id === varId ? { ...v, ...updates } : v
     ));
@@ -872,7 +904,7 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
               Variable
             </Button>
           </CardHeader>
-          <CardContent className="flex-1 min-h-0 flex flex-col gap-2 px-3 pb-3">
+          <CardContent className="flex-1 min-h-0 flex flex-col gap-2 px-3 pb-3 relative">
             <div 
               ref={editorContainerRef}
               className="relative flex-1 border border-border rounded-md min-h-[200px]" 
@@ -983,32 +1015,33 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
                 data-testid="textarea-prompt"
               />
               
-              {/* Floating "+ Variable" button - positioned relative to textarea */}
-              {selectedText && selectionRange && buttonPosition && (
-                <Button
-                  ref={buttonRef}
-                  size="sm"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    createVariableFromSelection();
-                  }}
-                  onMouseDown={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                  }}
-                  className="absolute z-[9999] shadow-xl cursor-pointer bg-primary text-primary-foreground border-2 border-background"
-                  style={{
-                    top: `${buttonPosition.top}px`,
-                    left: `${buttonPosition.left}px`,
-                  }}
-                  data-testid="button-create-variable"
-                >
-                  <Plus className="h-3 w-3 mr-1" />
-                  Variable
-                </Button>
-              )}
             </div>
+            
+            {/* Floating "+ Variable" button - positioned OUTSIDE container for click handling */}
+            {selectedText && selectionRange && buttonPosition && (
+              <Button
+                ref={buttonRef}
+                size="sm"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  createVariableFromSelection();
+                }}
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                }}
+                className="absolute z-[9999] shadow-xl cursor-pointer bg-primary text-primary-foreground border-2 border-background pointer-events-auto"
+                style={{
+                  top: `${buttonPosition.top + 8}px`,
+                  left: `${buttonPosition.left + 8}px`,
+                }}
+                data-testid="button-create-variable"
+              >
+                <Plus className="h-3 w-3 mr-1" />
+                Variable
+              </Button>
+            )}
             
             <div className="flex flex-wrap gap-1">
               {variables.length > 0 && (
