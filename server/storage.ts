@@ -113,6 +113,51 @@ export class MemStorage implements IStorage {
       followingCount: 45
     });
     
+    // Add artists for Art Hub mock prompts
+    const hubArtists = [
+      { id: "artist-neon", username: "neon_artist", displayName: "NeonArtist", bio: "Cyberpunk and neon aesthetics specialist" },
+      { id: "artist-magic", username: "magic_creator", displayName: "MagicCreator", bio: "Creating magical fantasy worlds" },
+      { id: "artist-modern", username: "modern_mind", displayName: "ModernMind", bio: "Digital abstract art enthusiast" },
+      { id: "artist-cyber", username: "cyber_sensei", displayName: "CyberSensei", bio: "Master of futuristic warrior art" },
+      { id: "artist-nature", username: "nature_whisperer", displayName: "NatureWhisperer", bio: "Bringing nature spirits to life" },
+      { id: "artist-shape", username: "shape_shifter", displayName: "ShapeShifter", bio: "Geometric and abstract designs" },
+      { id: "artist-vehicle", username: "vehicle_vision", displayName: "VehicleVision", bio: "Retro-futuristic vehicle designs" },
+      { id: "artist-mythic", username: "mythic_master", displayName: "MythicMaster", bio: "Mythological creature creator" },
+    ];
+    
+    hubArtists.forEach((artist, artistIdx) => {
+      this.artists.set(artist.id, {
+        id: artist.id,
+        username: artist.username,
+        displayName: artist.displayName,
+        bio: artist.bio,
+        avatarUrl: null,
+        coverImageUrl: null,
+        followerCount: Math.floor(Math.random() * 500) + 50,
+        followingCount: Math.floor(Math.random() * 100) + 10
+      });
+      
+      // Add sample artworks for each hub artist
+      const artworkCount = 3 + Math.floor(Math.random() * 3);
+      for (let i = 0; i < artworkCount; i++) {
+        const artworkId = `artwork-${artist.id}-${i + 1}`;
+        this.artworks.set(artworkId, {
+          id: artworkId,
+          artistId: artist.id,
+          title: `${artist.displayName} Creation #${i + 1}`,
+          description: `A beautiful piece by ${artist.displayName}`,
+          imageUrl: `https://picsum.photos/seed/${artist.id}${i}/400/400`,
+          promptUsed: null,
+          promptId: null,
+          likes: Math.floor(Math.random() * 200) + 20,
+          views: Math.floor(Math.random() * 1000) + 100,
+          isPublic: true,
+          tags: ["ai-art", artist.username.split('_')[0]],
+          createdAt: new Date().toISOString()
+        });
+      }
+    });
+    
     const artist2Artworks = [
       { title: "Abstract Flow", description: "Fluid abstract patterns" },
       { title: "Digital Garden", description: "Virtual nature" },

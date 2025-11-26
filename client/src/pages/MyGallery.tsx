@@ -3,18 +3,16 @@ import { useLocation } from "wouter";
 import Navbar from "@/components/Navbar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { ArrowLeft, Heart, Eye, Grid, List, Plus, ImageIcon } from "lucide-react";
-import { useState } from "react";
+import { ArrowLeft, Plus, ImageIcon } from "lucide-react";
+import ArtworkGrid, { type ArtworkItem } from "@/components/ArtworkGrid";
 import type { Artwork, Artist } from "@shared/schema";
 
 const CURRENT_ARTIST_ID = "default-artist";
 
 export default function MyGallery() {
   const [, setLocation] = useLocation();
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
   const { data: artist, isLoading: artistLoading } = useQuery<Artist>({
     queryKey: [`/api/artists/${CURRENT_ARTIST_ID}`],
@@ -88,25 +86,7 @@ export default function MyGallery() {
                 </CardContent>
               </Card>
 
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant={viewMode === 'grid' ? 'default' : 'ghost'}
-                    size="icon"
-                    onClick={() => setViewMode('grid')}
-                    data-testid="button-view-grid"
-                  >
-                    <Grid className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant={viewMode === 'list' ? 'default' : 'ghost'}
-                    size="icon"
-                    onClick={() => setViewMode('list')}
-                    data-testid="button-view-list"
-                  >
-                    <List className="h-4 w-4" />
-                  </Button>
-                </div>
+              <div className="flex items-center justify-end mb-4">
                 <Button onClick={() => setLocation('/editor')} data-testid="button-create-new">
                   <Plus className="h-4 w-4 mr-2" />
                   Create New
@@ -114,77 +94,22 @@ export default function MyGallery() {
               </div>
 
               {artworks && artworks.length > 0 ? (
-                <div className={viewMode === 'grid' 
-                  ? "grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
-                  : "flex flex-col gap-4"
-                }>
-                  {artworks.map((artwork) => (
-                    <Card 
-                      key={artwork.id}
-                      className="overflow-hidden hover-elevate cursor-pointer group"
-                      onClick={() => setLocation(`/artwork/${artwork.id}`)}
-                      data-testid={`card-artwork-${artwork.id}`}
-                    >
-                      {viewMode === 'grid' ? (
-                        <>
-                          <div className="aspect-square relative">
-                            <img 
-                              src={artwork.imageUrl} 
-                              alt={artwork.title}
-                              className="w-full h-full object-cover"
-                            />
-                            <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                              <div className="flex gap-4 text-white">
-                                <span className="flex items-center gap-1">
-                                  <Heart className="h-4 w-4" />
-                                  {artwork.likes}
-                                </span>
-                                <span className="flex items-center gap-1">
-                                  <Eye className="h-4 w-4" />
-                                  {artwork.views}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                          <CardContent className="p-3">
-                            <h3 className="font-medium text-white truncate">{artwork.title}</h3>
-                            {artwork.tags && Array.isArray(artwork.tags) && (
-                              <div className="flex gap-1 mt-2 flex-wrap">
-                                {(artwork.tags as string[]).slice(0, 2).map((tag: string, i: number) => (
-                                  <Badge key={i} variant="secondary" className="text-xs">
-                                    {tag}
-                                  </Badge>
-                                ))}
-                              </div>
-                            )}
-                          </CardContent>
-                        </>
-                      ) : (
-                        <div className="flex gap-4 p-4">
-                          <img 
-                            src={artwork.imageUrl} 
-                            alt={artwork.title}
-                            className="w-24 h-24 object-cover rounded-md"
-                          />
-                          <div className="flex-1">
-                            <h3 className="font-medium text-white">{artwork.title}</h3>
-                            <p className="text-sm text-muted-foreground mt-1">{artwork.description}</p>
-                            <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
-                              <span className="flex items-center gap-1">
-                                <Heart className="h-3 w-3" />
-                                {artwork.likes}
-                              </span>
-                              <span className="flex items-center gap-1">
-                                <Eye className="h-3 w-3" />
-                                {artwork.views}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                    </Card>
-                  ))}
-                </div>
+                <ArtworkGrid
+                  items={artworks.map((artwork): ArtworkItem => ({
+                    id: artwork.id,
+                    title: artwork.title,
+                    artistId: artwork.artistId,
+                    artistName: artist?.displayName || 'You',
+                    imageUrl: artwork.imageUrl,
+                    likes: artwork.likes || 0,
+                    views: artwork.views || 0,
+                    tags: artwork.tags as string[] | undefined
+                  }))}
+                  variant="artwork"
+                  showArtist={false}
+                  useMasonryLayout={true}
+                  onCardClick={(id) => setLocation(`/artwork/${id}`)}
+                />
               ) : (
                 <Card className="p-12 text-center">
                   <ImageIcon className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
