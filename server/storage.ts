@@ -168,7 +168,16 @@ export class MemStorage implements IStorage {
     const prompt: Prompt = { 
       ...insertPrompt, 
       id,
-      userId: insertPrompt.userId ?? null
+      userId: insertPrompt.userId ?? null,
+      tags: insertPrompt.tags ?? null,
+      category: insertPrompt.category ?? null,
+      aiModel: insertPrompt.aiModel ?? null,
+      price: insertPrompt.price ?? null,
+      aspectRatio: insertPrompt.aspectRatio ?? null,
+      photoCount: insertPrompt.photoCount ?? null,
+      promptType: insertPrompt.promptType ?? null,
+      uploadedPhotos: insertPrompt.uploadedPhotos ?? null,
+      resolution: insertPrompt.resolution ?? null
     };
     this.prompts.set(id, prompt);
     return prompt;
@@ -203,7 +212,8 @@ export class MemStorage implements IStorage {
       defaultValue: insertVariable.defaultValue ?? null,
       min: insertVariable.min ?? null,
       max: insertVariable.max ?? null,
-      options: insertVariable.options ?? null
+      options: insertVariable.options ?? null,
+      defaultOptionIndex: insertVariable.defaultOptionIndex ?? null
     };
     this.variables.set(id, variable);
     return variable;

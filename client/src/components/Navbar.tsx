@@ -134,6 +134,9 @@ export default function Navbar({ credits = 125, username = "Artist", onSearch }:
                   <p className="text-xs text-muted-foreground">artist@example.com</p>
                 </div>
                 <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => setLocation('/my-gallery')} data-testid="menu-item-my-gallery">
+                  My Gallery
+                </DropdownMenuItem>
                 <DropdownMenuItem data-testid="menu-item-my-prompts">
                   My Prompts
                 </DropdownMenuItem>
