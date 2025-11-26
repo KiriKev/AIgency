@@ -97,6 +97,12 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
   const [resolution, setResolution] = useState<string | null>(null);
   const [showValidationDialog, setShowValidationDialog] = useState(false);
   const [buttonPosition, setButtonPosition] = useState<{ top: number; left: number } | null>(null);
+  const [linkOrCreateDialog, setLinkOrCreateDialog] = useState<{
+    open: boolean;
+    varName: string;
+    selectedText: string;
+    selectionRange: { start: number; end: number } | null;
+  }>({ open: false, varName: '', selectedText: '', selectionRange: null });
   
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -312,19 +318,40 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
     if (!selectedText || !selectionRange) return;
     
     const varName = selectedText.replace(/\s+/g, '_').replace(/[^\w-]/g, '');
-    const varPlaceholder = `[${varName}]`;
+    const existingVariable = variables.find(v => v.name === varName);
     
+    if (existingVariable) {
+      // Variable exists - show dialog asking what to do
+      setLinkOrCreateDialog({
+        open: true,
+        varName,
+        selectedText,
+        selectionRange
+      });
+    } else {
+      // No existing variable - create new one directly
+      performVariableCreation(varName, selectedText, selectionRange, false);
+    }
+  };
+  
+  const performVariableCreation = (
+    varName: string, 
+    originalText: string, 
+    range: { start: number; end: number },
+    createNew: boolean
+  ) => {
+    const varPlaceholder = `[${varName}]`;
     const existingVariable = variables.find(v => v.name === varName);
     
     // Replace selected text with the variable placeholder
     const newPrompt = 
-      prompt.substring(0, selectionRange.start) + 
+      prompt.substring(0, range.start) + 
       varPlaceholder + 
-      prompt.substring(selectionRange.end);
+      prompt.substring(range.end);
     setPrompt(newPrompt);
     
     // Move cursor to after the variable
-    const newCursorPos = selectionRange.start + varPlaceholder.length;
+    const newCursorPos = range.start + varPlaceholder.length;
     setTimeout(() => {
       if (textareaRef.current) {
         textareaRef.current.focus();
@@ -335,8 +362,8 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
     setSelectedText("");
     setSelectionRange(null);
     
-    if (existingVariable) {
-      // Variable already exists - just reference it
+    if (existingVariable && !createNew) {
+      // Link to existing variable
       toast({
         title: "Variable verknüpft",
         description: `Bestehende Variable "${varName}" wurde eingefügt.`,
@@ -345,28 +372,62 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
       setEditingVariableId(existingVariable.id);
       setShowVariableEditor(true);
     } else {
-      // Create new variable
+      // Create new variable (with unique name if needed)
+      let finalVarName = varName;
+      if (createNew && existingVariable) {
+        // Generate unique name by adding number suffix
+        let counter = 2;
+        while (variables.some(v => v.name === `${varName}_${counter}`)) {
+          counter++;
+        }
+        finalVarName = `${varName}_${counter}`;
+        
+        // Update the prompt with the new unique name
+        const uniquePlaceholder = `[${finalVarName}]`;
+        const updatedPrompt = 
+          prompt.substring(0, range.start) + 
+          uniquePlaceholder + 
+          prompt.substring(range.end);
+        setPrompt(updatedPrompt);
+      }
+      
       const newVariable: Variable = {
-        id: varName,
-        name: varName,
-        label: selectedText,
+        id: finalVarName,
+        name: finalVarName,
+        label: originalText,
         description: '',
         type: 'text',
-        defaultValue: selectedText,
+        defaultValue: originalText,
         required: false,
         position: variables.length
       };
       
-      setVariables([...variables, newVariable]);
-      setOpenVariables([varName]);
-      setEditingVariableId(varName);
+      setVariables(prev => [...prev, newVariable]);
+      setOpenVariables([finalVarName]);
+      setEditingVariableId(finalVarName);
       setShowVariableEditor(true);
       
       toast({
         title: "Variable erstellt",
-        description: `Neue Variable "${varName}" wurde erstellt.`,
+        description: `Neue Variable "${finalVarName}" wurde erstellt.`,
       });
     }
+  };
+  
+  const handleLinkVariable = () => {
+    const { varName, selectedText: origText, selectionRange: range } = linkOrCreateDialog;
+    if (range) {
+      performVariableCreation(varName, origText, range, false);
+    }
+    setLinkOrCreateDialog({ open: false, varName: '', selectedText: '', selectionRange: null });
+  };
+  
+  const handleCreateNewVariable = () => {
+    const { varName, selectedText: origText, selectionRange: range } = linkOrCreateDialog;
+    if (range) {
+      performVariableCreation(varName, origText, range, true);
+    }
+    setLinkOrCreateDialog({ open: false, varName: '', selectedText: '', selectionRange: null });
   };
 
   useEffect(() => {
@@ -2093,6 +2154,39 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
           </ScrollArea>
           <AlertDialogFooter>
             <AlertDialogCancel data-testid="button-cancel-load">Abbrechen</AlertDialogCancel>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={linkOrCreateDialog.open} onOpenChange={(open) => {
+        if (!open) {
+          setLinkOrCreateDialog({ open: false, varName: '', selectedText: '', selectionRange: null });
+        }
+      }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Variable existiert bereits</AlertDialogTitle>
+            <AlertDialogDescription>
+              Eine Variable mit dem Namen "{linkOrCreateDialog.varName}" existiert bereits. Was möchten Sie tun?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex-col sm:flex-row gap-2">
+            <AlertDialogCancel data-testid="button-cancel-link">
+              Abbrechen
+            </AlertDialogCancel>
+            <Button
+              variant="outline"
+              onClick={handleLinkVariable}
+              data-testid="button-link-variable"
+            >
+              Mit bestehender Variable verknüpfen
+            </Button>
+            <Button
+              onClick={handleCreateNewVariable}
+              data-testid="button-create-new-variable"
+            >
+              Neue Variable erstellen
+            </Button>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
