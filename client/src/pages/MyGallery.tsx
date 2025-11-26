@@ -17,11 +17,11 @@ export default function MyGallery() {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
   const { data: artist, isLoading: artistLoading } = useQuery<Artist>({
-    queryKey: ['/api/artists', CURRENT_ARTIST_ID],
+    queryKey: [`/api/artists/${CURRENT_ARTIST_ID}`],
   });
 
   const { data: artworks, isLoading: artworksLoading } = useQuery<Artwork[]>({
-    queryKey: ['/api/artists', CURRENT_ARTIST_ID, 'artworks'],
+    queryKey: [`/api/artists/${CURRENT_ARTIST_ID}/artworks`],
   });
 
   const isLoading = artistLoading || artworksLoading;

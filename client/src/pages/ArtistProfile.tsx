@@ -17,11 +17,11 @@ export default function ArtistProfile() {
   const [isFollowing, setIsFollowing] = useState(false);
 
   const { data: artist, isLoading: artistLoading } = useQuery<Artist>({
-    queryKey: ['/api/artists', artistId],
+    queryKey: [`/api/artists/${artistId}`],
   });
 
   const { data: artworks, isLoading: artworksLoading } = useQuery<Artwork[]>({
-    queryKey: ['/api/artists', artistId, 'artworks'],
+    queryKey: [`/api/artists/${artistId}/artworks`],
   });
 
   const isLoading = artistLoading || artworksLoading;

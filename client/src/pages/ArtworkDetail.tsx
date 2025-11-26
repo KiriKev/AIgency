@@ -18,15 +18,17 @@ export default function ArtworkDetail() {
   const [isSaved, setIsSaved] = useState(false);
 
   const { data: artwork, isLoading: artworkLoading } = useQuery<Artwork>({
-    queryKey: ['/api/artworks', artworkId],
+    queryKey: [`/api/artworks/${artworkId}`],
   });
 
+  const artistId = artwork?.artistId;
+  
   const { data: artist, isLoading: artistLoading } = useQuery<Artist>({
-    queryKey: ['/api/artists', artwork?.artistId],
-    enabled: !!artwork?.artistId,
+    queryKey: artistId ? [`/api/artists/${artistId}`] : ['artist-placeholder'],
+    enabled: !!artistId,
   });
 
-  const isLoading = artworkLoading || (artwork && artistLoading);
+  const isLoading = artworkLoading || (artistId && artistLoading);
 
   if (isLoading) {
     return (
