@@ -2163,40 +2163,40 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
           setLinkOrCreateDialog({ open: false, varName: '', selectedText: '', selectionRange: null });
         }
       }}>
-        <AlertDialogContent className="max-w-md !p-0 overflow-hidden">
-          <div className="relative p-6">
+        <AlertDialogContent className="max-w-md">
+          <div className="flex justify-end -mt-2 -mr-2">
             <Button
               variant="ghost"
               size="icon"
-              className="absolute right-2 top-2 h-6 w-6 rounded-sm opacity-70 hover:opacity-100"
+              className="h-6 w-6 rounded-sm opacity-70 hover:opacity-100"
               onClick={() => setLinkOrCreateDialog({ open: false, varName: '', selectedText: '', selectionRange: null })}
               data-testid="button-close-link-dialog"
             >
               <X className="h-4 w-4" />
             </Button>
-            <AlertDialogHeader className="pr-8">
-              <AlertDialogTitle>Variable existiert bereits</AlertDialogTitle>
-              <AlertDialogDescription>
-                Eine Variable mit dem Namen "<span className="font-medium">{linkOrCreateDialog.varName}</span>" existiert bereits. Was möchten Sie tun?
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <div className="flex flex-col gap-2 mt-4">
-              <Button
-                variant="outline"
-                onClick={handleLinkVariable}
-                className="w-full"
-                data-testid="button-link-variable"
-              >
-                Mit bestehender Variable verknüpfen
-              </Button>
-              <Button
-                onClick={handleCreateNewVariable}
-                className="w-full"
-                data-testid="button-create-new-variable"
-              >
-                Neue Variable erstellen
-              </Button>
-            </div>
+          </div>
+          <AlertDialogHeader className="-mt-4">
+            <AlertDialogTitle>Variable existiert bereits</AlertDialogTitle>
+            <AlertDialogDescription>
+              Eine Variable mit dem Namen "<span className="font-medium">{linkOrCreateDialog.varName}</span>" existiert bereits. Was möchten Sie tun?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="flex flex-col gap-2">
+            <Button
+              variant="outline"
+              onClick={handleLinkVariable}
+              className="w-full"
+              data-testid="button-link-variable"
+            >
+              Mit bestehender Variable verknüpfen
+            </Button>
+            <Button
+              onClick={handleCreateNewVariable}
+              className="w-full"
+              data-testid="button-create-new-variable"
+            >
+              Neue Variable erstellen
+            </Button>
           </div>
         </AlertDialogContent>
       </AlertDialog>
