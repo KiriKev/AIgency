@@ -2163,30 +2163,34 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
           setLinkOrCreateDialog({ open: false, varName: '', selectedText: '', selectionRange: null });
         }
       }}>
-        <AlertDialogContent>
+        <AlertDialogContent className="max-w-md">
           <AlertDialogHeader>
             <AlertDialogTitle>Variable existiert bereits</AlertDialogTitle>
             <AlertDialogDescription>
-              Eine Variable mit dem Namen "{linkOrCreateDialog.varName}" existiert bereits. Was möchten Sie tun?
+              Eine Variable mit dem Namen "<span className="font-medium">{linkOrCreateDialog.varName}</span>" existiert bereits. Was möchten Sie tun?
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter className="flex-col sm:flex-row gap-2">
-            <AlertDialogCancel data-testid="button-cancel-link">
-              Abbrechen
-            </AlertDialogCancel>
+          <div className="flex flex-col gap-2 mt-4">
             <Button
               variant="outline"
               onClick={handleLinkVariable}
+              className="w-full"
               data-testid="button-link-variable"
             >
               Mit bestehender Variable verknüpfen
             </Button>
             <Button
               onClick={handleCreateNewVariable}
+              className="w-full"
               data-testid="button-create-new-variable"
             >
               Neue Variable erstellen
             </Button>
+          </div>
+          <AlertDialogFooter className="mt-2">
+            <AlertDialogCancel className="w-full sm:w-auto" data-testid="button-cancel-link">
+              Abbrechen
+            </AlertDialogCancel>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
