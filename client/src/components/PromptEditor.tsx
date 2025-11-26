@@ -314,40 +314,16 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
     const varName = selectedText.replace(/\s+/g, '_').replace(/[^\w-]/g, '');
     const varPlaceholder = `[${varName}]`;
     
-    const isDuplicate = variables.some(v => v.name === varName);
-    if (isDuplicate) {
-      toast({
-        title: "Fehler",
-        description: "Diese Variable existiert bereits!",
-        variant: "destructive"
-      });
-      return;
-    }
+    const existingVariable = variables.find(v => v.name === varName);
     
-    const newVariable: Variable = {
-      id: varName,
-      name: varName,
-      label: selectedText,
-      description: '',
-      type: 'text',
-      defaultValue: selectedText,
-      required: false,
-      position: variables.length
-    };
-    
-    setVariables([...variables, newVariable]);
-    
-    // Open variable editor overlay on mobile
-    setEditingVariableId(varName);
-    setShowVariableEditor(true);
-    
+    // Replace selected text with the variable placeholder
     const newPrompt = 
       prompt.substring(0, selectionRange.start) + 
       varPlaceholder + 
       prompt.substring(selectionRange.end);
     setPrompt(newPrompt);
     
-    // Move cursor to after the variable (right after the closing bracket)
+    // Move cursor to after the variable
     const newCursorPos = selectionRange.start + varPlaceholder.length;
     setTimeout(() => {
       if (textareaRef.current) {
@@ -358,47 +334,80 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
     
     setSelectedText("");
     setSelectionRange(null);
-    setOpenVariables([varName]);
-  };
-
-  const detectBracketVariables = (text: string) => {
-    const regex = /\[([^\]]+)\]/g;
-    const matches = Array.from(text.matchAll(regex));
     
-    matches.forEach(match => {
-      const varName = match[1];
-      const exists = variables.some(v => v.name === varName);
+    if (existingVariable) {
+      // Variable already exists - just reference it
+      toast({
+        title: "Variable verknüpft",
+        description: `Bestehende Variable "${varName}" wurde eingefügt.`,
+      });
+      setOpenVariables([existingVariable.id]);
+      setEditingVariableId(existingVariable.id);
+      setShowVariableEditor(true);
+    } else {
+      // Create new variable
+      const newVariable: Variable = {
+        id: varName,
+        name: varName,
+        label: selectedText,
+        description: '',
+        type: 'text',
+        defaultValue: selectedText,
+        required: false,
+        position: variables.length
+      };
       
-      if (!exists) {
-        const newVariable: Variable = {
-          id: varName,
-          name: varName,
-          label: varName,
-          description: '',
-          type: 'text',
-          defaultValue: '',
-          required: true,
-          position: variables.length
-        };
-        
-        setVariables(prev => [...prev, newVariable]);
-        setOpenVariables(prev => [...prev, varName]);
-      }
-    });
+      setVariables([...variables, newVariable]);
+      setOpenVariables([varName]);
+      setEditingVariableId(varName);
+      setShowVariableEditor(true);
+      
+      toast({
+        title: "Variable erstellt",
+        description: `Neue Variable "${varName}" wurde erstellt.`,
+      });
+    }
   };
 
   useEffect(() => {
     const timeoutId = setTimeout(() => {
-      const currentPlaceholders = new Set<string>();
+      // Get all unique variable names from the prompt
       const regex = /\[([^\]]+)\]/g;
+      const uniqueVarNames = new Set<string>();
       let match;
       while ((match = regex.exec(prompt)) !== null) {
-        currentPlaceholders.add(match[1]);
+        uniqueVarNames.add(match[1]);
       }
       
-      detectBracketVariables(prompt);
-      
-      setVariables(prev => prev.filter(v => currentPlaceholders.has(v.name)));
+      setVariables(prev => {
+        // Keep existing variables that are still in the prompt
+        const existingVars = prev.filter(v => uniqueVarNames.has(v.name));
+        const existingNames = new Set(existingVars.map(v => v.name));
+        
+        // Create new variables for names that don't exist yet
+        const newVars: Variable[] = [];
+        uniqueVarNames.forEach(varName => {
+          if (!existingNames.has(varName)) {
+            newVars.push({
+              id: varName,
+              name: varName,
+              label: varName,
+              description: '',
+              type: 'text',
+              defaultValue: '',
+              required: true,
+              position: existingVars.length + newVars.length
+            });
+          }
+        });
+        
+        // Open newly created variables
+        if (newVars.length > 0) {
+          setOpenVariables(prev => [...prev, ...newVars.map(v => v.id)]);
+        }
+        
+        return [...existingVars, ...newVars];
+      });
     }, 500);
     
     return () => clearTimeout(timeoutId);
