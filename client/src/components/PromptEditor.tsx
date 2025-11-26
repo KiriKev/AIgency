@@ -849,7 +849,13 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
           <CardContent className="flex-1 min-h-0 flex flex-col gap-2 px-3 pb-3">
             <div 
               className="relative flex-1 border border-border rounded-md min-h-[200px]" 
-              onClick={() => textareaRef.current?.focus()}
+              onClick={(e) => {
+                // If clicking on the container (not the button), clear selection and focus
+                if ((e.target as HTMLElement).tagName !== 'BUTTON') {
+                  clearSelection();
+                  textareaRef.current?.focus();
+                }
+              }}
               style={{ resize: 'vertical', overflow: 'hidden' }}
             >
               <div 
@@ -1449,7 +1455,15 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
 
               {/* Scrollable Content */}
               <div className="px-3 pt-3 pb-3 w-full max-w-full overflow-x-hidden">
-                <div className="relative min-h-[500px] w-full max-w-full overflow-visible border border-border rounded-md">
+                <div 
+                  className="relative min-h-[500px] w-full max-w-full overflow-visible border border-border rounded-md"
+                  onClick={(e) => {
+                    if ((e.target as HTMLElement).tagName !== 'BUTTON') {
+                      clearSelection();
+                      textareaRef.current?.focus();
+                    }
+                  }}
+                >
                   <div 
                     className="absolute inset-0 font-mono text-sm whitespace-pre-wrap pointer-events-none overflow-hidden select-none text-white"
                     style={{ 
