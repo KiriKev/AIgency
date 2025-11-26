@@ -100,7 +100,29 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
   
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const editorContainerRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
+  
+  // Global click handler to clear selection when clicking outside
+  useEffect(() => {
+    const handleGlobalClick = (e: MouseEvent) => {
+      // If we have a selection and click is outside the editor container
+      if (selectedText && selectionRange && buttonPosition) {
+        const target = e.target as HTMLElement;
+        const isInsideEditor = editorContainerRef.current?.contains(target);
+        const isButton = target.tagName === 'BUTTON' || target.closest('button');
+        
+        if (!isInsideEditor && !isButton) {
+          setSelectedText("");
+          setSelectionRange(null);
+          setButtonPosition(null);
+        }
+      }
+    };
+    
+    document.addEventListener('mousedown', handleGlobalClick);
+    return () => document.removeEventListener('mousedown', handleGlobalClick);
+  }, [selectedText, selectionRange, buttonPosition]);
 
   const { data: savedPrompts = [] } = useQuery<any[]>({
     queryKey: ['/api/prompts'],
@@ -848,19 +870,9 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
           </CardHeader>
           <CardContent className="flex-1 min-h-0 flex flex-col gap-2 px-3 pb-3">
             <div 
+              ref={editorContainerRef}
               className="relative flex-1 border border-border rounded-md min-h-[200px]" 
-              onClick={(e) => {
-                // If clicking on the container (not the button), check if it's a real click (no selection)
-                if ((e.target as HTMLElement).tagName !== 'BUTTON') {
-                  // Only clear if no text is selected in the textarea
-                  const start = textareaRef.current?.selectionStart ?? 0;
-                  const end = textareaRef.current?.selectionEnd ?? 0;
-                  if (start === end) {
-                    clearSelection();
-                  }
-                  textareaRef.current?.focus();
-                }
-              }}
+              onClick={() => textareaRef.current?.focus()}
               style={{ resize: 'vertical', overflow: 'hidden' }}
             >
               <div 
@@ -967,8 +979,7 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
                   resize: 'none',
                   padding: '8px 12px',
                   lineHeight: '1.625',
-                  boxSizing: 'border-box',
-                  pointerEvents: selectedText && selectionRange && buttonPosition ? 'none' : 'auto'
+                  boxSizing: 'border-box'
                 }}
                 placeholder="Schreibe deinen Prompt hier... Nutze [VariableName] für Variablen"
                 data-testid="textarea-prompt"
@@ -1462,16 +1473,7 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
               <div className="px-3 pt-3 pb-3 w-full max-w-full overflow-x-hidden">
                 <div 
                   className="relative min-h-[500px] w-full max-w-full overflow-visible border border-border rounded-md"
-                  onClick={(e) => {
-                    if ((e.target as HTMLElement).tagName !== 'BUTTON') {
-                      const start = textareaRef.current?.selectionStart ?? 0;
-                      const end = textareaRef.current?.selectionEnd ?? 0;
-                      if (start === end) {
-                        clearSelection();
-                      }
-                      textareaRef.current?.focus();
-                    }
-                  }}
+                  onClick={() => textareaRef.current?.focus()}
                 >
                   <div 
                     className="absolute inset-0 font-mono text-sm whitespace-pre-wrap pointer-events-none overflow-hidden select-none text-white"
