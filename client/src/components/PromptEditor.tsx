@@ -103,34 +103,33 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
   const editorContainerRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   
-  // Global click handler to clear selection when clicking outside
+  // Global click handler to clear selection when clicking outside editor
   useEffect(() => {
-    const handleGlobalClick = (e: MouseEvent) => {
-      // If we have a selection
-      if (selectedText && selectionRange && buttonPosition) {
-        const target = e.target as HTMLElement;
-        
-        // Check if clicking on the variable button or inside it
-        const isVariableButton = target.closest('[data-testid="button-create-variable"]') ||
-                                  target.closest('[data-testid="button-create-from-selection"]');
-        
-        // Don't clear if clicking on the variable button
-        if (isVariableButton) {
-          return;
-        }
-        
-        const isInsideEditor = editorContainerRef.current?.contains(target);
-        
-        if (!isInsideEditor) {
-          setSelectedText("");
-          setSelectionRange(null);
-          setButtonPosition(null);
-        }
+    const handleGlobalMouseUp = (e: MouseEvent) => {
+      // Only act if we have an active selection with button
+      if (!selectedText || !selectionRange || !buttonPosition) return;
+      
+      const target = e.target as HTMLElement;
+      
+      // Don't clear if clicking on the variable button
+      if (target.closest('[data-testid="button-create-variable"]') ||
+          target.closest('[data-testid="button-create-from-selection"]')) {
+        return;
       }
+      
+      // Don't clear if clicking inside the editor container
+      if (editorContainerRef.current?.contains(target)) {
+        return;
+      }
+      
+      // Clear selection for clicks outside
+      setSelectedText("");
+      setSelectionRange(null);
+      setButtonPosition(null);
     };
     
-    document.addEventListener('mousedown', handleGlobalClick);
-    return () => document.removeEventListener('mousedown', handleGlobalClick);
+    document.addEventListener('click', handleGlobalMouseUp);
+    return () => document.removeEventListener('click', handleGlobalMouseUp);
   }, [selectedText, selectionRange, buttonPosition]);
 
   const { data: savedPrompts = [] } = useQuery<any[]>({
