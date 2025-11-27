@@ -12,11 +12,12 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Sparkles, RefreshCw, Check, X, Image as ImageIcon, ArrowLeft } from "lucide-react";
+import { Sparkles, RefreshCw, Check, X, Image as ImageIcon, ArrowLeft, Maximize2 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useState } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useLocation } from "wouter";
+import ImageLightbox from "./ImageLightbox";
 
 const ASPECT_RATIOS = [
   { value: "1:1", label: "1:1" },
@@ -48,6 +49,7 @@ export default function GeneratorInterface({
   const [middleFinger, setMiddleFinger] = useState(false);
   const [iterations, setIterations] = useState(0);
   const [chatMessage, setChatMessage] = useState("");
+  const [lightboxImage, setLightboxImage] = useState<{ url: string; title: string } | null>(null);
 
   const baseCost = selectedModel === "gemini-3.0" ? 15 : 15;
   const upscaleCost = upscale4k ? 5 : 0;
@@ -85,31 +87,37 @@ export default function GeneratorInterface({
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-4">
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-1">
-            {[1, 2, 3, 4].map((idx) => (
-              <div
-                key={idx}
-                className="aspect-square bg-muted rounded-sm overflow-hidden border-[0.5px] border-border hover-elevate cursor-pointer relative group"
-              >
-                <img 
-                  src={`${imageUrl.replace('w=800', `w=400`).replace('h=800', 'h=400')}&variant=${idx}`}
-                  alt={`${title} variation ${idx}`}
-                  className="w-full h-full object-cover"
-                  onError={(e) => {
-                    e.currentTarget.style.display = 'none';
-                    e.currentTarget.nextElementSibling?.classList.remove('hidden');
-                  }}
-                />
-                <div className="hidden absolute inset-0 flex items-center justify-center bg-muted">
-                  <div className="text-center">
-                    <ImageIcon className="h-12 w-12 mx-auto text-muted-foreground mb-2" />
-                    <p className="text-xs text-muted-foreground">Image {idx}</p>
+            {[1, 2, 3, 4].map((idx) => {
+              const variationUrl = `${imageUrl.replace('w=800', `w=400`).replace('h=800', 'h=400')}&variant=${idx}`;
+              return (
+                <div
+                  key={idx}
+                  className="aspect-square bg-muted rounded-sm overflow-hidden border-[0.5px] border-border hover-elevate cursor-zoom-in relative group"
+                  onClick={() => setLightboxImage({ url: imageUrl, title: `${title} - Variation ${idx}` })}
+                  data-testid={`generated-image-${idx}`}
+                >
+                  <img 
+                    src={variationUrl}
+                    alt={`${title} variation ${idx}`}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none';
+                      e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                    }}
+                  />
+                  <div className="hidden absolute inset-0 flex items-center justify-center bg-muted">
+                    <div className="text-center">
+                      <ImageIcon className="h-12 w-12 mx-auto text-muted-foreground mb-2" />
+                      <p className="text-xs text-muted-foreground">Image {idx}</p>
+                    </div>
+                  </div>
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                    <Maximize2 className="h-6 w-6 text-white" />
+                    <p className="text-white text-sm font-medium">Variation {idx}</p>
                   </div>
                 </div>
-                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                  <p className="text-white text-sm font-medium">Variation {idx}</p>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           <div className="flex gap-2">
@@ -307,6 +315,13 @@ export default function GeneratorInterface({
           )}
         </CardContent>
       </Card>
+
+      <ImageLightbox
+        isOpen={!!lightboxImage}
+        onClose={() => setLightboxImage(null)}
+        imageUrl={lightboxImage?.url || ''}
+        title={lightboxImage?.title}
+      />
     </div>
   );
 }
