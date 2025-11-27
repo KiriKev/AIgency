@@ -953,11 +953,40 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
     <TooltipProvider>
       {/* Desktop View */}
       <div className="hidden lg:grid h-[calc(100vh-6rem)] grid-cols-[minmax(200px,_0.75fr)_minmax(350px,_2fr)_minmax(250px,_1.25fr)_minmax(280px,_1.5fr)] gap-1">
-        {/* Settings Panel */}
-        <PromptSettingsPanel 
-          settings={settingsData}
-          onUpdate={handleSettingsUpdate}
-        />
+        {/* Settings Panel OR Prompt Display for Showcase */}
+        {promptType === 'showcase' ? (
+          <Card className="flex flex-col overflow-hidden">
+            <CardHeader className="pb-2 px-3 shrink-0">
+              <CardTitle className="text-sm text-white">Prompt</CardTitle>
+            </CardHeader>
+            <CardContent className="flex-1 min-h-0 px-3 pb-3">
+              <ScrollArea className="h-full">
+                <div className="font-mono text-sm whitespace-pre-wrap text-white leading-relaxed">
+                  {prompt.split(/(\[[^\]]+\])/).map((part, index) => {
+                    const match = part.match(/\[([^\]]+)\]/);
+                    if (match) {
+                      const varName = match[1];
+                      const variable = variables.find(v => v.name === varName);
+                      if (variable) {
+                        return (
+                          <span key={index} className="text-teal-400 dark:text-teal-300">
+                            [{varName}]
+                          </span>
+                        );
+                      }
+                    }
+                    return <span key={index}>{part}</span>;
+                  })}
+                </div>
+              </ScrollArea>
+            </CardContent>
+          </Card>
+        ) : (
+          <PromptSettingsPanel 
+            settings={settingsData}
+            onUpdate={handleSettingsUpdate}
+          />
+        )}
 
         {/* Editor Panel */}
         <Card className="flex flex-col overflow-hidden">
