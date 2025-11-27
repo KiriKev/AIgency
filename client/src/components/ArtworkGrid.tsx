@@ -93,14 +93,14 @@ function ArtworkCard({ item, showArtist = true, onArtistClick, onCardClick, onIm
           </Badge>
         )}
 
-        <div className={`absolute inset-0 bg-gradient-to-t from-background/95 via-background/40 to-transparent flex flex-col justify-end p-3 gap-1 transition-opacity ${isHovered ? 'opacity-100' : 'opacity-90'}`}>
-          <h3 className="font-semibold text-sm text-white truncate" data-testid={`text-title-${item.id}`}>
+        <div className={`absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent flex flex-col justify-end p-3 gap-0.5 transition-opacity ${isHovered ? 'opacity-100' : 'opacity-100'}`}>
+          <h3 className="font-bold text-base text-white drop-shadow-lg" data-testid={`text-title-${item.id}`}>
             {item.title}
           </h3>
           
           {showArtist && (
             <p 
-              className={`text-xs text-muted-foreground truncate ${item.artistId && onArtistClick ? 'hover:text-primary cursor-pointer hover:underline' : ''}`}
+              className={`text-sm text-white/80 ${item.artistId && onArtistClick ? 'hover:text-primary cursor-pointer hover:underline' : ''}`}
               onClick={item.artistId && onArtistClick ? handleArtistClick : undefined}
               data-testid={`text-artist-${item.id}`}
             >
