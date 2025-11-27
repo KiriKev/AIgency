@@ -19,10 +19,10 @@ export default function Generator() {
   const promptData = mockPrompts[promptId] || mockPrompts["1"];
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pt-16">
       <Navbar />
       
-      <main className="w-full px-6 lg:px-8 py-8">
+      <main className="w-full px-6 lg:px-8 py-4">
         <GeneratorInterface 
           title={promptData.title}
           artistName={promptData.artistName}
