@@ -8,15 +8,7 @@ import {
   type Artist,
   type InsertArtist,
   type Artwork,
-  type InsertArtwork,
-  type PromptGeneration,
-  type InsertPromptGeneration,
-  type GenerationChat,
-  type InsertGenerationChat,
-  type GenerationChatMessage,
-  type InsertGenerationChatMessage,
-  type PromptComment,
-  type InsertPromptComment
+  type InsertArtwork
 } from "@shared/schema";
 import { randomUUID } from "crypto";
 
@@ -52,30 +44,6 @@ export interface IStorage {
   createArtwork(artwork: InsertArtwork): Promise<Artwork>;
   updateArtwork(id: string, artwork: Partial<InsertArtwork>): Promise<Artwork | undefined>;
   deleteArtwork(id: string): Promise<boolean>;
-  
-  // Prompt Generation methods
-  getPromptGeneration(id: string): Promise<PromptGeneration | undefined>;
-  getGenerationsByPromptId(promptId: string): Promise<PromptGeneration[]>;
-  getGenerationsByUserId(userId: string): Promise<PromptGeneration[]>;
-  createPromptGeneration(generation: InsertPromptGeneration): Promise<PromptGeneration>;
-  updatePromptGeneration(id: string, update: Partial<InsertPromptGeneration>): Promise<PromptGeneration | undefined>;
-  acceptGeneration(id: string): Promise<PromptGeneration | undefined>;
-  
-  // Generation Chat methods
-  getGenerationChat(id: string): Promise<GenerationChat | undefined>;
-  getChatByGenerationId(generationId: string): Promise<GenerationChat | undefined>;
-  createGenerationChat(chat: InsertGenerationChat): Promise<GenerationChat>;
-  deleteGenerationChat(id: string): Promise<boolean>;
-  
-  // Chat Message methods
-  getChatMessages(chatId: string): Promise<GenerationChatMessage[]>;
-  createChatMessage(message: InsertGenerationChatMessage): Promise<GenerationChatMessage>;
-  
-  // Prompt Comment methods
-  getPromptComments(promptId: string): Promise<PromptComment[]>;
-  createPromptComment(comment: InsertPromptComment): Promise<PromptComment>;
-  deletePromptComment(id: string): Promise<boolean>;
-  hasUserGeneratedFromPrompt(userId: string, promptId: string): Promise<boolean>;
 }
 
 export class MemStorage implements IStorage {
@@ -84,10 +52,6 @@ export class MemStorage implements IStorage {
   private variables: Map<string, Variable>;
   private artists: Map<string, Artist>;
   private artworks: Map<string, Artwork>;
-  private promptGenerations: Map<string, PromptGeneration>;
-  private generationChats: Map<string, GenerationChat>;
-  private generationChatMessages: Map<string, GenerationChatMessage>;
-  private promptComments: Map<string, PromptComment>;
 
   constructor() {
     this.users = new Map();
@@ -95,10 +59,6 @@ export class MemStorage implements IStorage {
     this.variables = new Map();
     this.artists = new Map();
     this.artworks = new Map();
-    this.promptGenerations = new Map();
-    this.generationChats = new Map();
-    this.generationChatMessages = new Map();
-    this.promptComments = new Map();
     
     // Create default artist for demo
     const defaultArtistId = "default-artist";
@@ -422,145 +382,6 @@ export class MemStorage implements IStorage {
 
   async deleteArtwork(id: string): Promise<boolean> {
     return this.artworks.delete(id);
-  }
-
-  // Prompt Generation methods
-  async getPromptGeneration(id: string): Promise<PromptGeneration | undefined> {
-    return this.promptGenerations.get(id);
-  }
-
-  async getGenerationsByPromptId(promptId: string): Promise<PromptGeneration[]> {
-    return Array.from(this.promptGenerations.values())
-      .filter((g) => g.promptId === promptId)
-      .sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
-  }
-
-  async getGenerationsByUserId(userId: string): Promise<PromptGeneration[]> {
-    return Array.from(this.promptGenerations.values())
-      .filter((g) => g.userId === userId)
-      .sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
-  }
-
-  async createPromptGeneration(insertGeneration: InsertPromptGeneration): Promise<PromptGeneration> {
-    const id = randomUUID();
-    const generation: PromptGeneration = {
-      ...insertGeneration,
-      id,
-      watermarkedImageUrl: insertGeneration.watermarkedImageUrl ?? null,
-      settingsSnapshot: insertGeneration.settingsSnapshot ?? null,
-      status: insertGeneration.status ?? "pending",
-      accepted: insertGeneration.accepted ?? false,
-      createdAt: new Date().toISOString()
-    };
-    this.promptGenerations.set(id, generation);
-    return generation;
-  }
-
-  async updatePromptGeneration(id: string, update: Partial<InsertPromptGeneration>): Promise<PromptGeneration | undefined> {
-    const generation = this.promptGenerations.get(id);
-    if (!generation) return undefined;
-    
-    const updated = { ...generation, ...update };
-    this.promptGenerations.set(id, updated);
-    return updated;
-  }
-
-  async acceptGeneration(id: string): Promise<PromptGeneration | undefined> {
-    const generation = this.promptGenerations.get(id);
-    if (!generation) return undefined;
-    
-    const updated = { ...generation, accepted: true, status: "accepted" };
-    this.promptGenerations.set(id, updated);
-    
-    // Delete associated chat when generation is accepted
-    const chat = await this.getChatByGenerationId(id);
-    if (chat) {
-      // Delete all messages first
-      const messages = Array.from(this.generationChatMessages.entries())
-        .filter(([, m]) => m.chatId === chat.id);
-      messages.forEach(([msgId]) => this.generationChatMessages.delete(msgId));
-      // Delete the chat
-      this.generationChats.delete(chat.id);
-    }
-    
-    return updated;
-  }
-
-  // Generation Chat methods
-  async getGenerationChat(id: string): Promise<GenerationChat | undefined> {
-    return this.generationChats.get(id);
-  }
-
-  async getChatByGenerationId(generationId: string): Promise<GenerationChat | undefined> {
-    return Array.from(this.generationChats.values()).find(
-      (chat) => chat.generationId === generationId
-    );
-  }
-
-  async createGenerationChat(insertChat: InsertGenerationChat): Promise<GenerationChat> {
-    const id = randomUUID();
-    const chat: GenerationChat = {
-      ...insertChat,
-      id,
-      active: insertChat.active ?? true,
-      createdAt: new Date().toISOString()
-    };
-    this.generationChats.set(id, chat);
-    return chat;
-  }
-
-  async deleteGenerationChat(id: string): Promise<boolean> {
-    // Delete all messages first
-    const messages = Array.from(this.generationChatMessages.entries())
-      .filter(([, m]) => m.chatId === id);
-    messages.forEach(([msgId]) => this.generationChatMessages.delete(msgId));
-    return this.generationChats.delete(id);
-  }
-
-  // Chat Message methods
-  async getChatMessages(chatId: string): Promise<GenerationChatMessage[]> {
-    return Array.from(this.generationChatMessages.values())
-      .filter((m) => m.chatId === chatId)
-      .sort((a, b) => (a.createdAt || '').localeCompare(b.createdAt || ''));
-  }
-
-  async createChatMessage(insertMessage: InsertGenerationChatMessage): Promise<GenerationChatMessage> {
-    const id = randomUUID();
-    const message: GenerationChatMessage = {
-      ...insertMessage,
-      id,
-      createdAt: new Date().toISOString()
-    };
-    this.generationChatMessages.set(id, message);
-    return message;
-  }
-
-  // Prompt Comment methods
-  async getPromptComments(promptId: string): Promise<PromptComment[]> {
-    return Array.from(this.promptComments.values())
-      .filter((c) => c.promptId === promptId)
-      .sort((a, b) => (a.createdAt || '').localeCompare(b.createdAt || ''));
-  }
-
-  async createPromptComment(insertComment: InsertPromptComment): Promise<PromptComment> {
-    const id = randomUUID();
-    const comment: PromptComment = {
-      ...insertComment,
-      id,
-      createdAt: new Date().toISOString()
-    };
-    this.promptComments.set(id, comment);
-    return comment;
-  }
-
-  async deletePromptComment(id: string): Promise<boolean> {
-    return this.promptComments.delete(id);
-  }
-
-  async hasUserGeneratedFromPrompt(userId: string, promptId: string): Promise<boolean> {
-    return Array.from(this.promptGenerations.values()).some(
-      (g) => g.userId === userId && g.promptId === promptId
-    );
   }
 }
 
