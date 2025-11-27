@@ -962,19 +962,41 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
         {/* Editor Panel */}
         <Card className="flex flex-col overflow-hidden">
           <CardHeader className="pb-2 px-3 shrink-0 flex flex-row items-center justify-between gap-2 space-y-0">
-            <CardTitle className="text-base">Prompt Editor</CardTitle>
-            <Button
-              onClick={createNewEmptyVariable}
-              size="sm"
-              variant="default"
-              className="shrink-0"
-              data-testid="button-add-variable-desktop"
-            >
-              <Plus className="h-3 w-3 mr-1" />
-              Variable
-            </Button>
+            <CardTitle className="text-base text-white">Prompt Editor</CardTitle>
+            {promptType !== 'showcase' && (
+              <Button
+                onClick={createNewEmptyVariable}
+                size="sm"
+                variant="default"
+                className="shrink-0"
+                data-testid="button-add-variable-desktop"
+              >
+                <Plus className="h-3 w-3 mr-1" />
+                Variable
+              </Button>
+            )}
           </CardHeader>
           <CardContent className="flex-1 min-h-0 flex flex-col gap-2 px-3 pb-3 relative">
+            {promptType === 'showcase' ? (
+              <div className="flex-1 border border-border rounded-md p-3 overflow-y-auto">
+                <div className="font-mono text-sm whitespace-pre-wrap text-white" style={{ wordBreak: 'break-word', overflowWrap: 'anywhere', lineHeight: '1.625' }}>
+                  {prompt.split(/(\[[^\]]+\])/).map((part, index) => {
+                    const match = part.match(/\[([^\]]+)\]/);
+                    if (match) {
+                      const varName = match[1];
+                      const variable = variables.find(v => v.name === varName);
+                      return (
+                        <span key={index} className="text-teal-400 dark:text-teal-300">
+                          [{variable?.label || varName}]
+                        </span>
+                      );
+                    }
+                    return <span key={index}>{part}</span>;
+                  })}
+                </div>
+              </div>
+            ) : (
+            <>
             <div 
               ref={editorContainerRef}
               className="relative flex-1 border border-border rounded-md min-h-[200px]" 
@@ -982,7 +1004,7 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
               style={{ resize: 'vertical', overflow: 'hidden' }}
             >
               <div 
-                className="absolute inset-0 font-mono text-sm whitespace-pre-wrap pointer-events-none overflow-hidden select-none"
+                className="absolute inset-0 font-mono text-sm whitespace-pre-wrap pointer-events-none overflow-hidden select-none text-white"
                 style={{ 
                   wordBreak: 'break-word', 
                   overflowWrap: 'anywhere',
@@ -1117,7 +1139,7 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
             <div className="flex flex-wrap gap-1">
               {variables.length > 0 && (
                 <div className="flex flex-wrap gap-1 items-center">
-                  <span className="text-xs text-foreground">Variablen:</span>
+                  <span className="text-xs text-white">Variablen:</span>
                   {variables.map((variable) => (
                     <Badge
                       key={variable.id}
@@ -1139,23 +1161,25 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
             </div>
 
             <Card className="p-2 shrink-0">
-              <h4 className="text-xs font-medium mb-1.5">Vorschau</h4>
-              <div className="font-mono text-xs whitespace-pre-wrap break-words text-foreground max-h-[150px] overflow-y-auto">
+              <h4 className="text-xs font-medium text-white mb-1.5">Vorschau</h4>
+              <div className="font-mono text-xs whitespace-pre-wrap break-words text-white max-h-[150px] overflow-y-auto">
                 {renderPreviewWithDefaults()}
               </div>
             </Card>
+            </>
+            )}
           </CardContent>
         </Card>
 
         {/* Variables Panel */}
         <Card className="flex flex-col overflow-hidden" id="desktop-variables-panel">
             <CardHeader className="pb-2 px-3 shrink-0">
-              <CardTitle className="text-base">Variablen</CardTitle>
+              <CardTitle className="text-base text-white">Variablen</CardTitle>
             </CardHeader>
             <CardContent className="flex-1 min-h-0 px-3 pb-3">
               <ScrollArea className="h-full pr-4">
                 {variables.length === 0 ? (
-                  <p className="text-sm text-foreground text-center py-8">
+                  <p className="text-sm text-white text-center py-8">
                     Keine Variablen vorhanden.
                     <br />
                     Markiere Text oder nutze [Name]
@@ -1170,7 +1194,7 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
                       >
                         <AccordionTrigger className="hover-elevate px-2 rounded" data-testid={`accordion-trigger-${variable.id}`}>
                           <div className="flex items-center gap-2 flex-1">
-                            <span className="text-sm font-medium">{variable.label}</span>
+                            <span className="text-sm font-medium text-white">{variable.label}</span>
                             <Badge variant="outline" className="text-xs">{variable.type}</Badge>
                           </div>
                         </AccordionTrigger>
@@ -1466,7 +1490,7 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
         {/* Generation Panel */}
         <Card className="flex flex-col overflow-hidden">
             <CardHeader className="pb-2 px-3 shrink-0">
-              <CardTitle className="text-sm">Generierung</CardTitle>
+              <CardTitle className="text-sm text-white">Generierung</CardTitle>
             </CardHeader>
             <CardContent className="flex-1 min-h-0 flex flex-col gap-2 px-3 pb-3">
               {generatedImage ? (
@@ -1479,7 +1503,7 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
                   />
                 </div>
               ) : (
-                <div className="flex-1 flex items-center justify-center text-center text-foreground text-sm">
+                <div className="flex-1 flex items-center justify-center text-center text-white text-sm">
                   Kein generiertes Bild vorhanden.
                   <br />
                   Klicke auf Generieren.
@@ -1528,15 +1552,15 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
               size="sm" 
               onClick={onBack}
               data-testid="button-back"
-              className="text-foreground"
+              className="text-white"
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
               Zurück
             </Button>
           )}
           <div className="flex-1 min-w-0">
-            <h1 className="text-lg font-semibold text-foreground truncate">Create Prompt Template</h1>
-            <p className="text-xs text-foreground truncate">
+            <h1 className="text-lg font-semibold text-white truncate">Create Prompt Template</h1>
+            <p className="text-xs text-white truncate">
               Design reusable prompt templates with customizable variables
             </p>
           </div>
@@ -1802,7 +1826,7 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
                       >
                         <AccordionTrigger className="hover-elevate px-2 rounded" data-testid={`accordion-trigger-${variable.id}`}>
                           <div className="flex items-center gap-2 flex-1">
-                            <span className="text-sm font-medium">{variable.label}</span>
+                            <span className="text-sm font-medium text-white">{variable.label}</span>
                             <Badge variant="outline" className="text-xs">{variable.type}</Badge>
                           </div>
                         </AccordionTrigger>

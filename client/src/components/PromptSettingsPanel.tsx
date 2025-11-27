@@ -91,11 +91,11 @@ export default function PromptSettingsPanel({ settings, onUpdate, useScrollArea 
     <div className="space-y-2 p-3 pr-2 bg-transparent">
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm">Prompt Meta</CardTitle>
+            <CardTitle className="text-sm text-white">Prompt Meta</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="space-y-2">
-              <Label htmlFor="title" className="text-xs">Title</Label>
+              <Label htmlFor="title" className="text-xs text-white">Title</Label>
               <Input
                 id="title"
                 value={settings.title}
@@ -107,7 +107,7 @@ export default function PromptSettingsPanel({ settings, onUpdate, useScrollArea 
             </div>
 
             <div className="space-y-2">
-              <Label className="text-xs">Prompt Type</Label>
+              <Label className="text-xs text-white">Prompt Type</Label>
               <RadioGroup 
                 value={settings.promptType} 
                 onValueChange={(value) => onUpdate({ promptType: value })}
@@ -116,7 +116,7 @@ export default function PromptSettingsPanel({ settings, onUpdate, useScrollArea 
               >
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="showcase" id="showcase" data-testid="radio-showcase" />
-                  <Label htmlFor="showcase" className="text-sm font-normal cursor-pointer flex-1">Showcase</Label>
+                  <Label htmlFor="showcase" className="text-sm font-normal cursor-pointer flex-1 text-white">Showcase</Label>
                   <TooltipProvider>
                     <Tooltip delayDuration={0}>
                       <TooltipTrigger asChild>
@@ -132,7 +132,7 @@ export default function PromptSettingsPanel({ settings, onUpdate, useScrollArea 
                 </div>
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="create-now" id="create-now" data-testid="radio-create-now" />
-                  <Label htmlFor="create-now" className="text-sm font-normal cursor-pointer flex-1">Create now</Label>
+                  <Label htmlFor="create-now" className="text-sm font-normal cursor-pointer flex-1 text-white">Create now</Label>
                   <TooltipProvider>
                     <Tooltip delayDuration={0}>
                       <TooltipTrigger asChild>
@@ -150,7 +150,7 @@ export default function PromptSettingsPanel({ settings, onUpdate, useScrollArea 
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="category" className="text-xs">Category</Label>
+              <Label htmlFor="category" className="text-xs text-white">Category</Label>
               <Select value={settings.category} onValueChange={(value) => onUpdate({ category: value })}>
                 <SelectTrigger className="h-8 text-sm" data-testid="select-category">
                   <SelectValue placeholder="select category" />
@@ -168,7 +168,7 @@ export default function PromptSettingsPanel({ settings, onUpdate, useScrollArea 
             </div>
 
             <div className="space-y-2">
-              <Label className="text-xs">Tags</Label>
+              <Label className="text-xs text-white">Tags</Label>
               <div className="flex gap-2">
                 <Input
                   value={newTag}
@@ -206,11 +206,11 @@ export default function PromptSettingsPanel({ settings, onUpdate, useScrollArea 
 
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm">AI Model & Pricing</CardTitle>
+            <CardTitle className="text-sm text-white">AI Model & Pricing</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="space-y-2">
-              <Label htmlFor="ai-model" className="text-xs">AI Model</Label>
+              <Label htmlFor="ai-model" className="text-xs text-white">AI Model</Label>
               <Select value={settings.aiModel} onValueChange={(value) => onUpdate({ aiModel: value })}>
                 <SelectTrigger className="h-8 text-sm" data-testid="select-ai-model">
                   <SelectValue />
@@ -225,7 +225,7 @@ export default function PromptSettingsPanel({ settings, onUpdate, useScrollArea 
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="price" className="text-xs">Price per creation (USD)</Label>
+              <Label htmlFor="price" className="text-xs text-white">Price per creation (USD)</Label>
               <Input
                 id="price"
                 type="number"
@@ -242,12 +242,12 @@ export default function PromptSettingsPanel({ settings, onUpdate, useScrollArea 
 
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm">Output Controls</CardTitle>
+            <CardTitle className="text-sm text-white">Output Controls</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="space-y-2">
               <div className="flex items-center gap-1">
-                <Label htmlFor="aspect-ratio" className="text-xs">Aspect Ratio</Label>
+                <Label htmlFor="aspect-ratio" className="text-xs text-white">Aspect Ratio</Label>
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
@@ -281,7 +281,7 @@ export default function PromptSettingsPanel({ settings, onUpdate, useScrollArea 
 
             <div className="space-y-2">
               <div className="flex items-center gap-1">
-                <Label htmlFor="resolution" className="text-xs">Resolution</Label>
+                <Label htmlFor="resolution" className="text-xs text-white">Resolution</Label>
                 <TooltipProvider>
                   <Tooltip delayDuration={0}>
                     <TooltipTrigger asChild>
@@ -316,11 +316,11 @@ export default function PromptSettingsPanel({ settings, onUpdate, useScrollArea 
         {settings.aiModel === "gemini" && (
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm">Gemini Assets</CardTitle>
+              <CardTitle className="text-sm text-white">Gemini Assets</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="space-y-2">
-                <Label htmlFor="photo-count" className="text-xs">Photo Count</Label>
+                <Label htmlFor="photo-count" className="text-xs text-white">Photo Count</Label>
                 <Select 
                   value={settings.photoCount.toString()} 
                   onValueChange={(value) => {
@@ -345,7 +345,7 @@ export default function PromptSettingsPanel({ settings, onUpdate, useScrollArea 
               </div>
 
               <div className="space-y-2">
-                <Label className="text-xs">
+                <Label className="text-xs text-white">
                   Upload Photos ({settings.uploadedPhotos.length}/{settings.photoCount})
                 </Label>
                 
