@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Sparkles, RefreshCw, Check, Image as ImageIcon, ArrowLeft, Maximize2, Send, MessageCircle } from "lucide-react";
+import { Sparkles, Image as ImageIcon, ArrowLeft, Maximize2, Send, MessageCircle } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useState } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -307,17 +307,6 @@ export default function GeneratorInterface({
                   </div>
                 );
               })}
-            </div>
-
-            <div className="flex gap-2 mt-3 max-w-2xl mx-auto">
-              <Button className="flex-1" size="sm" data-testid="button-accept">
-                <Check className="h-4 w-4 mr-2" />
-                Accept & Save
-              </Button>
-              <Button variant="outline" className="flex-1" size="sm" data-testid="button-regenerate">
-                <RefreshCw className="h-4 w-4 mr-2" />
-                Regenerate
-              </Button>
             </div>
 
             <div className="border-t border-border/50 mt-4 pt-4 max-w-2xl mx-auto">
