@@ -26,7 +26,19 @@ const ASPECT_RATIOS = [
   { value: "3:4", label: "3:4" },
 ];
 
-export default function GeneratorInterface() {
+interface GeneratorInterfaceProps {
+  title?: string;
+  artistName?: string;
+  artistId?: string;
+  imageUrl?: string;
+}
+
+export default function GeneratorInterface({ 
+  title = "Cyberpunk Cityscape",
+  artistName = "NeonArtist",
+  artistId = "artist-neon",
+  imageUrl = "https://images.unsplash.com/photo-1545569341-9eb8b30979d9?w=800&h=800&fit=crop"
+}: GeneratorInterfaceProps) {
   const [, setLocation] = useLocation();
   const [evilSlider, setEvilSlider] = useState([75]);
   const [fireSlider, setFireSlider] = useState([60]);
@@ -53,11 +65,17 @@ export default function GeneratorInterface() {
           data-testid="button-back"
         >
           <ArrowLeft className="h-4 w-4 mr-2" />
-          Zurück
+          Back
         </Button>
         <div>
-          <h2 className="text-xl font-bold">Cyberpunk Cityscape</h2>
-          <p className="text-sm text-muted-foreground">by NeonArtist</p>
+          <h2 className="text-xl font-bold text-white">{title}</h2>
+          <p 
+            className="text-sm text-muted-foreground hover:text-primary cursor-pointer hover:underline"
+            onClick={() => setLocation(`/artist/${artistId}`)}
+            data-testid="text-artist-link"
+          >
+            by {artistName}
+          </p>
         </div>
         <Badge variant="secondary" className="ml-auto" data-testid="badge-iterations">
           {iterations} / 5 iterations
@@ -70,11 +88,25 @@ export default function GeneratorInterface() {
             {[1, 2, 3, 4].map((idx) => (
               <div
                 key={idx}
-                className="aspect-square bg-muted rounded-sm flex items-center justify-center border-[0.5px] border-border hover-elevate cursor-pointer"
+                className="aspect-square bg-muted rounded-sm overflow-hidden border-[0.5px] border-border hover-elevate cursor-pointer relative group"
               >
-                <div className="text-center">
-                  <ImageIcon className="h-12 w-12 mx-auto text-muted-foreground mb-2" />
-                  <p className="text-xs text-muted-foreground">Image {idx}</p>
+                <img 
+                  src={`${imageUrl.replace('w=800', `w=400`).replace('h=800', 'h=400')}&variant=${idx}`}
+                  alt={`${title} variation ${idx}`}
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                    e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                  }}
+                />
+                <div className="hidden absolute inset-0 flex items-center justify-center bg-muted">
+                  <div className="text-center">
+                    <ImageIcon className="h-12 w-12 mx-auto text-muted-foreground mb-2" />
+                    <p className="text-xs text-muted-foreground">Image {idx}</p>
+                  </div>
+                </div>
+                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                  <p className="text-white text-sm font-medium">Variation {idx}</p>
                 </div>
               </div>
             ))}
