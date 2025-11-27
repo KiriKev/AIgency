@@ -169,18 +169,22 @@ export default function ArtworkDetail() {
                     </span>
                   </div>
 
-                  {artwork.tags && Array.isArray(artwork.tags) && (artwork.tags as string[]).length > 0 && (
-                    <div>
-                      <p className="text-xs text-muted-foreground mb-2">Tags</p>
-                      <div className="flex gap-2 flex-wrap">
-                        {(artwork.tags as string[]).map((tag, i) => (
-                          <Badge key={i} variant="secondary">
-                            {String(tag)}
-                          </Badge>
-                        ))}
+                  {(() => {
+                    const tags = artwork.tags as string[] | null;
+                    if (!tags || !Array.isArray(tags) || tags.length === 0) return null;
+                    return (
+                      <div>
+                        <p className="text-xs text-muted-foreground mb-2">Tags</p>
+                        <div className="flex gap-2 flex-wrap">
+                          {tags.map((tag, i) => (
+                            <Badge key={i} variant="secondary">
+                              {tag}
+                            </Badge>
+                          ))}
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    );
+                  })()}
 
                   {artwork.promptUsed && (
                     <div>

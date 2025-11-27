@@ -41,7 +41,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/prompts", async (req, res) => {
     try {
-      const { content, ...rest } = req.body;
+      const { content, encryptedContent, iv, authTag, ...rest } = req.body;
       if (!content || typeof content !== 'string') {
         return res.status(400).json({ error: "Content is required" });
       }
@@ -58,7 +58,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.patch("/api/prompts/:id", async (req, res) => {
     try {
-      const prompt = await storage.updatePrompt(req.params.id, req.body);
+      const { encryptedContent, iv, authTag, ...safeBody } = req.body;
+      const prompt = await storage.updatePrompt(req.params.id, safeBody);
       if (!prompt) {
         return res.status(404).json({ error: "Prompt not found" });
       }

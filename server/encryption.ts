@@ -3,13 +3,34 @@ import crypto from 'crypto';
 const ALGORITHM = 'aes-256-gcm';
 const IV_LENGTH = 16;
 const AUTH_TAG_LENGTH = 16;
+const REQUIRED_KEY_LENGTH = 32;
+
+let cachedKey: Buffer | null = null;
 
 function getEncryptionKey(): Buffer {
+  if (cachedKey) return cachedKey;
+  
   const key = process.env.PROMPT_ENCRYPTION_KEY;
   if (!key) {
-    throw new Error('PROMPT_ENCRYPTION_KEY environment variable is not set');
+    throw new Error('PROMPT_ENCRYPTION_KEY environment variable is not set. Generate one using generateEncryptionKey()');
   }
-  return Buffer.from(key, 'base64');
+  
+  const keyBuffer = Buffer.from(key, 'base64');
+  if (keyBuffer.length !== REQUIRED_KEY_LENGTH) {
+    throw new Error(`PROMPT_ENCRYPTION_KEY must be exactly ${REQUIRED_KEY_LENGTH} bytes when decoded from base64. Current length: ${keyBuffer.length} bytes`);
+  }
+  
+  cachedKey = keyBuffer;
+  return cachedKey;
+}
+
+export function isEncryptionConfigured(): boolean {
+  try {
+    getEncryptionKey();
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 export interface EncryptedData {
