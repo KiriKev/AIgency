@@ -86,12 +86,6 @@ export default function ImageLightbox({ isOpen, onClose, imageUrl, title }: Imag
           </Button>
         </div>
 
-        {title && (
-          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4 z-40">
-            <h3 className="text-white font-medium text-center">{title}</h3>
-          </div>
-        )}
-
         <div 
           className="flex items-center justify-center w-full h-full min-h-[50vh] p-8 cursor-move overflow-auto"
           onClick={(e) => {

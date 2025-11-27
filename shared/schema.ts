@@ -104,3 +104,72 @@ export const insertArtworkSchema = createInsertSchema(artworks).omit({
 
 export type InsertArtwork = z.infer<typeof insertArtworkSchema>;
 export type Artwork = typeof artworks.$inferSelect;
+
+// Prompt generations - stores each image generation with settings snapshot
+export const promptGenerations = pgTable("prompt_generations", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  promptId: varchar("prompt_id").notNull(),
+  userId: varchar("user_id").notNull(),
+  imageUrl: text("image_url").notNull(),
+  watermarkedImageUrl: text("watermarked_image_url"),
+  settingsSnapshot: jsonb("settings_snapshot"),
+  status: text("status").default("pending"),
+  accepted: boolean("accepted").default(false),
+  createdAt: text("created_at").default(sql`now()`),
+});
+
+export const insertPromptGenerationSchema = createInsertSchema(promptGenerations).omit({
+  id: true,
+});
+
+export type InsertPromptGeneration = z.infer<typeof insertPromptGenerationSchema>;
+export type PromptGeneration = typeof promptGenerations.$inferSelect;
+
+// Generation chats - temporary chat sessions for image refinement
+export const generationChats = pgTable("generation_chats", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  generationId: varchar("generation_id").notNull(),
+  userId: varchar("user_id").notNull(),
+  active: boolean("active").default(true),
+  createdAt: text("created_at").default(sql`now()`),
+});
+
+export const insertGenerationChatSchema = createInsertSchema(generationChats).omit({
+  id: true,
+});
+
+export type InsertGenerationChat = z.infer<typeof insertGenerationChatSchema>;
+export type GenerationChat = typeof generationChats.$inferSelect;
+
+// Generation chat messages
+export const generationChatMessages = pgTable("generation_chat_messages", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  chatId: varchar("chat_id").notNull(),
+  role: text("role").notNull(),
+  content: text("content").notNull(),
+  createdAt: text("created_at").default(sql`now()`),
+});
+
+export const insertGenerationChatMessageSchema = createInsertSchema(generationChatMessages).omit({
+  id: true,
+});
+
+export type InsertGenerationChatMessage = z.infer<typeof insertGenerationChatMessageSchema>;
+export type GenerationChatMessage = typeof generationChatMessages.$inferSelect;
+
+// Prompt comments - only users who generated from this prompt can comment
+export const promptComments = pgTable("prompt_comments", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  promptId: varchar("prompt_id").notNull(),
+  userId: varchar("user_id").notNull(),
+  generationId: varchar("generation_id").notNull(),
+  content: text("content").notNull(),
+  createdAt: text("created_at").default(sql`now()`),
+});
+
+export const insertPromptCommentSchema = createInsertSchema(promptComments).omit({
+  id: true,
+});
+
+export type InsertPromptComment = z.infer<typeof insertPromptCommentSchema>;
+export type PromptComment = typeof promptComments.$inferSelect;
