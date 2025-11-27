@@ -357,35 +357,33 @@ export default function GeneratorInterface({
           </div>
         </ScrollArea>
 
-        <div className="w-20 lg:w-24 border-l border-border/50 bg-card/30 shrink-0 flex flex-col h-full">
+        <div className="w-20 lg:w-24 border-l border-border/50 bg-card/30 shrink-0 flex flex-col overflow-hidden">
           <div className="p-2 border-b border-border/50 shrink-0">
             <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">History</span>
           </div>
-          <ScrollArea className="flex-1">
-            <div className="p-1.5 space-y-1.5">
-              {variations.map((variation) => (
-                <div
-                  key={variation.id}
-                  className={`relative aspect-square rounded-sm overflow-hidden cursor-pointer transition-all ${
-                    selectedVariation === variation.id 
-                      ? 'ring-2 ring-primary ring-offset-1 ring-offset-background' 
-                      : 'hover:opacity-80'
-                  }`}
-                  onClick={() => handleVariationSelect(variation)}
-                  data-testid={`variation-${variation.id}`}
-                >
-                  <img
-                    src={variation.imageUrl}
-                    alt={`Variation ${variation.id}`}
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-1">
-                    <p className="text-[8px] text-white/80 text-center">{variation.createdAt}</p>
-                  </div>
+          <div className="flex-1 overflow-y-auto p-1.5 space-y-1.5">
+            {variations.map((variation) => (
+              <div
+                key={variation.id}
+                className={`relative aspect-square rounded-sm overflow-hidden cursor-pointer transition-all ${
+                  selectedVariation === variation.id 
+                    ? 'ring-2 ring-primary ring-offset-1 ring-offset-background' 
+                    : 'hover:opacity-80'
+                }`}
+                onClick={() => handleVariationSelect(variation)}
+                data-testid={`variation-${variation.id}`}
+              >
+                <img
+                  src={variation.imageUrl}
+                  alt={`Variation ${variation.id}`}
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-1">
+                  <p className="text-[8px] text-white/80 text-center">{variation.createdAt}</p>
                 </div>
-              ))}
-            </div>
-          </ScrollArea>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 
