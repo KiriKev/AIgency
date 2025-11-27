@@ -73,13 +73,13 @@ export class MemStorage implements IStorage {
       followingCount: 12
     });
     
-    // Add some sample artworks
+    // Add some sample artworks with Unsplash images
     const sampleArtworks = [
-      { title: "Cosmic Dreams", description: "A surreal journey through space", promptUsed: "cosmic nebula with stars" },
-      { title: "Forest Spirit", description: "Mystical creature in enchanted woods", promptUsed: "magical forest spirit glowing" },
-      { title: "Neon City", description: "Futuristic cyberpunk cityscape", promptUsed: "neon lit cyberpunk city at night" },
-      { title: "Ocean Depths", description: "Deep sea wonders", promptUsed: "underwater bioluminescent creatures" },
-      { title: "Mountain Serenity", description: "Peaceful mountain landscape", promptUsed: "serene mountain lake sunset" },
+      { title: "Cosmic Dreams", description: "A surreal journey through space", promptUsed: "cosmic nebula with stars", imageUrl: "https://images.unsplash.com/photo-1462331940025-496dfbfc7564?w=400&h=400&fit=crop" },
+      { title: "Forest Spirit", description: "Mystical creature in enchanted woods", promptUsed: "magical forest spirit glowing", imageUrl: "https://images.unsplash.com/photo-1448375240586-882707db888b?w=400&h=400&fit=crop" },
+      { title: "Neon City", description: "Futuristic cyberpunk cityscape", promptUsed: "neon lit cyberpunk city at night", imageUrl: "https://images.unsplash.com/photo-1514565131-fce0801e5785?w=400&h=400&fit=crop" },
+      { title: "Ocean Depths", description: "Deep sea wonders", promptUsed: "underwater bioluminescent creatures", imageUrl: "https://images.unsplash.com/photo-1559827291-72ee739d0d9a?w=400&h=400&fit=crop" },
+      { title: "Mountain Serenity", description: "Peaceful mountain landscape", promptUsed: "serene mountain lake sunset", imageUrl: "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=400&h=400&fit=crop" },
     ];
     
     sampleArtworks.forEach((art, index) => {
@@ -89,7 +89,7 @@ export class MemStorage implements IStorage {
         artistId: defaultArtistId,
         title: art.title,
         description: art.description,
-        imageUrl: `https://picsum.photos/seed/${index + 1}/400/400`,
+        imageUrl: art.imageUrl,
         promptUsed: art.promptUsed,
         promptId: null,
         likes: Math.floor(Math.random() * 100) + 10,
@@ -137,7 +137,14 @@ export class MemStorage implements IStorage {
         followingCount: Math.floor(Math.random() * 100) + 10
       });
       
-      // Add sample artworks for each hub artist
+      // Add sample artworks for each hub artist with Unsplash images
+      const unsplashImages = [
+        "https://images.unsplash.com/photo-1541701494587-cb58502866ab?w=400&h=400&fit=crop",
+        "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&h=400&fit=crop",
+        "https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=400&h=400&fit=crop",
+        "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=400&h=400&fit=crop",
+        "https://images.unsplash.com/photo-1534972195531-d756b9bfa9f2?w=400&h=400&fit=crop",
+      ];
       const artworkCount = 3 + Math.floor(Math.random() * 3);
       for (let i = 0; i < artworkCount; i++) {
         const artworkId = `artwork-${artist.id}-${i + 1}`;
@@ -146,7 +153,7 @@ export class MemStorage implements IStorage {
           artistId: artist.id,
           title: `${artist.displayName} Creation #${i + 1}`,
           description: `A beautiful piece by ${artist.displayName}`,
-          imageUrl: `https://picsum.photos/seed/${artist.id}${i}/400/400`,
+          imageUrl: unsplashImages[(artistIdx * 3 + i) % unsplashImages.length],
           promptUsed: null,
           promptId: null,
           likes: Math.floor(Math.random() * 200) + 20,
@@ -159,9 +166,9 @@ export class MemStorage implements IStorage {
     });
     
     const artist2Artworks = [
-      { title: "Abstract Flow", description: "Fluid abstract patterns" },
-      { title: "Digital Garden", description: "Virtual nature" },
-      { title: "Retro Future", description: "80s inspired scifi" },
+      { title: "Abstract Flow", description: "Fluid abstract patterns", imageUrl: "https://images.unsplash.com/photo-1557672172-298e090bd0f1?w=400&h=400&fit=crop" },
+      { title: "Digital Garden", description: "Virtual nature", imageUrl: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=400&fit=crop" },
+      { title: "Retro Future", description: "80s inspired scifi", imageUrl: "https://images.unsplash.com/photo-1614851099511-773084f6911d?w=400&h=400&fit=crop" },
     ];
     
     artist2Artworks.forEach((art, index) => {
@@ -171,7 +178,7 @@ export class MemStorage implements IStorage {
         artistId: artist2Id,
         title: art.title,
         description: art.description,
-        imageUrl: `https://picsum.photos/seed/a2${index + 10}/400/400`,
+        imageUrl: art.imageUrl,
         promptUsed: null,
         promptId: null,
         likes: Math.floor(Math.random() * 100) + 10,
