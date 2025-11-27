@@ -93,14 +93,14 @@ function ArtworkCard({ item, showArtist = true, onArtistClick, onCardClick, onIm
           </Badge>
         )}
 
-        <div className={`absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent flex flex-col justify-end p-3 gap-0.5 transition-opacity ${isHovered ? 'opacity-100' : 'opacity-100'}`}>
-          <h3 className="font-bold text-base text-white drop-shadow-lg" data-testid={`text-title-${item.id}`}>
+        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black via-black/80 to-transparent p-3 pt-8">
+          <h3 className="font-bold text-base text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]" data-testid={`text-title-${item.id}`}>
             {item.title}
           </h3>
           
           {showArtist && (
             <p 
-              className={`text-sm text-white/80 ${item.artistId && onArtistClick ? 'hover:text-primary cursor-pointer hover:underline' : ''}`}
+              className={`text-sm text-white/90 drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)] ${item.artistId && onArtistClick ? 'hover:text-primary cursor-pointer hover:underline' : ''}`}
               onClick={item.artistId && onArtistClick ? handleArtistClick : undefined}
               data-testid={`text-artist-${item.id}`}
             >
@@ -108,7 +108,7 @@ function ArtworkCard({ item, showArtist = true, onArtistClick, onCardClick, onIm
             </p>
           )}
           
-          <div className="flex items-center gap-3 text-xs text-muted-foreground">
+          <div className="flex items-center gap-3 text-xs text-white/70 mt-1">
             {variant === 'prompt' && item.rating !== undefined && (
               <>
                 <div className="flex items-center gap-1">
