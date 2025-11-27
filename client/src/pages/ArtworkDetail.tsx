@@ -169,13 +169,13 @@ export default function ArtworkDetail() {
                     </span>
                   </div>
 
-                  {artwork.tags && Array.isArray(artwork.tags) && artwork.tags.length > 0 && (
+                  {artwork.tags && Array.isArray(artwork.tags) && (artwork.tags as string[]).length > 0 && (
                     <div>
                       <p className="text-xs text-muted-foreground mb-2">Tags</p>
                       <div className="flex gap-2 flex-wrap">
-                        {(artwork.tags as string[]).map((tag: string, i: number) => (
+                        {(artwork.tags as string[]).map((tag, i) => (
                           <Badge key={i} variant="secondary">
-                            {tag}
+                            {String(tag)}
                           </Badge>
                         ))}
                       </div>

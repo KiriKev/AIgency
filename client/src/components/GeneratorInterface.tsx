@@ -52,6 +52,7 @@ interface Comment {
 }
 
 interface GeneratorInterfaceProps {
+  promptId?: string;
   title?: string;
   artistName?: string;
   artistId?: string;
@@ -59,10 +60,11 @@ interface GeneratorInterfaceProps {
 }
 
 export default function GeneratorInterface({ 
-  title = "Cyberpunk Cityscape",
-  artistName = "NeonArtist",
-  artistId = "artist-neon",
-  imageUrl = "https://images.unsplash.com/photo-1545569341-9eb8b30979d9?w=800&h=800&fit=crop"
+  promptId,
+  title = "Untitled Prompt",
+  artistName = "Unknown Artist",
+  artistId,
+  imageUrl
 }: GeneratorInterfaceProps) {
   const [, setLocation] = useLocation();
   const [evilSlider, setEvilSlider] = useState([75]);
@@ -278,12 +280,12 @@ export default function GeneratorInterface({
           <div className="p-3">
             <div className="grid grid-cols-2 gap-1 max-w-2xl mx-auto">
               {[1, 2, 3, 4].map((idx) => {
-                const variationUrl = `${imageUrl.replace('w=800', `w=400`).replace('h=800', 'h=400')}&variant=${idx}`;
+                const variationUrl = imageUrl ? `${imageUrl.replace('w=800', `w=400`).replace('h=800', 'h=400')}&variant=${idx}` : undefined;
                 return (
                   <div
                     key={idx}
                     className="aspect-square bg-muted rounded-sm overflow-hidden border-[0.5px] border-border hover-elevate cursor-zoom-in relative group"
-                    onClick={() => setLightboxImage(imageUrl)}
+                    onClick={() => imageUrl && setLightboxImage(imageUrl)}
                     data-testid={`generated-image-${idx}`}
                   >
                     <img 

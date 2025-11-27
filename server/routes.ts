@@ -26,25 +26,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/prompts/:id/content", async (req, res) => {
+    try {
+      const promptWithContent = await storage.getPromptWithDecryptedContent(req.params.id);
+      if (!promptWithContent) {
+        return res.status(404).json({ error: "Prompt not found" });
+      }
+      res.json({ content: promptWithContent.decryptedContent });
+    } catch (error) {
+      console.error("Decrypt prompt error:", error);
+      res.status(500).json({ error: "Failed to decrypt prompt content" });
+    }
+  });
+
   app.post("/api/prompts", async (req, res) => {
     try {
-      const validatedData = insertPromptSchema.parse(req.body);
-      const prompt = await storage.createPrompt(validatedData);
+      const { content, ...rest } = req.body;
+      if (!content || typeof content !== 'string') {
+        return res.status(400).json({ error: "Content is required" });
+      }
+      if (!rest.title || typeof rest.title !== 'string') {
+        return res.status(400).json({ error: "Title is required" });
+      }
+      const prompt = await storage.createPrompt({ content, ...rest });
       res.status(201).json(prompt);
     } catch (error) {
+      console.error("Create prompt error:", error);
       res.status(400).json({ error: "Invalid prompt data" });
     }
   });
 
   app.patch("/api/prompts/:id", async (req, res) => {
     try {
-      const validatedData = insertPromptSchema.parse(req.body);
-      const prompt = await storage.updatePrompt(req.params.id, validatedData);
+      const prompt = await storage.updatePrompt(req.params.id, req.body);
       if (!prompt) {
         return res.status(404).json({ error: "Prompt not found" });
       }
       res.json(prompt);
     } catch (error) {
+      console.error("Update prompt error:", error);
       res.status(500).json({ error: "Failed to update prompt" });
     }
   });
