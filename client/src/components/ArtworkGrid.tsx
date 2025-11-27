@@ -1,9 +1,10 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Star, Download, Sparkles, Heart, Eye } from "lucide-react";
+import { Star, Download, Sparkles, Heart, Eye, Maximize2 } from "lucide-react";
 import { useState } from "react";
 import { useLocation } from "wouter";
+import ImageLightbox from "./ImageLightbox";
 
 export interface ArtworkItem {
   id: string;
@@ -27,10 +28,11 @@ interface ArtworkCardProps {
   showArtist?: boolean;
   onArtistClick?: (artistId: string) => void;
   onCardClick?: (id: string) => void;
+  onImageClick?: (item: ArtworkItem) => void;
   variant?: 'prompt' | 'artwork';
 }
 
-function ArtworkCard({ item, showArtist = true, onArtistClick, onCardClick, variant = 'prompt' }: ArtworkCardProps) {
+function ArtworkCard({ item, showArtist = true, onArtistClick, onCardClick, onImageClick, variant = 'prompt' }: ArtworkCardProps) {
   const [isHovered, setIsHovered] = useState(false);
   const imageUrl = item.imageUrl || item.thumbnail || '';
 
@@ -38,6 +40,13 @@ function ArtworkCard({ item, showArtist = true, onArtistClick, onCardClick, vari
     e.stopPropagation();
     if (item.artistId && onArtistClick) {
       onArtistClick(item.artistId);
+    }
+  };
+
+  const handleImageClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onImageClick) {
+      onImageClick(item);
     }
   };
 
@@ -54,12 +63,24 @@ function ArtworkCard({ item, showArtist = true, onArtistClick, onCardClick, vari
           <img 
             src={imageUrl} 
             alt={item.title}
-            className="absolute inset-0 w-full h-full object-cover"
+            className="absolute inset-0 w-full h-full object-cover cursor-zoom-in"
+            onClick={handleImageClick}
+            data-testid={`image-artwork-${item.id}`}
           />
         ) : (
           <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-chart-2/20 flex items-center justify-center">
             <Sparkles className="h-12 w-12 text-primary/30" />
           </div>
+        )}
+        
+        {isHovered && imageUrl && (
+          <button
+            onClick={handleImageClick}
+            className="absolute top-2 left-2 p-1.5 rounded-md bg-black/50 hover:bg-black/70 text-white/80 hover:text-white transition-all z-10"
+            data-testid={`button-expand-${item.id}`}
+          >
+            <Maximize2 className="h-4 w-4" />
+          </button>
         )}
         
         {variant === 'prompt' && item.price !== undefined && (
@@ -147,6 +168,7 @@ export default function ArtworkGrid({
   onArtistClick
 }: ArtworkGridProps) {
   const [, setLocation] = useLocation();
+  const [lightboxItem, setLightboxItem] = useState<ArtworkItem | null>(null);
 
   const handleArtistClick = (artistId: string) => {
     if (onArtistClick) {
@@ -162,40 +184,66 @@ export default function ArtworkGrid({
     }
   };
 
+  const handleImageClick = (item: ArtworkItem) => {
+    setLightboxItem(item);
+  };
+
+  const closeLightbox = () => {
+    setLightboxItem(null);
+  };
+
   if (useMasonryLayout) {
     return (
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-1 auto-rows-[200px]">
-        {items.map((item, idx) => {
-          const spans = idx % 7 === 0 ? 'row-span-2 col-span-2' : idx % 5 === 0 ? 'row-span-2' : '';
-          return (
-            <div key={item.id} className={spans}>
-              <ArtworkCard
-                item={item}
-                variant={variant}
-                showArtist={showArtist}
-                onCardClick={handleCardClick}
-                onArtistClick={handleArtistClick}
-              />
-            </div>
-          );
-        })}
-      </div>
+      <>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-1 auto-rows-[200px]">
+          {items.map((item, idx) => {
+            const spans = idx % 7 === 0 ? 'row-span-2 col-span-2' : idx % 5 === 0 ? 'row-span-2' : '';
+            return (
+              <div key={item.id} className={spans}>
+                <ArtworkCard
+                  item={item}
+                  variant={variant}
+                  showArtist={showArtist}
+                  onCardClick={handleCardClick}
+                  onArtistClick={handleArtistClick}
+                  onImageClick={handleImageClick}
+                />
+              </div>
+            );
+          })}
+        </div>
+        <ImageLightbox
+          isOpen={!!lightboxItem}
+          onClose={closeLightbox}
+          imageUrl={lightboxItem?.imageUrl || lightboxItem?.thumbnail || ''}
+          title={lightboxItem?.title}
+        />
+      </>
     );
   }
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-      {items.map((item) => (
-        <ArtworkCard
-          key={item.id}
-          item={item}
-          variant={variant}
-          showArtist={showArtist}
-          onCardClick={handleCardClick}
-          onArtistClick={handleArtistClick}
-        />
-      ))}
-    </div>
+    <>
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        {items.map((item) => (
+          <ArtworkCard
+            key={item.id}
+            item={item}
+            variant={variant}
+            showArtist={showArtist}
+            onCardClick={handleCardClick}
+            onArtistClick={handleArtistClick}
+            onImageClick={handleImageClick}
+          />
+        ))}
+      </div>
+      <ImageLightbox
+        isOpen={!!lightboxItem}
+        onClose={closeLightbox}
+        imageUrl={lightboxItem?.imageUrl || lightboxItem?.thumbnail || ''}
+        title={lightboxItem?.title}
+      />
+    </>
   );
 }
 
