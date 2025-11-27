@@ -104,3 +104,39 @@ export const insertArtworkSchema = createInsertSchema(artworks).omit({
 
 export type InsertArtwork = z.infer<typeof insertArtworkSchema>;
 export type Artwork = typeof artworks.$inferSelect;
+
+// Generated variations for each prompt (right-side history panel)
+export const generatedVariations = pgTable("generated_variations", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  artworkId: varchar("artwork_id").notNull(),
+  userId: varchar("user_id").notNull(),
+  imageUrl: text("image_url").notNull(),
+  watermarkedImageUrl: text("watermarked_image_url"),
+  isAccepted: boolean("is_accepted").default(false),
+  settings: jsonb("settings"),
+  createdAt: text("created_at").default(sql`now()`),
+});
+
+export const insertGeneratedVariationSchema = createInsertSchema(generatedVariations).omit({
+  id: true,
+});
+
+export type InsertGeneratedVariation = z.infer<typeof insertGeneratedVariationSchema>;
+export type GeneratedVariation = typeof generatedVariations.$inferSelect;
+
+// Comments on artworks (only users who generated from this artwork can comment)
+export const artworkComments = pgTable("artwork_comments", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  artworkId: varchar("artwork_id").notNull(),
+  userId: varchar("user_id").notNull(),
+  username: text("username").notNull(),
+  content: text("content").notNull(),
+  createdAt: text("created_at").default(sql`now()`),
+});
+
+export const insertArtworkCommentSchema = createInsertSchema(artworkComments).omit({
+  id: true,
+});
+
+export type InsertArtworkComment = z.infer<typeof insertArtworkCommentSchema>;
+export type ArtworkComment = typeof artworkComments.$inferSelect;
