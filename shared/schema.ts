@@ -20,17 +20,24 @@ export type User = typeof users.$inferSelect;
 export const prompts = pgTable("prompts", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   title: text("title").notNull(),
-  content: text("content").notNull(),
+  encryptedContent: text("encrypted_content").notNull(),
+  iv: text("iv").notNull(),
+  authTag: text("auth_tag").notNull(),
   userId: varchar("user_id"),
+  artistId: varchar("artist_id"),
   category: text("category"),
-  tags: jsonb("tags"),
+  tags: jsonb("tags").$type<string[]>(),
   aiModel: text("ai_model").default("gemini"),
   price: integer("price").default(1),
   aspectRatio: text("aspect_ratio"),
   photoCount: integer("photo_count").default(1),
   promptType: text("prompt_type").default("create-now"),
-  uploadedPhotos: jsonb("uploaded_photos"),
+  uploadedPhotos: jsonb("uploaded_photos").$type<string[]>(),
   resolution: text("resolution"),
+  previewImageUrl: text("preview_image_url"),
+  downloads: integer("downloads").default(0),
+  rating: integer("rating").default(0),
+  createdAt: text("created_at").default(sql`now()`),
 });
 
 export const insertPromptSchema = createInsertSchema(prompts).omit({
@@ -39,6 +46,11 @@ export const insertPromptSchema = createInsertSchema(prompts).omit({
 
 export type InsertPrompt = z.infer<typeof insertPromptSchema>;
 export type Prompt = typeof prompts.$inferSelect;
+
+export interface VariableOption {
+  label: string;
+  promptValue: string;
+}
 
 export const variables = pgTable("variables", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -52,8 +64,10 @@ export const variables = pgTable("variables", {
   position: integer("position").notNull(),
   min: integer("min"),
   max: integer("max"),
-  options: jsonb("options"),
+  step: integer("step").default(1),
+  options: jsonb("options").$type<VariableOption[]>(),
   defaultOptionIndex: integer("default_option_index").default(0),
+  placeholder: text("placeholder"),
 });
 
 export const insertVariableSchema = createInsertSchema(variables).omit({

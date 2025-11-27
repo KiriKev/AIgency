@@ -1,4 +1,11 @@
 import { 
+  users,
+  prompts,
+  variables,
+  artists,
+  artworks,
+  generatedVariations,
+  artworkComments,
   type User, 
   type InsertUser, 
   type Prompt, 
@@ -8,19 +15,28 @@ import {
   type Artist,
   type InsertArtist,
   type Artwork,
-  type InsertArtwork
+  type InsertArtwork,
+  type GeneratedVariation,
+  type InsertGeneratedVariation,
+  type ArtworkComment,
+  type InsertArtworkComment
 } from "@shared/schema";
-import { randomUUID } from "crypto";
+import { db } from "./db";
+import { eq, desc } from "drizzle-orm";
+import { encryptPrompt, decryptPrompt } from "./encryption";
 
 export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   
-  getPrompt(id: string): Promise<Prompt | undefined>;
+  getPrompt(id: string): Promise<(Prompt & { decryptedContent?: string }) | undefined>;
+  getPromptWithDecryptedContent(id: string): Promise<(Prompt & { decryptedContent: string }) | undefined>;
   getAllPrompts(): Promise<Prompt[]>;
-  createPrompt(prompt: InsertPrompt): Promise<Prompt>;
-  updatePrompt(id: string, prompt: Partial<InsertPrompt>): Promise<Prompt | undefined>;
+  getPublicPrompts(): Promise<Prompt[]>;
+  getPromptsByArtistId(artistId: string): Promise<Prompt[]>;
+  createPrompt(promptData: { content: string } & Omit<InsertPrompt, 'encryptedContent' | 'iv' | 'authTag'>): Promise<Prompt>;
+  updatePrompt(id: string, promptData: Partial<{ content: string } & Omit<InsertPrompt, 'encryptedContent' | 'iv' | 'authTag'>>): Promise<Prompt | undefined>;
   deletePrompt(id: string): Promise<boolean>;
   
   getVariablesByPromptId(promptId: string): Promise<Variable[]>;
@@ -29,14 +45,12 @@ export interface IStorage {
   deleteVariable(id: string): Promise<boolean>;
   deleteVariablesByPromptId(promptId: string): Promise<void>;
   
-  // Artist methods
   getArtist(id: string): Promise<Artist | undefined>;
   getArtistByUsername(username: string): Promise<Artist | undefined>;
   getAllArtists(): Promise<Artist[]>;
   createArtist(artist: InsertArtist): Promise<Artist>;
   updateArtist(id: string, artist: Partial<InsertArtist>): Promise<Artist | undefined>;
   
-  // Artwork methods
   getArtwork(id: string): Promise<Artwork | undefined>;
   getArtworksByArtistId(artistId: string): Promise<Artwork[]>;
   getAllArtworks(): Promise<Artwork[]>;
@@ -44,345 +58,194 @@ export interface IStorage {
   createArtwork(artwork: InsertArtwork): Promise<Artwork>;
   updateArtwork(id: string, artwork: Partial<InsertArtwork>): Promise<Artwork | undefined>;
   deleteArtwork(id: string): Promise<boolean>;
+  
+  getVariationsByArtworkId(artworkId: string): Promise<GeneratedVariation[]>;
+  createVariation(variation: InsertGeneratedVariation): Promise<GeneratedVariation>;
+  
+  getCommentsByArtworkId(artworkId: string): Promise<ArtworkComment[]>;
+  createComment(comment: InsertArtworkComment): Promise<ArtworkComment>;
 }
 
-export class MemStorage implements IStorage {
-  private users: Map<string, User>;
-  private prompts: Map<string, Prompt>;
-  private variables: Map<string, Variable>;
-  private artists: Map<string, Artist>;
-  private artworks: Map<string, Artwork>;
-
-  constructor() {
-    this.users = new Map();
-    this.prompts = new Map();
-    this.variables = new Map();
-    this.artists = new Map();
-    this.artworks = new Map();
-    
-    // Create default artist for demo
-    const defaultArtistId = "default-artist";
-    this.artists.set(defaultArtistId, {
-      id: defaultArtistId,
-      username: "artist",
-      displayName: "Artist",
-      bio: "Digital artist and AI enthusiast",
-      avatarUrl: null,
-      coverImageUrl: null,
-      followerCount: 42,
-      followingCount: 12
-    });
-    
-    // Add some sample artworks with Unsplash images
-    const sampleArtworks = [
-      { title: "Cosmic Dreams", description: "A surreal journey through space", promptUsed: "cosmic nebula with stars", imageUrl: "https://images.unsplash.com/photo-1462331940025-496dfbfc7564?w=400&h=400&fit=crop" },
-      { title: "Forest Spirit", description: "Mystical creature in enchanted woods", promptUsed: "magical forest spirit glowing", imageUrl: "https://images.unsplash.com/photo-1448375240586-882707db888b?w=400&h=400&fit=crop" },
-      { title: "Neon City", description: "Futuristic cyberpunk cityscape", promptUsed: "neon lit cyberpunk city at night", imageUrl: "https://images.unsplash.com/photo-1514565131-fce0801e5785?w=400&h=400&fit=crop" },
-      { title: "Ocean Depths", description: "Deep sea wonders", promptUsed: "underwater bioluminescent creatures", imageUrl: "https://images.unsplash.com/photo-1559827291-72ee739d0d9a?w=400&h=400&fit=crop" },
-      { title: "Mountain Serenity", description: "Peaceful mountain landscape", promptUsed: "serene mountain lake sunset", imageUrl: "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=400&h=400&fit=crop" },
-    ];
-    
-    sampleArtworks.forEach((art, index) => {
-      const id = `artwork-${index + 1}`;
-      this.artworks.set(id, {
-        id,
-        artistId: defaultArtistId,
-        title: art.title,
-        description: art.description,
-        imageUrl: art.imageUrl,
-        promptUsed: art.promptUsed,
-        promptId: null,
-        likes: Math.floor(Math.random() * 100) + 10,
-        views: Math.floor(Math.random() * 500) + 50,
-        isPublic: true,
-        tags: ["ai-art", "digital"],
-        createdAt: new Date().toISOString()
-      });
-    });
-    
-    // Add another artist with artworks
-    const artist2Id = "artist-2";
-    this.artists.set(artist2Id, {
-      id: artist2Id,
-      username: "creative_mind",
-      displayName: "Creative Mind",
-      bio: "Exploring the boundaries of AI art",
-      avatarUrl: null,
-      coverImageUrl: null,
-      followerCount: 128,
-      followingCount: 45
-    });
-    
-    // Add artists for Art Hub mock prompts
-    const hubArtists = [
-      { id: "artist-neon", username: "neon_artist", displayName: "NeonArtist", bio: "Cyberpunk and neon aesthetics specialist" },
-      { id: "artist-magic", username: "magic_creator", displayName: "MagicCreator", bio: "Creating magical fantasy worlds" },
-      { id: "artist-modern", username: "modern_mind", displayName: "ModernMind", bio: "Digital abstract art enthusiast" },
-      { id: "artist-cyber", username: "cyber_sensei", displayName: "CyberSensei", bio: "Master of futuristic warrior art" },
-      { id: "artist-nature", username: "nature_whisperer", displayName: "NatureWhisperer", bio: "Bringing nature spirits to life" },
-      { id: "artist-shape", username: "shape_shifter", displayName: "ShapeShifter", bio: "Geometric and abstract designs" },
-      { id: "artist-vehicle", username: "vehicle_vision", displayName: "VehicleVision", bio: "Retro-futuristic vehicle designs" },
-      { id: "artist-mythic", username: "mythic_master", displayName: "MythicMaster", bio: "Mythological creature creator" },
-    ];
-    
-    hubArtists.forEach((artist, artistIdx) => {
-      this.artists.set(artist.id, {
-        id: artist.id,
-        username: artist.username,
-        displayName: artist.displayName,
-        bio: artist.bio,
-        avatarUrl: null,
-        coverImageUrl: null,
-        followerCount: Math.floor(Math.random() * 500) + 50,
-        followingCount: Math.floor(Math.random() * 100) + 10
-      });
-      
-      // Add sample artworks for each hub artist with Unsplash images
-      const unsplashImages = [
-        "https://images.unsplash.com/photo-1541701494587-cb58502866ab?w=400&h=400&fit=crop",
-        "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&h=400&fit=crop",
-        "https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=400&h=400&fit=crop",
-        "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=400&h=400&fit=crop",
-        "https://images.unsplash.com/photo-1534972195531-d756b9bfa9f2?w=400&h=400&fit=crop",
-      ];
-      const artworkCount = 3 + Math.floor(Math.random() * 3);
-      for (let i = 0; i < artworkCount; i++) {
-        const artworkId = `artwork-${artist.id}-${i + 1}`;
-        this.artworks.set(artworkId, {
-          id: artworkId,
-          artistId: artist.id,
-          title: `${artist.displayName} Creation #${i + 1}`,
-          description: `A beautiful piece by ${artist.displayName}`,
-          imageUrl: unsplashImages[(artistIdx * 3 + i) % unsplashImages.length],
-          promptUsed: null,
-          promptId: null,
-          likes: Math.floor(Math.random() * 200) + 20,
-          views: Math.floor(Math.random() * 1000) + 100,
-          isPublic: true,
-          tags: ["ai-art", artist.username.split('_')[0]],
-          createdAt: new Date().toISOString()
-        });
-      }
-    });
-    
-    const artist2Artworks = [
-      { title: "Abstract Flow", description: "Fluid abstract patterns", imageUrl: "https://images.unsplash.com/photo-1557672172-298e090bd0f1?w=400&h=400&fit=crop" },
-      { title: "Digital Garden", description: "Virtual nature", imageUrl: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=400&fit=crop" },
-      { title: "Retro Future", description: "80s inspired scifi", imageUrl: "https://images.unsplash.com/photo-1614851099511-773084f6911d?w=400&h=400&fit=crop" },
-    ];
-    
-    artist2Artworks.forEach((art, index) => {
-      const id = `artwork-a2-${index + 1}`;
-      this.artworks.set(id, {
-        id,
-        artistId: artist2Id,
-        title: art.title,
-        description: art.description,
-        imageUrl: art.imageUrl,
-        promptUsed: null,
-        promptId: null,
-        likes: Math.floor(Math.random() * 100) + 10,
-        views: Math.floor(Math.random() * 500) + 50,
-        isPublic: true,
-        tags: ["ai-art"],
-        createdAt: new Date().toISOString()
-      });
-    });
-  }
-
+export class DatabaseStorage implements IStorage {
   async getUser(id: string): Promise<User | undefined> {
-    return this.users.get(id);
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user || undefined;
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.username === username,
-    );
+    const [user] = await db.select().from(users).where(eq(users.username, username));
+    return user || undefined;
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    const id = randomUUID();
-    const user: User = { ...insertUser, id };
-    this.users.set(id, user);
+    const [user] = await db.insert(users).values(insertUser).returning();
     return user;
   }
 
   async getPrompt(id: string): Promise<Prompt | undefined> {
-    return this.prompts.get(id);
+    const [prompt] = await db.select().from(prompts).where(eq(prompts.id, id));
+    return prompt || undefined;
+  }
+
+  async getPromptWithDecryptedContent(id: string): Promise<(Prompt & { decryptedContent: string }) | undefined> {
+    const prompt = await this.getPrompt(id);
+    if (!prompt) return undefined;
+    
+    const decryptedContent = decryptPrompt({
+      encryptedContent: prompt.encryptedContent,
+      iv: prompt.iv,
+      authTag: prompt.authTag
+    });
+    
+    return { ...prompt, decryptedContent };
   }
 
   async getAllPrompts(): Promise<Prompt[]> {
-    return Array.from(this.prompts.values());
+    return db.select().from(prompts).orderBy(desc(prompts.createdAt));
   }
 
-  async createPrompt(insertPrompt: InsertPrompt): Promise<Prompt> {
-    const id = randomUUID();
-    const prompt: Prompt = { 
-      ...insertPrompt, 
-      id,
-      userId: insertPrompt.userId ?? null,
-      tags: insertPrompt.tags ?? null,
-      category: insertPrompt.category ?? null,
-      aiModel: insertPrompt.aiModel ?? null,
-      price: insertPrompt.price ?? null,
-      aspectRatio: insertPrompt.aspectRatio ?? null,
-      photoCount: insertPrompt.photoCount ?? null,
-      promptType: insertPrompt.promptType ?? null,
-      uploadedPhotos: insertPrompt.uploadedPhotos ?? null,
-      resolution: insertPrompt.resolution ?? null
-    };
-    this.prompts.set(id, prompt);
+  async getPublicPrompts(): Promise<Prompt[]> {
+    return db.select().from(prompts).orderBy(desc(prompts.createdAt));
+  }
+
+  async getPromptsByArtistId(artistId: string): Promise<Prompt[]> {
+    return db.select().from(prompts).where(eq(prompts.artistId, artistId)).orderBy(desc(prompts.createdAt));
+  }
+
+  async createPrompt(promptData: { content: string } & Omit<InsertPrompt, 'encryptedContent' | 'iv' | 'authTag'>): Promise<Prompt> {
+    const { content, ...rest } = promptData;
+    const encrypted = encryptPrompt(content);
+    
+    const [prompt] = await db.insert(prompts).values({
+      ...rest,
+      encryptedContent: encrypted.encryptedContent,
+      iv: encrypted.iv,
+      authTag: encrypted.authTag
+    }).returning();
+    
     return prompt;
   }
 
-  async updatePrompt(id: string, update: Partial<InsertPrompt>): Promise<Prompt | undefined> {
-    const prompt = this.prompts.get(id);
-    if (!prompt) return undefined;
+  async updatePrompt(id: string, promptData: Partial<{ content: string } & Omit<InsertPrompt, 'encryptedContent' | 'iv' | 'authTag'>>): Promise<Prompt | undefined> {
+    const { content, ...rest } = promptData;
     
-    const updated = { ...prompt, ...update };
-    this.prompts.set(id, updated);
-    return updated;
+    let updateData: Partial<InsertPrompt> = { ...rest };
+    
+    if (content !== undefined) {
+      const encrypted = encryptPrompt(content);
+      updateData = {
+        ...updateData,
+        encryptedContent: encrypted.encryptedContent,
+        iv: encrypted.iv,
+        authTag: encrypted.authTag
+      };
+    }
+    
+    const [prompt] = await db.update(prompts).set(updateData).where(eq(prompts.id, id)).returning();
+    return prompt || undefined;
   }
 
   async deletePrompt(id: string): Promise<boolean> {
-    return this.prompts.delete(id);
+    const result = await db.delete(prompts).where(eq(prompts.id, id));
+    return true;
   }
 
   async getVariablesByPromptId(promptId: string): Promise<Variable[]> {
-    return Array.from(this.variables.values())
-      .filter((v) => v.promptId === promptId)
-      .sort((a, b) => a.position - b.position);
+    return db.select().from(variables).where(eq(variables.promptId, promptId)).orderBy(variables.position);
   }
 
   async createVariable(insertVariable: InsertVariable): Promise<Variable> {
-    const id = randomUUID();
-    const variable: Variable = { 
-      ...insertVariable,
-      id,
-      description: insertVariable.description ?? null,
-      required: insertVariable.required ?? null,
-      defaultValue: insertVariable.defaultValue ?? null,
-      min: insertVariable.min ?? null,
-      max: insertVariable.max ?? null,
-      options: insertVariable.options ?? null,
-      defaultOptionIndex: insertVariable.defaultOptionIndex ?? null
-    };
-    this.variables.set(id, variable);
+    const [variable] = await db.insert(variables).values(insertVariable).returning();
     return variable;
   }
 
   async updateVariable(id: string, update: Partial<InsertVariable>): Promise<Variable | undefined> {
-    const variable = this.variables.get(id);
-    if (!variable) return undefined;
-    
-    const updated = { ...variable, ...update };
-    this.variables.set(id, updated);
-    return updated;
+    const [variable] = await db.update(variables).set(update).where(eq(variables.id, id)).returning();
+    return variable || undefined;
   }
 
   async deleteVariable(id: string): Promise<boolean> {
-    return this.variables.delete(id);
+    await db.delete(variables).where(eq(variables.id, id));
+    return true;
   }
 
   async deleteVariablesByPromptId(promptId: string): Promise<void> {
-    const toDelete = Array.from(this.variables.entries())
-      .filter(([, v]) => v.promptId === promptId)
-      .map(([id]) => id);
-    
-    toDelete.forEach(id => this.variables.delete(id));
+    await db.delete(variables).where(eq(variables.promptId, promptId));
   }
 
-  // Artist methods
   async getArtist(id: string): Promise<Artist | undefined> {
-    return this.artists.get(id);
+    const [artist] = await db.select().from(artists).where(eq(artists.id, id));
+    return artist || undefined;
   }
 
   async getArtistByUsername(username: string): Promise<Artist | undefined> {
-    return Array.from(this.artists.values()).find(
-      (artist) => artist.username === username,
-    );
+    const [artist] = await db.select().from(artists).where(eq(artists.username, username));
+    return artist || undefined;
   }
 
   async getAllArtists(): Promise<Artist[]> {
-    return Array.from(this.artists.values());
+    return db.select().from(artists);
   }
 
   async createArtist(insertArtist: InsertArtist): Promise<Artist> {
-    const id = randomUUID();
-    const artist: Artist = {
-      ...insertArtist,
-      id,
-      bio: insertArtist.bio ?? null,
-      avatarUrl: insertArtist.avatarUrl ?? null,
-      coverImageUrl: insertArtist.coverImageUrl ?? null,
-      followerCount: insertArtist.followerCount ?? 0,
-      followingCount: insertArtist.followingCount ?? 0
-    };
-    this.artists.set(id, artist);
+    const [artist] = await db.insert(artists).values(insertArtist).returning();
     return artist;
   }
 
   async updateArtist(id: string, update: Partial<InsertArtist>): Promise<Artist | undefined> {
-    const artist = this.artists.get(id);
-    if (!artist) return undefined;
-    
-    const updated = { ...artist, ...update };
-    this.artists.set(id, updated);
-    return updated;
+    const [artist] = await db.update(artists).set(update).where(eq(artists.id, id)).returning();
+    return artist || undefined;
   }
 
-  // Artwork methods
   async getArtwork(id: string): Promise<Artwork | undefined> {
-    return this.artworks.get(id);
+    const [artwork] = await db.select().from(artworks).where(eq(artworks.id, id));
+    return artwork || undefined;
   }
 
   async getArtworksByArtistId(artistId: string): Promise<Artwork[]> {
-    return Array.from(this.artworks.values())
-      .filter((a) => a.artistId === artistId)
-      .sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
+    return db.select().from(artworks).where(eq(artworks.artistId, artistId)).orderBy(desc(artworks.createdAt));
   }
 
   async getAllArtworks(): Promise<Artwork[]> {
-    return Array.from(this.artworks.values())
-      .sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
+    return db.select().from(artworks).orderBy(desc(artworks.createdAt));
   }
 
   async getPublicArtworks(): Promise<Artwork[]> {
-    return Array.from(this.artworks.values())
-      .filter((a) => a.isPublic)
-      .sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
+    return db.select().from(artworks).where(eq(artworks.isPublic, true)).orderBy(desc(artworks.createdAt));
   }
 
   async createArtwork(insertArtwork: InsertArtwork): Promise<Artwork> {
-    const id = randomUUID();
-    const artwork: Artwork = {
-      ...insertArtwork,
-      id,
-      description: insertArtwork.description ?? null,
-      promptUsed: insertArtwork.promptUsed ?? null,
-      promptId: insertArtwork.promptId ?? null,
-      likes: insertArtwork.likes ?? 0,
-      views: insertArtwork.views ?? 0,
-      isPublic: insertArtwork.isPublic ?? true,
-      tags: insertArtwork.tags ?? null,
-      createdAt: new Date().toISOString()
-    };
-    this.artworks.set(id, artwork);
+    const [artwork] = await db.insert(artworks).values(insertArtwork).returning();
     return artwork;
   }
 
   async updateArtwork(id: string, update: Partial<InsertArtwork>): Promise<Artwork | undefined> {
-    const artwork = this.artworks.get(id);
-    if (!artwork) return undefined;
-    
-    const updated = { ...artwork, ...update };
-    this.artworks.set(id, updated);
-    return updated;
+    const [artwork] = await db.update(artworks).set(update).where(eq(artworks.id, id)).returning();
+    return artwork || undefined;
   }
 
   async deleteArtwork(id: string): Promise<boolean> {
-    return this.artworks.delete(id);
+    await db.delete(artworks).where(eq(artworks.id, id));
+    return true;
+  }
+
+  async getVariationsByArtworkId(artworkId: string): Promise<GeneratedVariation[]> {
+    return db.select().from(generatedVariations).where(eq(generatedVariations.artworkId, artworkId)).orderBy(desc(generatedVariations.createdAt));
+  }
+
+  async createVariation(insertVariation: InsertGeneratedVariation): Promise<GeneratedVariation> {
+    const [variation] = await db.insert(generatedVariations).values(insertVariation).returning();
+    return variation;
+  }
+
+  async getCommentsByArtworkId(artworkId: string): Promise<ArtworkComment[]> {
+    return db.select().from(artworkComments).where(eq(artworkComments.artworkId, artworkId)).orderBy(desc(artworkComments.createdAt));
+  }
+
+  async createComment(insertComment: InsertArtworkComment): Promise<ArtworkComment> {
+    const [comment] = await db.insert(artworkComments).values(insertComment).returning();
+    return comment;
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new DatabaseStorage();
