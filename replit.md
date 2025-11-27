@@ -50,9 +50,10 @@ Preferred communication style: Simple, everyday language.
 - Error handling with appropriate HTTP status codes
 
 **Storage Layer:**
-- In-memory storage implementation (MemStorage) for development/testing
-- Database-ready interface (IStorage) for production migration
+- PostgreSQL-backed DatabaseStorage implementation with encrypted prompt storage
+- AES-256-GCM encryption for all prompt content
 - Separation of concerns between storage interface and implementation
+- Encryption key required via PROMPT_ENCRYPTION_KEY environment variable
 
 ### Data Storage Solutions
 
@@ -63,8 +64,10 @@ Preferred communication style: Simple, everyday language.
 
 **Database Schema:**
 - `users` table: id, username, password (authentication ready)
-- `prompts` table: id, title, content, userId (foreign key)
-- `variables` table: id, promptId, name, label, description, type, defaultValue, required, position, min, max, options
+- `prompts` table: id, title, encrypted_content, iv, auth_tag, userId, artistId, category, tags, aiModel, price, aspectRatio, photoCount, promptType, uploadedPhotos, resolution, previewImageUrl, downloads, rating, createdAt
+- `variables` table: id, promptId, name, label, description, type, defaultValue, required, position, min, max, step, options, defaultOptionIndex, placeholder
+- `artists` table: id, username, displayName, bio, avatarUrl, coverImageUrl, followerCount, followingCount
+- `artworks` table: id, artistId, title, description, imageUrl, promptUsed, promptId, likes, views, isPublic, tags, createdAt
 - Support for complex variable types stored as JSONB (defaultValue, options arrays)
 
 **Variable Types System:**
