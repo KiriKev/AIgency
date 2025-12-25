@@ -967,16 +967,18 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
         <Card className="flex flex-col overflow-hidden">
           <CardHeader className="pb-2 px-3 shrink-0 flex flex-row items-center justify-between gap-2 space-y-0">
             <CardTitle className="text-base text-white">Prompt Editor</CardTitle>
-            <Button
-              onClick={createNewEmptyVariable}
-              size="sm"
-              variant="default"
-              className="shrink-0"
-              data-testid="button-add-variable-desktop"
-            >
-              <Plus className="h-3 w-3 mr-1" />
-              Variable
-            </Button>
+            {promptType === 'paid-prompt' && (
+              <Button
+                onClick={createNewEmptyVariable}
+                size="sm"
+                variant="default"
+                className="shrink-0"
+                data-testid="button-add-variable-desktop"
+              >
+                <Plus className="h-3 w-3 mr-1" />
+                Variable
+              </Button>
+            )}
           </CardHeader>
           <CardContent className="flex-1 min-h-0 flex flex-col gap-2 px-3 pb-3 relative">
             <div 
@@ -1091,7 +1093,7 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
               />
               
               {/* Floating "+ Variable" button - inside container with higher z-index */}
-              {selectedText && selectionRange && buttonPosition && (
+              {promptType === 'paid-prompt' && selectedText && selectionRange && buttonPosition && (
                 <Button
                   ref={buttonRef}
                   size="sm"

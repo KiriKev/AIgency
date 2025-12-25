@@ -239,38 +239,40 @@ export default function PromptSettingsPanel({ settings, onUpdate, useScrollArea 
               </Select>
             </div>
 
-            <div className="space-y-2">
-              <div className="flex items-center gap-1">
-                <Label htmlFor="price" className="text-xs text-white">Price per generation (USD)</Label>
-                <TooltipProvider>
-                  <Tooltip delayDuration={0}>
-                    <TooltipTrigger asChild>
-                      <HelpCircle className="h-3 w-3 text-muted-foreground cursor-help" />
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p className="text-xs max-w-xs">
-                        Due to settings, minimum-price per generation is {settings.price.toFixed(4)} USD.
-                      </p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
+            {settings.promptType === 'paid-prompt' && (
+              <div className="space-y-2">
+                <div className="flex items-center gap-1">
+                  <Label htmlFor="price" className="text-xs text-white">Price per generation (USD)</Label>
+                  <TooltipProvider>
+                    <Tooltip delayDuration={0}>
+                      <TooltipTrigger asChild>
+                        <HelpCircle className="h-3 w-3 text-muted-foreground cursor-help" />
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p className="text-xs max-w-xs">
+                          Due to settings, minimum-price per generation is {settings.price.toFixed(4)} USD.
+                        </p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
+                <Input
+                  id="price"
+                  type="number"
+                  step="0.0001"
+                  min="0.0001"
+                  value={settings.price}
+                  onChange={(e) => onUpdate({ price: Math.max(0.0001, parseFloat(e.target.value) || 0.0001) })}
+                  className="h-8 text-sm"
+                  data-testid="input-price"
+                />
               </div>
-              <Input
-                id="price"
-                type="number"
-                step="0.0001"
-                min="0.0001"
-                value={settings.price}
-                onChange={(e) => onUpdate({ price: Math.max(0.0001, parseFloat(e.target.value) || 0.0001) })}
-                className="h-8 text-sm"
-                data-testid="input-price"
-              />
-            </div>
+            )}
           </CardContent>
         </Card>
 
 
-        {settings.aiModel === "gemini" && (
+        {settings.aiModel === "gemini" && settings.promptType === 'paid-prompt' && (
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm text-white">Gemini Assets</CardTitle>
