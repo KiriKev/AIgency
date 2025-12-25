@@ -63,6 +63,7 @@ export const variables = pgTable("variables", {
   type: text("type").notNull(),
   defaultValue: jsonb("default_value"),
   required: boolean("required").default(false),
+  allowReferenceImage: boolean("allow_reference_image").default(false),
   position: integer("position").notNull(),
   min: integer("min"),
   max: integer("max"),

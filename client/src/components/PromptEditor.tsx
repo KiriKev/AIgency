@@ -1484,16 +1484,29 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
                             </div>
                           )}
 
-                          <div className="flex items-center space-x-2 pt-1">
-                            <Checkbox
-                              id={`required-${variable.id}`}
-                              checked={variable.required}
-                              onCheckedChange={(checked) => updateVariable(variable.id, { required: checked as boolean })}
-                              data-testid={`checkbox-required-${variable.id}`}
-                            />
-                            <Label htmlFor={`required-${variable.id}`} className="text-xs text-white">
-                              Pflichtfeld
-                            </Label>
+                          <div className="flex items-center gap-4 pt-1">
+                            <div className="flex items-center space-x-2">
+                              <Checkbox
+                                id={`required-${variable.id}`}
+                                checked={variable.required}
+                                onCheckedChange={(checked) => updateVariable(variable.id, { required: checked as boolean })}
+                                data-testid={`checkbox-required-${variable.id}`}
+                              />
+                              <Label htmlFor={`required-${variable.id}`} className="text-xs text-white">
+                                Pflichtfeld
+                              </Label>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <Checkbox
+                                id={`allow-ref-image-${variable.id}`}
+                                checked={variable.allowReferenceImage || false}
+                                onCheckedChange={(checked) => updateVariable(variable.id, { allowReferenceImage: checked as boolean })}
+                                data-testid={`checkbox-allow-ref-image-${variable.id}`}
+                              />
+                              <Label htmlFor={`allow-ref-image-${variable.id}`} className="text-xs text-white">
+                                allow reference image
+                              </Label>
+                            </div>
                           </div>
                           
                           <Button
@@ -2060,17 +2073,31 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
                             </div>
                           )}
 
-                          <div className="flex items-center space-x-2">
-                            <Checkbox
-                              id={`required-mobile-${variable.id}`}
-                              checked={variable.required}
-                              onCheckedChange={(checked) => updateVariable(variable.id, { required: checked as boolean })}
-                              disabled={promptType === 'showcase'}
-                              data-testid={`checkbox-required-${variable.id}`}
-                            />
-                            <Label htmlFor={`required-mobile-${variable.id}`} className="text-sm text-white">
-                              Pflichtfeld
-                            </Label>
+                          <div className="flex items-center gap-4 flex-wrap">
+                            <div className="flex items-center space-x-2">
+                              <Checkbox
+                                id={`required-mobile-${variable.id}`}
+                                checked={variable.required}
+                                onCheckedChange={(checked) => updateVariable(variable.id, { required: checked as boolean })}
+                                disabled={promptType === 'showcase'}
+                                data-testid={`checkbox-required-${variable.id}`}
+                              />
+                              <Label htmlFor={`required-mobile-${variable.id}`} className="text-sm text-white">
+                                Pflichtfeld
+                              </Label>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <Checkbox
+                                id={`allow-ref-image-mobile-${variable.id}`}
+                                checked={variable.allowReferenceImage || false}
+                                onCheckedChange={(checked) => updateVariable(variable.id, { allowReferenceImage: checked as boolean })}
+                                disabled={promptType === 'showcase'}
+                                data-testid={`checkbox-allow-ref-image-mobile-${variable.id}`}
+                              />
+                              <Label htmlFor={`allow-ref-image-mobile-${variable.id}`} className="text-sm text-white">
+                                allow reference image
+                              </Label>
+                            </div>
                           </div>
 
                           <div className="flex gap-2 mt-4 pt-4 border-t">
