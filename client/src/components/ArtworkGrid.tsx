@@ -65,10 +65,10 @@ function ArtworkCard({ item, showArtist = true, onArtistClick, onCardClick, vari
           </div>
         )}
         
-        {variant === 'prompt' && isHovered && (
+        {variant === 'prompt' && (
           <Badge 
             variant={item.isFree || item.isFreeShowcase ? "secondary" : "default"} 
-            className="absolute top-2 right-2 backdrop-blur-sm text-xs transition-opacity duration-200"
+            className="absolute top-2 left-2 backdrop-blur-sm text-xs z-10"
             data-testid={`badge-price-${item.id}`}
           >
             {item.isFree || item.isFreeShowcase ? 'FREE' : `${item.price}cr`}
