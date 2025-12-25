@@ -61,6 +61,7 @@ interface Variable {
   min?: number;
   max?: number;
   required: boolean;
+  allowReferenceImage?: boolean;
   position: number;
   defaultOptionIndex?: number;
 }
