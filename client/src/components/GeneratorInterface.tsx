@@ -121,7 +121,7 @@ function X402LinkSection({ settings, promptId }: { settings: X402Settings; promp
                   {copiedField === 'middleware' ? <Check className="h-3 w-3 text-green-500" /> : <Copy className="h-3 w-3" />}
                 </Button>
               </div>
-              <pre className="bg-background/50 border border-border/50 rounded-md p-2 text-xs font-mono max-h-32 text-white whitespace-pre-wrap break-all overflow-hidden">
+              <pre className="bg-background/50 border border-border/50 rounded-md p-2 text-xs font-mono max-h-32 text-white whitespace-pre-wrap break-words overflow-y-auto scrollbar-thin">
                 {middlewareCode}
               </pre>
             </div>
@@ -141,7 +141,7 @@ function X402LinkSection({ settings, promptId }: { settings: X402Settings; promp
                   {copiedField === 'json' ? <Check className="h-3 w-3 text-green-500" /> : <Copy className="h-3 w-3" />}
                 </Button>
               </div>
-              <pre className="bg-background/50 border border-border/50 rounded-md p-2 text-xs font-mono text-white whitespace-pre-wrap break-all overflow-hidden">
+              <pre className="bg-background/50 border border-border/50 rounded-md p-2 text-xs font-mono max-h-28 text-white whitespace-pre-wrap break-words overflow-y-auto scrollbar-thin">
                 {jsonPayload}
               </pre>
             </div>
@@ -161,7 +161,7 @@ function X402LinkSection({ settings, promptId }: { settings: X402Settings; promp
                   {copiedField === 'curl' ? <Check className="h-3 w-3 text-green-500" /> : <Copy className="h-3 w-3" />}
                 </Button>
               </div>
-              <pre className="bg-background/50 border border-border/50 rounded-md p-2 text-xs font-mono max-h-24 text-white whitespace-pre-wrap break-all overflow-hidden">
+              <pre className="bg-background/50 border border-border/50 rounded-md p-2 text-xs font-mono max-h-24 text-white whitespace-pre-wrap break-words overflow-y-auto scrollbar-thin">
                 {curlExample}
               </pre>
             </div>
