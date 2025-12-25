@@ -63,6 +63,7 @@ interface Variable {
   required: boolean;
   position: number;
   defaultOptionIndex?: number;
+  referenceImageAllowed?: boolean;
 }
 
 interface PromptEditorProps {
@@ -1203,7 +1204,17 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
         {/* Variables Panel */}
         <Card className="flex flex-col overflow-hidden" id="desktop-variables-panel">
             <CardHeader className="pb-2 px-3 shrink-0">
-              <CardTitle className="text-base text-white">Variablen</CardTitle>
+              <div className="flex items-center gap-2">
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span className="text-[10px] text-muted-foreground cursor-help">Ref</span>
+                  </TooltipTrigger>
+                  <TooltipContent side="top" className="text-xs">
+                    Reference image allowed
+                  </TooltipContent>
+                </Tooltip>
+                <CardTitle className="text-base text-white">Variablen</CardTitle>
+              </div>
             </CardHeader>
             <CardContent className="flex-1 min-h-0 px-3 pb-3">
               <ScrollArea className="h-full pr-4">
@@ -1223,6 +1234,21 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
                       >
                         <AccordionTrigger className="hover-elevate px-2 rounded" data-testid={`accordion-trigger-${variable.id}`}>
                           <div className="flex items-center gap-2 flex-1">
+                            <div 
+                              className="shrink-0"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <Checkbox
+                                id={`ref-img-${variable.id}`}
+                                checked={variable.referenceImageAllowed || false}
+                                onCheckedChange={(checked) => {
+                                  updateVariable(variable.id, { referenceImageAllowed: checked as boolean });
+                                }}
+                                className="h-3.5 w-3.5"
+                                disabled={promptType === 'showcase'}
+                                data-testid={`checkbox-ref-img-${variable.id}`}
+                              />
+                            </div>
                             <span className="text-sm font-medium text-white">{variable.label}</span>
                             <Badge variant="outline" className="text-xs">{variable.type}</Badge>
                           </div>
@@ -1837,6 +1863,21 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
                       >
                         <AccordionTrigger className="hover-elevate px-2 rounded" data-testid={`accordion-trigger-${variable.id}`}>
                           <div className="flex items-center gap-2 flex-1">
+                            <div 
+                              className="shrink-0"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <Checkbox
+                                id={`ref-img-mobile-${variable.id}`}
+                                checked={variable.referenceImageAllowed || false}
+                                onCheckedChange={(checked) => {
+                                  updateVariable(variable.id, { referenceImageAllowed: checked as boolean });
+                                }}
+                                className="h-3.5 w-3.5"
+                                disabled={promptType === 'showcase'}
+                                data-testid={`checkbox-ref-img-mobile-${variable.id}`}
+                              />
+                            </div>
                             <span className="text-sm font-medium text-white">{variable.label}</span>
                             <Badge variant="outline" className="text-xs">{variable.type}</Badge>
                           </div>

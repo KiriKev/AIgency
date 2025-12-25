@@ -46,6 +46,7 @@ interface X402Settings {
   evil: number;
   middleFinger: boolean;
   cameraEffects: string[];
+  everydayObject: string;
   model: string;
   aspectRatio: string;
   resolution: string;
@@ -71,6 +72,7 @@ function X402LinkSection({ settings, promptId }: { settings: X402Settings; promp
       evil: settings.evil,
       middleFinger: settings.middleFinger,
       cameraEffects: settings.cameraEffects,
+      everydayObject: settings.everydayObject,
       model: settings.model,
       aspectRatio: settings.aspectRatio,
       resolution: settings.resolution
@@ -222,6 +224,7 @@ export default function GeneratorInterface({
   const [aspectRatio, setAspectRatio] = useState("16:9");
   const [resolution, setResolution] = useState("2K");
   const [middleFinger, setMiddleFinger] = useState(false);
+  const [everydayObject, setEverydayObject] = useState("");
   const [lightboxImage, setLightboxImage] = useState<string | null>(null);
   const [commentText, setCommentText] = useState("");
   const [selectedVariation, setSelectedVariation] = useState<string | null>(null);
@@ -386,6 +389,17 @@ export default function GeneratorInterface({
                     </div>
                   </div>
 
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">Everyday object</Label>
+                    <Input
+                      value={everydayObject}
+                      onChange={(e) => setEverydayObject(e.target.value)}
+                      placeholder="e.g. coffee cup, umbrella, book..."
+                      className="h-8 text-xs"
+                      data-testid="input-everyday-object"
+                    />
+                  </div>
+
                   <Separator className="my-2" />
 
                   <div className="space-y-1.5">
@@ -475,6 +489,10 @@ export default function GeneratorInterface({
                         <span className="font-mono text-white">{cameraEffects.length > 0 ? cameraEffects.join(", ") : "None"}</span>
                       </div>
                       <div className="flex justify-between">
+                        <span className="text-muted-foreground">Everyday Object</span>
+                        <span className="font-mono text-white truncate max-w-[120px]">{everydayObject || "None"}</span>
+                      </div>
+                      <div className="flex justify-between">
                         <span className="text-muted-foreground">Model</span>
                         <span className="font-mono text-white">Nano Banana Pro</span>
                       </div>
@@ -500,6 +518,7 @@ export default function GeneratorInterface({
                     evil: evilSlider[0],
                     middleFinger,
                     cameraEffects,
+                    everydayObject,
                     model: "nano-banana-pro",
                     aspectRatio,
                     resolution
