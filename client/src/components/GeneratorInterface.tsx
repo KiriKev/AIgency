@@ -324,48 +324,44 @@ export default function GeneratorInterface({
       </div>
 
       <div className="flex-1 flex overflow-hidden">
-        {/* Free showcase without prompt text - just show the image, no left sidebar */}
-        {isFreeShowcase && !publicPromptText ? (
-          <></>
-        ) : (
-          <ScrollArea className="w-[22rem] shrink-0 border-r border-border/50">
-            <div className="p-3 space-y-3">
-              {isFreeShowcase && publicPromptText ? (
-                <Card className="border-0 bg-card/50">
-                  <CardHeader className="p-3 pb-2">
-                    <div className="flex items-center gap-2">
-                      <Badge className="bg-amber-500 hover:bg-amber-600 text-black font-bold text-[10px] px-1.5 py-0.5">
-                        FREE
-                      </Badge>
-                      <CardTitle className="text-sm">Prompt</CardTitle>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="p-3 pt-0 space-y-3">
-                    <div className="relative">
-                      <textarea
-                        readOnly
-                        value={publicPromptText}
-                        className="w-full h-48 p-3 text-xs font-mono bg-background/50 border border-border/50 rounded-md text-muted-foreground resize-none scrollbar-thin"
-                        data-testid="textarea-free-prompt"
-                      />
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="absolute top-2 right-2 h-6 px-2"
-                        onClick={() => {
-                          navigator.clipboard.writeText(publicPromptText);
-                        }}
-                        data-testid="button-copy-prompt"
-                      >
-                        <Copy className="h-3 w-3" />
-                      </Button>
-                    </div>
-                    <p className="text-[10px] text-muted-foreground">
-                      This is a free showcase prompt. Copy and use it in your favorite AI image generator.
-                    </p>
-                  </CardContent>
-                </Card>
-              ) : (
+        <ScrollArea className="w-[22rem] shrink-0 border-r border-border/50">
+          <div className="p-3 space-y-3">
+            {isFreeShowcase && publicPromptText ? (
+              <Card className="border-0 bg-card/50">
+                <CardHeader className="p-3 pb-2">
+                  <div className="flex items-center gap-2">
+                    <Badge className="bg-amber-500 hover:bg-amber-600 text-black font-bold text-[10px] px-1.5 py-0.5">
+                      FREE
+                    </Badge>
+                    <CardTitle className="text-sm">Prompt</CardTitle>
+                  </div>
+                </CardHeader>
+                <CardContent className="p-3 pt-0 space-y-3">
+                  <div className="relative">
+                    <textarea
+                      readOnly
+                      value={publicPromptText}
+                      className="w-full h-48 p-3 text-xs font-mono bg-background/50 border border-border/50 rounded-md text-muted-foreground resize-none scrollbar-thin"
+                      data-testid="textarea-free-prompt"
+                    />
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="absolute top-2 right-2 h-6 px-2"
+                      onClick={() => {
+                        navigator.clipboard.writeText(publicPromptText);
+                      }}
+                      data-testid="button-copy-prompt"
+                    >
+                      <Copy className="h-3 w-3" />
+                    </Button>
+                  </div>
+                  <p className="text-[10px] text-muted-foreground">
+                    This is a free showcase prompt. Copy and use it in your favorite AI image generator.
+                  </p>
+                </CardContent>
+              </Card>
+            ) : (
               <Card className="border-0 bg-card/50">
                 <CardHeader className="p-3 pb-2">
                   <CardTitle className="text-sm">Settings</CardTitle>
@@ -604,7 +600,6 @@ export default function GeneratorInterface({
             )}
           </div>
         </ScrollArea>
-        )}
 
         <ScrollArea className="flex-1">
           <div className="p-3">
