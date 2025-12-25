@@ -232,7 +232,7 @@ export default function GeneratorInterface({
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
   const { data: promptVariables = [] } = useQuery<Variable[]>({
-    queryKey: ['/api/prompts', promptId, 'variables'],
+    queryKey: [`/api/prompts/${promptId}/variables`],
     enabled: !!promptId
   });
 
