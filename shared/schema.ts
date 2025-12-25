@@ -40,6 +40,7 @@ export const prompts = pgTable("prompts", {
   createdAt: text("created_at").default(sql`now()`),
   isFreeShowcase: boolean("is_free_showcase").default(false),
   publicPromptText: text("public_prompt_text"),
+  everydayObject: text("everyday_object"),
 });
 
 export const insertPromptSchema = createInsertSchema(prompts).omit({
@@ -70,6 +71,7 @@ export const variables = pgTable("variables", {
   options: jsonb("options").$type<VariableOption[]>(),
   defaultOptionIndex: integer("default_option_index").default(0),
   placeholder: text("placeholder"),
+  referenceImageAllowed: boolean("reference_image_allowed").default(false),
 });
 
 export const insertVariableSchema = createInsertSchema(variables).omit({
