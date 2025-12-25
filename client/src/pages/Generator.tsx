@@ -6,18 +6,21 @@ import type { Prompt, Artist } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 
+const isUUID = (str: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
+
 export default function Generator() {
   const params = useParams<{ id: string }>();
   const [, setLocation] = useLocation();
-  const promptId = params.id;
+  const promptIdOrSlug = params.id;
+  const isSlug = promptIdOrSlug && !isUUID(promptIdOrSlug);
 
   const { data: prompt, isLoading: promptLoading, error: promptError } = useQuery<Prompt>({
-    queryKey: ['/api/prompts', promptId],
-    enabled: !!promptId
+    queryKey: [isSlug ? `/api/prompts/by-slug/${promptIdOrSlug}` : `/api/prompts/${promptIdOrSlug}`],
+    enabled: !!promptIdOrSlug
   });
 
   const { data: artist } = useQuery<Artist>({
-    queryKey: ['/api/artists', prompt?.artistId],
+    queryKey: [`/api/artists/${prompt?.artistId}`],
     enabled: !!prompt?.artistId
   });
 

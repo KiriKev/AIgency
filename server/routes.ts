@@ -14,6 +14,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/prompts/by-slug/:slug", async (req, res) => {
+    try {
+      const prompt = await storage.getPromptBySlug(req.params.slug);
+      if (!prompt) {
+        return res.status(404).json({ error: "Prompt not found" });
+      }
+      res.json(prompt);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch prompt" });
+    }
+  });
+
   app.get("/api/prompts/:id", async (req, res) => {
     try {
       const prompt = await storage.getPrompt(req.params.id);

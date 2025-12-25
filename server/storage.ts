@@ -31,6 +31,7 @@ export interface IStorage {
   createUser(user: InsertUser): Promise<User>;
   
   getPrompt(id: string): Promise<(Prompt & { decryptedContent?: string }) | undefined>;
+  getPromptBySlug(slug: string): Promise<Prompt | undefined>;
   getPromptWithDecryptedContent(id: string): Promise<(Prompt & { decryptedContent: string }) | undefined>;
   getAllPrompts(): Promise<Prompt[]>;
   getPublicPrompts(): Promise<Prompt[]>;
@@ -84,6 +85,16 @@ export class DatabaseStorage implements IStorage {
 
   async getPrompt(id: string): Promise<Prompt | undefined> {
     const [prompt] = await db.select().from(prompts).where(eq(prompts.id, id));
+    return prompt || undefined;
+  }
+
+  async getPromptBySlug(slug: string): Promise<Prompt | undefined> {
+    const normalizedSlug = slug.toLowerCase().replace(/-/g, ' ');
+    const allPrompts = await db.select().from(prompts);
+    const prompt = allPrompts.find(p => 
+      p.title.toLowerCase() === normalizedSlug || 
+      p.title.toLowerCase().replace(/\s+/g, '-') === slug.toLowerCase()
+    );
     return prompt || undefined;
   }
 
