@@ -94,7 +94,7 @@ function X402LinkSection({ settings, promptId }: { settings: X402Settings; promp
   const jsonPayload = JSON.stringify(x402Config.settings, null, 2);
 
   return (
-    <Card className="border-0 bg-card/50">
+    <Card className="border-0 bg-card/50 overflow-hidden">
       <Collapsible open={isOpen} onOpenChange={setIsOpen}>
         <CollapsibleTrigger asChild>
           <CardHeader className="p-3 cursor-pointer hover-elevate rounded-md">
@@ -107,7 +107,7 @@ function X402LinkSection({ settings, promptId }: { settings: X402Settings; promp
           </CardHeader>
         </CollapsibleTrigger>
         <CollapsibleContent>
-          <CardContent className="p-3 pt-0 space-y-3">
+          <CardContent className="p-3 pt-0 space-y-3 overflow-hidden">
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label className="text-xs text-muted-foreground">Middleware Config</Label>
@@ -121,7 +121,7 @@ function X402LinkSection({ settings, promptId }: { settings: X402Settings; promp
                   {copiedField === 'middleware' ? <Check className="h-3 w-3 text-green-500" /> : <Copy className="h-3 w-3" />}
                 </Button>
               </div>
-              <pre className="bg-background/50 border border-border/50 rounded-md p-2 text-xs font-mono max-h-32 text-white whitespace-pre-wrap break-words overflow-y-auto scrollbar-thin">
+              <pre className="bg-background/50 border border-border/50 rounded-md p-2 text-xs font-mono max-h-32 text-white whitespace-pre-wrap break-all overflow-y-auto overflow-x-hidden scrollbar-thin w-full max-w-full">
                 {middlewareCode}
               </pre>
             </div>
@@ -141,7 +141,7 @@ function X402LinkSection({ settings, promptId }: { settings: X402Settings; promp
                   {copiedField === 'json' ? <Check className="h-3 w-3 text-green-500" /> : <Copy className="h-3 w-3" />}
                 </Button>
               </div>
-              <pre className="bg-background/50 border border-border/50 rounded-md p-2 text-xs font-mono max-h-28 text-white whitespace-pre-wrap break-words overflow-y-auto scrollbar-thin">
+              <pre className="bg-background/50 border border-border/50 rounded-md p-2 text-xs font-mono max-h-28 text-white whitespace-pre-wrap break-all overflow-y-auto overflow-x-hidden scrollbar-thin w-full max-w-full">
                 {jsonPayload}
               </pre>
             </div>
@@ -161,7 +161,7 @@ function X402LinkSection({ settings, promptId }: { settings: X402Settings; promp
                   {copiedField === 'curl' ? <Check className="h-3 w-3 text-green-500" /> : <Copy className="h-3 w-3" />}
                 </Button>
               </div>
-              <pre className="bg-background/50 border border-border/50 rounded-md p-2 text-xs font-mono max-h-24 text-white whitespace-pre-wrap break-words overflow-y-auto scrollbar-thin">
+              <pre className="bg-background/50 border border-border/50 rounded-md p-2 text-xs font-mono max-h-24 text-white whitespace-pre-wrap break-all overflow-y-auto overflow-x-hidden scrollbar-thin w-full max-w-full">
                 {curlExample}
               </pre>
             </div>
