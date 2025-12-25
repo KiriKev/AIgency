@@ -31,10 +31,10 @@ const ASPECT_RATIOS = [
 
 interface VariationSettings {
   evil: number;
-  fire: number;
+  cameraEffects: string[];
   aspectRatio: string;
   model: string;
-  upscale4k: boolean;
+  resolution: string;
 }
 
 interface Variation {
@@ -68,21 +68,34 @@ export default function GeneratorInterface({
 }: GeneratorInterfaceProps) {
   const [, setLocation] = useLocation();
   const [evilSlider, setEvilSlider] = useState([75]);
-  const [fireSlider, setFireSlider] = useState([60]);
+  const [cameraEffects, setCameraEffects] = useState<string[]>([]);
   const [aspectRatio, setAspectRatio] = useState("16:9");
-  const [selectedModel, setSelectedModel] = useState("gemini-2.5");
-  const [upscale4k, setUpscale4k] = useState(false);
+  const [resolution, setResolution] = useState("2K");
   const [middleFinger, setMiddleFinger] = useState(false);
   const [lightboxImage, setLightboxImage] = useState<string | null>(null);
   const [commentText, setCommentText] = useState("");
   const [selectedVariation, setSelectedVariation] = useState<string | null>(null);
 
+  const CAMERA_EFFECTS = [
+    { value: "cinematic", label: "Cinematic lighting" },
+    { value: "warm", label: "Warm lighting" },
+    { value: "dystopian", label: "Dystopian grey" },
+  ];
+
+  const toggleCameraEffect = (effect: string) => {
+    setCameraEffects(prev => 
+      prev.includes(effect) 
+        ? prev.filter(e => e !== effect)
+        : [...prev, effect]
+    );
+  };
+
   const [variations] = useState<Variation[]>([
-    { id: "v1", imageUrl: `${imageUrl}&v=1`, settings: { evil: 80, fire: 50, aspectRatio: "16:9", model: "gemini-2.5", upscale4k: false }, createdAt: "2 min ago" },
-    { id: "v2", imageUrl: `${imageUrl}&v=2`, settings: { evil: 65, fire: 70, aspectRatio: "1:1", model: "gemini-3.0", upscale4k: true }, createdAt: "5 min ago" },
-    { id: "v3", imageUrl: `${imageUrl}&v=3`, settings: { evil: 90, fire: 40, aspectRatio: "9:16", model: "gemini-2.5", upscale4k: false }, createdAt: "10 min ago" },
-    { id: "v4", imageUrl: `${imageUrl}&v=4`, settings: { evil: 55, fire: 85, aspectRatio: "4:3", model: "gemini-2.5", upscale4k: true }, createdAt: "15 min ago" },
-    { id: "v5", imageUrl: `${imageUrl}&v=5`, settings: { evil: 70, fire: 60, aspectRatio: "16:9", model: "gemini-3.0", upscale4k: false }, createdAt: "20 min ago" },
+    { id: "v1", imageUrl: `${imageUrl}&v=1`, settings: { evil: 80, cameraEffects: ["cinematic"], aspectRatio: "16:9", model: "Nano Banana Pro", resolution: "2K" }, createdAt: "2 min ago" },
+    { id: "v2", imageUrl: `${imageUrl}&v=2`, settings: { evil: 65, cameraEffects: ["warm"], aspectRatio: "1:1", model: "Nano Banana Pro", resolution: "4K" }, createdAt: "5 min ago" },
+    { id: "v3", imageUrl: `${imageUrl}&v=3`, settings: { evil: 90, cameraEffects: ["dystopian"], aspectRatio: "9:16", model: "Nano Banana Pro", resolution: "1K" }, createdAt: "10 min ago" },
+    { id: "v4", imageUrl: `${imageUrl}&v=4`, settings: { evil: 55, cameraEffects: ["cinematic", "warm"], aspectRatio: "4:3", model: "Nano Banana Pro", resolution: "4K" }, createdAt: "15 min ago" },
+    { id: "v5", imageUrl: `${imageUrl}&v=5`, settings: { evil: 70, cameraEffects: [], aspectRatio: "16:9", model: "Nano Banana Pro", resolution: "2K" }, createdAt: "20 min ago" },
   ]);
 
   const [comments] = useState<Comment[]>([
@@ -92,19 +105,19 @@ export default function GeneratorInterface({
 
   const [hasGeneratedFromThisArtwork] = useState(true);
 
-  const baseCost = selectedModel === "gemini-3.0" ? 15 : 15;
-  const upscaleCost = upscale4k ? 5 : 0;
+  const baseCost = 15;
+  const resolutionCost = resolution === "4K" ? 10 : resolution === "2K" ? 5 : 0;
+  const effectsCost = cameraEffects.length * 5;
   const imageUploadCost = 20;
   const premiumCost = 50;
-  const totalCost = baseCost + baseCost + upscaleCost + imageUploadCost + premiumCost;
+  const totalCost = baseCost + resolutionCost + effectsCost + imageUploadCost + premiumCost;
 
   const handleVariationSelect = (variation: Variation) => {
     setSelectedVariation(variation.id);
     setEvilSlider([variation.settings.evil]);
-    setFireSlider([variation.settings.fire]);
+    setCameraEffects(variation.settings.cameraEffects);
     setAspectRatio(variation.settings.aspectRatio);
-    setSelectedModel(variation.settings.model);
-    setUpscale4k(variation.settings.upscale4k);
+    setResolution(variation.settings.resolution);
   };
 
   return (
@@ -154,32 +167,49 @@ export default function GeneratorInterface({
                   />
                 </div>
 
-                <div className="space-y-1.5">
-                  <div className="flex items-center justify-between">
-                    <Label className="text-xs">Fire</Label>
-                    <span className="text-xs font-mono text-muted-foreground">{fireSlider[0]}%</span>
-                  </div>
-                  <Slider
-                    value={fireSlider}
-                    onValueChange={setFireSlider}
-                    max={100}
-                    step={1}
-                    className="h-1"
-                    data-testid="slider-fire"
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="finger"
+                    checked={middleFinger}
+                    onCheckedChange={(checked) => setMiddleFinger(checked as boolean)}
+                    className="h-3.5 w-3.5"
+                    data-testid="checkbox-finger"
                   />
+                  <Label htmlFor="finger" className="text-xs font-normal cursor-pointer">
+                    Middle finger
+                  </Label>
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label className="text-xs">Camera Effects</Label>
+                  <div className="space-y-1.5">
+                    {CAMERA_EFFECTS.map(effect => (
+                      <div key={effect.value} className="flex items-center space-x-2">
+                        <Checkbox
+                          id={`effect-${effect.value}`}
+                          checked={cameraEffects.includes(effect.value)}
+                          onCheckedChange={() => toggleCameraEffect(effect.value)}
+                          className="h-3.5 w-3.5"
+                          data-testid={`checkbox-effect-${effect.value}`}
+                        />
+                        <Label htmlFor={`effect-${effect.value}`} className="text-xs font-normal cursor-pointer">
+                          {effect.label}
+                        </Label>
+                      </div>
+                    ))}
+                  </div>
                 </div>
 
                 <Separator className="my-2" />
 
                 <div className="space-y-1.5">
                   <Label className="text-xs">Model</Label>
-                  <Select value={selectedModel} onValueChange={setSelectedModel}>
-                    <SelectTrigger className="h-8 text-xs" data-testid="select-model">
-                      <SelectValue />
+                  <Select value="nano-banana-pro" disabled>
+                    <SelectTrigger className="h-8 text-xs opacity-50 cursor-not-allowed" data-testid="select-model">
+                      <SelectValue placeholder="Nano Banana Pro" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="gemini-2.5">Gemini 2.5 Flash</SelectItem>
-                      <SelectItem value="gemini-3.0">Gemini 3.0 Pro</SelectItem>
+                      <SelectItem value="nano-banana-pro">Nano Banana Pro</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -202,31 +232,21 @@ export default function GeneratorInterface({
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="upscale"
-                      checked={upscale4k}
-                      onCheckedChange={(checked) => setUpscale4k(checked as boolean)}
-                      className="h-3.5 w-3.5"
-                      data-testid="checkbox-upscale"
-                    />
-                    <Label htmlFor="upscale" className="text-xs font-normal cursor-pointer">
-                      4K Upscale
-                    </Label>
-                  </div>
-
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="finger"
-                      checked={middleFinger}
-                      onCheckedChange={(checked) => setMiddleFinger(checked as boolean)}
-                      className="h-3.5 w-3.5"
-                      data-testid="checkbox-finger"
-                    />
-                    <Label htmlFor="finger" className="text-xs font-normal cursor-pointer">
-                      Middle finger
-                    </Label>
+                <div className="space-y-1.5">
+                  <Label className="text-xs">Resolution</Label>
+                  <div className="grid grid-cols-3 gap-1">
+                    {["1K", "2K", "4K"].map(res => (
+                      <Button
+                        key={res}
+                        variant={resolution === res ? 'default' : 'outline'}
+                        size="sm"
+                        className="h-7 text-xs"
+                        onClick={() => setResolution(res)}
+                        data-testid={`button-resolution-${res}`}
+                      >
+                        {res}
+                      </Button>
+                    ))}
                   </div>
                 </div>
               </CardContent>
@@ -242,14 +262,16 @@ export default function GeneratorInterface({
                     <span className="text-muted-foreground">Evil {evilSlider[0]}%</span>
                     <span className="font-mono text-primary">${baseCost.toFixed(2)}</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Fire {fireSlider[0]}%</span>
-                    <span className="font-mono text-primary">${baseCost.toFixed(2)}</span>
-                  </div>
-                  {upscale4k && (
+                  {cameraEffects.length > 0 && (
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">4K Upscale</span>
-                      <span className="font-mono">${upscaleCost.toFixed(2)}</span>
+                      <span className="text-muted-foreground">Camera Effects ({cameraEffects.length})</span>
+                      <span className="font-mono">${effectsCost.toFixed(2)}</span>
+                    </div>
+                  )}
+                  {resolutionCost > 0 && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Resolution {resolution}</span>
+                      <span className="font-mono">${resolutionCost.toFixed(2)}</span>
                     </div>
                   )}
                   <div className="flex justify-between">

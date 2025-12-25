@@ -43,7 +43,7 @@ function ArtworkCard({ item, showArtist = true, onArtistClick, onCardClick, vari
 
   return (
     <Card
-      className="overflow-hidden hover-elevate active-elevate-2 cursor-pointer transition-all duration-200 hover:scale-[1.01] h-full border-[0.5px]"
+      className="overflow-hidden hover-elevate active-elevate-2 cursor-pointer transition-all duration-200 hover:scale-[1.02] h-full border-0 rounded-none"
       onClick={() => onCardClick?.(item.id)}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
@@ -63,17 +63,17 @@ function ArtworkCard({ item, showArtist = true, onArtistClick, onCardClick, vari
           </div>
         )}
         
-        {variant === 'prompt' && item.price !== undefined && (
+        {variant === 'prompt' && item.price !== undefined && isHovered && (
           <Badge 
             variant={item.isFree ? "secondary" : "default"} 
-            className="absolute top-2 right-2 backdrop-blur-sm text-xs"
+            className="absolute top-2 right-2 backdrop-blur-sm text-xs transition-opacity duration-200"
             data-testid={`badge-price-${item.id}`}
           >
             {item.isFree ? 'FREE' : `${item.price}cr`}
           </Badge>
         )}
 
-        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black via-black/80 to-transparent p-3 pt-8">
+        <div className={`absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black via-black/80 to-transparent p-3 pt-8 transition-opacity duration-200 ${isHovered ? 'opacity-100' : 'opacity-0'}`}>
           <h3 className="font-bold text-base text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]" data-testid={`text-title-${item.id}`}>
             {item.title}
           </h3>
@@ -119,7 +119,7 @@ function ArtworkCard({ item, showArtist = true, onArtistClick, onCardClick, vari
             )}
           </div>
 
-          {isHovered && variant === 'prompt' && (
+          {variant === 'prompt' && (
             <Button size="sm" className="w-full mt-2" data-testid={`button-use-${item.id}`}>
               Use Prompt
             </Button>
@@ -164,12 +164,14 @@ export default function ArtworkGrid({
   };
 
   if (useMasonryLayout) {
+    const repeatedItems = [...items, ...items, ...items, ...items];
+    
     return (
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-1 auto-rows-[200px]">
-        {items.map((item, idx) => {
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-0 auto-rows-[200px]">
+        {repeatedItems.map((item, idx) => {
           const spans = idx % 7 === 0 ? 'row-span-2 col-span-2' : idx % 5 === 0 ? 'row-span-2' : '';
           return (
-            <div key={item.id} className={spans}>
+            <div key={`${item.id}-${idx}`} className={spans}>
               <ArtworkCard
                 item={item}
                 variant={variant}
