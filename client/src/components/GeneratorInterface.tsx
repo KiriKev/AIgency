@@ -121,7 +121,7 @@ function X402LinkSection({ settings, promptId }: { settings: X402Settings; promp
                   {copiedField === 'middleware' ? <Check className="h-3 w-3 text-green-500" /> : <Copy className="h-3 w-3" />}
                 </Button>
               </div>
-              <pre className="bg-background/50 border border-border/50 rounded-md p-2 text-xs font-mono overflow-x-auto max-h-32 text-white">
+              <pre className="bg-background/50 border border-border/50 rounded-md p-2 text-xs font-mono max-h-32 text-white whitespace-pre-wrap break-all overflow-hidden">
                 {middlewareCode}
               </pre>
             </div>
@@ -141,7 +141,7 @@ function X402LinkSection({ settings, promptId }: { settings: X402Settings; promp
                   {copiedField === 'json' ? <Check className="h-3 w-3 text-green-500" /> : <Copy className="h-3 w-3" />}
                 </Button>
               </div>
-              <pre className="bg-background/50 border border-border/50 rounded-md p-2 text-xs font-mono overflow-x-auto text-white">
+              <pre className="bg-background/50 border border-border/50 rounded-md p-2 text-xs font-mono text-white whitespace-pre-wrap break-all overflow-hidden">
                 {jsonPayload}
               </pre>
             </div>
@@ -161,7 +161,7 @@ function X402LinkSection({ settings, promptId }: { settings: X402Settings; promp
                   {copiedField === 'curl' ? <Check className="h-3 w-3 text-green-500" /> : <Copy className="h-3 w-3" />}
                 </Button>
               </div>
-              <pre className="bg-background/50 border border-border/50 rounded-md p-2 text-xs font-mono overflow-x-auto max-h-24 text-white">
+              <pre className="bg-background/50 border border-border/50 rounded-md p-2 text-xs font-mono max-h-24 text-white whitespace-pre-wrap break-all overflow-hidden">
                 {curlExample}
               </pre>
             </div>
@@ -291,7 +291,7 @@ export default function GeneratorInterface({
       </div>
 
       <div className="flex-1 flex overflow-hidden">
-        <ScrollArea className="w-80 shrink-0 border-r border-border/50">
+        <ScrollArea className="w-[22rem] shrink-0 border-r border-border/50">
           <div className="p-3 space-y-3">
             <Card className="border-0 bg-card/50">
               <CardHeader className="p-3 pb-2">
