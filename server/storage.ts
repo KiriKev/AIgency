@@ -89,6 +89,11 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getPromptBySlug(slug: string): Promise<Prompt | undefined> {
+    // First try to find by ID (since some IDs are slug-like)
+    const [promptById] = await db.select().from(prompts).where(eq(prompts.id, slug));
+    if (promptById) return promptById;
+    
+    // Then try to match by title
     const normalizedSlug = slug.toLowerCase().replace(/-/g, ' ');
     const allPrompts = await db.select().from(prompts);
     const prompt = allPrompts.find(p => 
