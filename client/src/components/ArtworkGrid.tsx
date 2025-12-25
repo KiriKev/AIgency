@@ -65,22 +65,13 @@ function ArtworkCard({ item, showArtist = true, onArtistClick, onCardClick, vari
           </div>
         )}
         
-        {item.isFreeShowcase && item.publicPromptText && (
+        {variant === 'prompt' && isHovered && (
           <Badge 
-            className="absolute top-2 left-2 bg-amber-500 hover:bg-amber-600 text-black font-bold text-[10px] px-1.5 py-0.5 z-10"
-            data-testid={`badge-free-${item.id}`}
-          >
-            FREE
-          </Badge>
-        )}
-
-        {variant === 'prompt' && item.price !== undefined && isHovered && (
-          <Badge 
-            variant={item.isFree ? "secondary" : "default"} 
+            variant={item.isFree || item.isFreeShowcase ? "secondary" : "default"} 
             className="absolute top-2 right-2 backdrop-blur-sm text-xs transition-opacity duration-200"
             data-testid={`badge-price-${item.id}`}
           >
-            {item.isFree ? 'FREE' : `${item.price}cr`}
+            {item.isFree || item.isFreeShowcase ? 'FREE' : `${item.price}cr`}
           </Badge>
         )}
 
