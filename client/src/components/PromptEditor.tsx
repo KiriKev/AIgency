@@ -793,7 +793,7 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
 
   const handleSubmit = () => {
     // Validate required fields
-    if (!promptTitle.trim() || !category.trim() || tags.length === 0 || !aspectRatio) {
+    if (!promptTitle.trim() || !category.trim() || tags.length === 0) {
       setShowValidationDialog(true);
       return;
     }
@@ -2144,7 +2144,7 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
           <AlertDialogHeader>
             <AlertDialogTitle>Fehlende Informationen</AlertDialogTitle>
             <AlertDialogDescription>
-              Bitte füllen Sie alle erforderlichen Felder aus: Title, Category, Tags und Aspect Ratio.
+              Bitte füllen Sie alle erforderlichen Felder aus: Title, Category und Tags.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
