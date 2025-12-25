@@ -2,6 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -33,6 +34,7 @@ interface PromptSettings {
   promptType: string;
   uploadedPhotos: string[];
   resolution: string | null;
+  isFreeShowcase?: boolean;
 }
 
 interface PromptSettingsPanelProps {
@@ -147,6 +149,31 @@ export default function PromptSettingsPanel({ settings, onUpdate, useScrollArea 
                   </TooltipProvider>
                 </div>
               </RadioGroup>
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="free-prompt"
+                checked={settings.isFreeShowcase || false}
+                onCheckedChange={(checked) => onUpdate({ isFreeShowcase: checked as boolean })}
+                className="h-3.5 w-3.5"
+                data-testid="checkbox-free-prompt"
+              />
+              <Label htmlFor="free-prompt" className="text-xs font-normal cursor-pointer text-white">
+                Free prompt
+              </Label>
+              <TooltipProvider>
+                <Tooltip delayDuration={0}>
+                  <TooltipTrigger asChild>
+                    <HelpCircle className="h-3 w-3 text-muted-foreground cursor-help" />
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p className="text-xs max-w-xs">
+                      Wenn aktiviert, wird der Prompt kostenlos angeboten und der vollständige Text ist öffentlich sichtbar.
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </div>
 
             <div className="space-y-2">

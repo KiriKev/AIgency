@@ -96,6 +96,7 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
   const [uploadedPhotos, setUploadedPhotos] = useState<string[]>([]);
   const [newTag, setNewTag] = useState("");
   const [resolution, setResolution] = useState<string | null>(null);
+  const [isFreeShowcase, setIsFreeShowcase] = useState(false);
   const [showValidationDialog, setShowValidationDialog] = useState(false);
   const [buttonPosition, setButtonPosition] = useState<{ top: number; left: number } | null>(null);
   const [linkOrCreateDialog, setLinkOrCreateDialog] = useState<{
@@ -870,7 +871,8 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
     photoCount,
     promptType,
     uploadedPhotos,
-    resolution
+    resolution,
+    isFreeShowcase
   };
 
   const handleSettingsUpdate = (updates: Partial<typeof settingsData>) => {
@@ -884,6 +886,7 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
     if (updates.promptType !== undefined) setPromptType(updates.promptType);
     if (updates.uploadedPhotos !== undefined) setUploadedPhotos(updates.uploadedPhotos);
     if (updates.resolution !== undefined) setResolution(updates.resolution);
+    if (updates.isFreeShowcase !== undefined) setIsFreeShowcase(updates.isFreeShowcase);
   };
 
   const renderPreviewWithDefaults = () => {
@@ -954,79 +957,28 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
     <TooltipProvider>
       {/* Desktop View */}
       <div className="hidden lg:grid h-[calc(100vh-6rem)] grid-cols-[minmax(200px,_0.75fr)_minmax(350px,_2fr)_minmax(250px,_1.25fr)_minmax(280px,_1.5fr)] gap-1">
-        {/* Settings Panel OR Prompt Display for Showcase */}
-        {promptType === 'showcase' ? (
-          <Card className="flex flex-col overflow-hidden">
-            <CardHeader className="pb-2 px-3 shrink-0">
-              <CardTitle className="text-sm text-white">Prompt</CardTitle>
-            </CardHeader>
-            <CardContent className="flex-1 min-h-0 px-3 pb-3">
-              <ScrollArea className="h-full">
-                <div className="font-mono text-sm whitespace-pre-wrap text-white leading-relaxed">
-                  {prompt.split(/(\[[^\]]+\])/).map((part, index) => {
-                    const match = part.match(/\[([^\]]+)\]/);
-                    if (match) {
-                      const varName = match[1];
-                      const variable = variables.find(v => v.name === varName);
-                      if (variable) {
-                        return (
-                          <span key={index} className="text-teal-400 dark:text-teal-300">
-                            [{varName}]
-                          </span>
-                        );
-                      }
-                    }
-                    return <span key={index}>{part}</span>;
-                  })}
-                </div>
-              </ScrollArea>
-            </CardContent>
-          </Card>
-        ) : (
-          <PromptSettingsPanel 
-            settings={settingsData}
-            onUpdate={handleSettingsUpdate}
-          />
-        )}
+        {/* Settings Panel - always visible */}
+        <PromptSettingsPanel 
+          settings={settingsData}
+          onUpdate={handleSettingsUpdate}
+        />
 
         {/* Editor Panel */}
         <Card className="flex flex-col overflow-hidden">
           <CardHeader className="pb-2 px-3 shrink-0 flex flex-row items-center justify-between gap-2 space-y-0">
             <CardTitle className="text-base text-white">Prompt Editor</CardTitle>
-            {promptType !== 'showcase' && (
-              <Button
-                onClick={createNewEmptyVariable}
-                size="sm"
-                variant="default"
-                className="shrink-0"
-                data-testid="button-add-variable-desktop"
-              >
-                <Plus className="h-3 w-3 mr-1" />
-                Variable
-              </Button>
-            )}
+            <Button
+              onClick={createNewEmptyVariable}
+              size="sm"
+              variant="default"
+              className="shrink-0"
+              data-testid="button-add-variable-desktop"
+            >
+              <Plus className="h-3 w-3 mr-1" />
+              Variable
+            </Button>
           </CardHeader>
           <CardContent className="flex-1 min-h-0 flex flex-col gap-2 px-3 pb-3 relative">
-            {promptType === 'showcase' ? (
-              <div className="flex-1 border border-border rounded-md p-3 overflow-y-auto">
-                <div className="font-mono text-sm whitespace-pre-wrap text-white" style={{ wordBreak: 'break-word', overflowWrap: 'anywhere', lineHeight: '1.625' }}>
-                  {prompt.split(/(\[[^\]]+\])/).map((part, index) => {
-                    const match = part.match(/\[([^\]]+)\]/);
-                    if (match) {
-                      const varName = match[1];
-                      const variable = variables.find(v => v.name === varName);
-                      return (
-                        <span key={index} className="text-teal-400 dark:text-teal-300">
-                          [{variable?.label || varName}]
-                        </span>
-                      );
-                    }
-                    return <span key={index}>{part}</span>;
-                  })}
-                </div>
-              </div>
-            ) : (
-            <>
             <div 
               ref={editorContainerRef}
               className="relative flex-1 border border-border rounded-md min-h-[200px]" 
@@ -1196,8 +1148,6 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
                 {renderPreviewWithDefaults()}
               </div>
             </Card>
-            </>
-            )}
           </CardContent>
         </Card>
 
