@@ -13,7 +13,12 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Sparkles, Image as ImageIcon, ArrowLeft, Maximize2, Send, MessageCircle } from "lucide-react";
+import { Sparkles, Image as ImageIcon, ArrowLeft, Maximize2, Send, MessageCircle, ChevronDown, Copy, Check } from "lucide-react";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useState } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -35,6 +40,147 @@ interface VariationSettings {
   aspectRatio: string;
   model: string;
   resolution: string;
+}
+
+interface X402Settings {
+  evil: number;
+  middleFinger: boolean;
+  cameraEffects: string[];
+  model: string;
+  aspectRatio: string;
+  resolution: string;
+}
+
+function X402LinkSection({ settings, promptId }: { settings: X402Settings; promptId?: string }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [copiedField, setCopiedField] = useState<string | null>(null);
+
+  const copyToClipboard = (text: string, field: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedField(field);
+    setTimeout(() => setCopiedField(null), 2000);
+  };
+
+  const x402Config = {
+    endpoint: `/api/generate/${promptId || "prompt-id"}`,
+    price: "0.05",
+    currency: "USDC",
+    network: "base",
+    description: "AI Image Generation",
+    settings: {
+      evil: settings.evil,
+      middleFinger: settings.middleFinger,
+      cameraEffects: settings.cameraEffects,
+      model: settings.model,
+      aspectRatio: settings.aspectRatio,
+      resolution: settings.resolution
+    }
+  };
+
+  const middlewareCode = `paymentMiddleware({
+  "POST ${x402Config.endpoint}": {
+    price: "${x402Config.price}",
+    network: "${x402Config.network}",
+    description: "${x402Config.description}",
+    config: ${JSON.stringify(x402Config.settings, null, 2).split('\n').map((line, i) => i === 0 ? line : '    ' + line).join('\n')}
+  }
+})`;
+
+  const curlExample = `curl -X POST "${x402Config.endpoint}" \\
+  -H "X-402-Payment: <payment_token>" \\
+  -H "Content-Type: application/json" \\
+  -d '${JSON.stringify(x402Config.settings)}'`;
+
+  const jsonPayload = JSON.stringify(x402Config.settings, null, 2);
+
+  return (
+    <Card className="border-0 bg-card/50">
+      <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+        <CollapsibleTrigger asChild>
+          <CardHeader className="p-3 cursor-pointer hover-elevate rounded-md">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-sm flex items-center gap-2">
+                <span className="text-primary">x402</span> Link
+              </CardTitle>
+              <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+            </div>
+          </CardHeader>
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+          <CardContent className="p-3 pt-0 space-y-3">
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label className="text-xs text-muted-foreground">Middleware Config</Label>
+                <Button 
+                  size="sm" 
+                  variant="ghost" 
+                  className="h-6 px-2"
+                  onClick={() => copyToClipboard(middlewareCode, 'middleware')}
+                  data-testid="button-copy-middleware"
+                >
+                  {copiedField === 'middleware' ? <Check className="h-3 w-3 text-green-500" /> : <Copy className="h-3 w-3" />}
+                </Button>
+              </div>
+              <pre className="bg-background/50 border border-border/50 rounded-md p-2 text-xs font-mono overflow-x-auto max-h-32 text-white">
+                {middlewareCode}
+              </pre>
+            </div>
+
+            <Separator />
+
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label className="text-xs text-muted-foreground">JSON Payload</Label>
+                <Button 
+                  size="sm" 
+                  variant="ghost" 
+                  className="h-6 px-2"
+                  onClick={() => copyToClipboard(jsonPayload, 'json')}
+                  data-testid="button-copy-json"
+                >
+                  {copiedField === 'json' ? <Check className="h-3 w-3 text-green-500" /> : <Copy className="h-3 w-3" />}
+                </Button>
+              </div>
+              <pre className="bg-background/50 border border-border/50 rounded-md p-2 text-xs font-mono overflow-x-auto text-white">
+                {jsonPayload}
+              </pre>
+            </div>
+
+            <Separator />
+
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label className="text-xs text-muted-foreground">cURL Example</Label>
+                <Button 
+                  size="sm" 
+                  variant="ghost" 
+                  className="h-6 px-2"
+                  onClick={() => copyToClipboard(curlExample, 'curl')}
+                  data-testid="button-copy-curl"
+                >
+                  {copiedField === 'curl' ? <Check className="h-3 w-3 text-green-500" /> : <Copy className="h-3 w-3" />}
+                </Button>
+              </div>
+              <pre className="bg-background/50 border border-border/50 rounded-md p-2 text-xs font-mono overflow-x-auto max-h-24 text-white">
+                {curlExample}
+              </pre>
+            </div>
+
+            <div className="pt-2">
+              <a 
+                href="https://www.x402.org/" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-xs text-primary hover:underline"
+              >
+                Learn more about x402
+              </a>
+            </div>
+          </CardContent>
+        </CollapsibleContent>
+      </Collapsible>
+    </Card>
+  );
 }
 
 interface Variation {
@@ -254,38 +400,33 @@ export default function GeneratorInterface({
 
             <Card className="border-0 bg-card/50">
               <CardHeader className="p-3 pb-2">
-                <CardTitle className="text-sm">Cost</CardTitle>
+                <CardTitle className="text-sm">Current Settings</CardTitle>
               </CardHeader>
               <CardContent className="p-3 pt-0 space-y-2">
                 <div className="space-y-1 text-xs">
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Evil {evilSlider[0]}%</span>
-                    <span className="font-mono text-primary">${baseCost.toFixed(2)}</span>
-                  </div>
-                  {cameraEffects.length > 0 && (
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Camera Effects ({cameraEffects.length})</span>
-                      <span className="font-mono">${effectsCost.toFixed(2)}</span>
-                    </div>
-                  )}
-                  {resolutionCost > 0 && (
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Resolution {resolution}</span>
-                      <span className="font-mono">${resolutionCost.toFixed(2)}</span>
-                    </div>
-                  )}
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Image uploads</span>
-                    <span className="font-mono">${imageUploadCost.toFixed(2)}</span>
+                    <span className="text-muted-foreground">Evil</span>
+                    <span className="font-mono text-white">{evilSlider[0]}%</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Premium</span>
-                    <span className="font-mono">${premiumCost.toFixed(2)}</span>
+                    <span className="text-muted-foreground">Middle Finger</span>
+                    <span className="font-mono text-white">{middleFinger ? "Yes" : "No"}</span>
                   </div>
-                  <Separator className="my-1" />
-                  <div className="flex justify-between font-semibold">
-                    <span>Total</span>
-                    <span className="font-mono text-primary">${totalCost.toFixed(2)}</span>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Camera Effects</span>
+                    <span className="font-mono text-white">{cameraEffects.length > 0 ? cameraEffects.join(", ") : "None"}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Model</span>
+                    <span className="font-mono text-white">Nano Banana Pro</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Aspect Ratio</span>
+                    <span className="font-mono text-white">{aspectRatio}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Resolution</span>
+                    <span className="font-mono text-white">{resolution}</span>
                   </div>
                 </div>
 
@@ -295,6 +436,18 @@ export default function GeneratorInterface({
                 </Button>
               </CardContent>
             </Card>
+
+            <X402LinkSection 
+              settings={{
+                evil: evilSlider[0],
+                middleFinger,
+                cameraEffects,
+                model: "nano-banana-pro",
+                aspectRatio,
+                resolution
+              }}
+              promptId={promptId}
+            />
           </div>
         </ScrollArea>
 
