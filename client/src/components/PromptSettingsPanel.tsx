@@ -211,21 +211,32 @@ export default function PromptSettingsPanel({ settings, onUpdate, useScrollArea 
           <CardContent className="space-y-3">
             <div className="space-y-2">
               <Label htmlFor="ai-model" className="text-xs text-white">AI Model</Label>
-              <Select value={settings.aiModel} onValueChange={(value) => onUpdate({ aiModel: value })}>
-                <SelectTrigger className="h-8 text-sm" data-testid="select-ai-model">
-                  <SelectValue />
+              <Select value="nano-banana-pro" disabled>
+                <SelectTrigger className="h-8 text-sm opacity-50 cursor-not-allowed" data-testid="select-ai-model">
+                  <SelectValue placeholder="Nano Banana Pro" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="gemini">Gemini</SelectItem>
-                  <SelectItem value="dalle">DALL-E</SelectItem>
-                  <SelectItem value="midjourney">Midjourney</SelectItem>
-                  <SelectItem value="stable-diffusion">Stable Diffusion</SelectItem>
+                  <SelectItem value="nano-banana-pro">Nano Banana Pro</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="price" className="text-xs text-white">Price per creation (USD)</Label>
+              <div className="flex items-center gap-1">
+                <Label htmlFor="price" className="text-xs text-white">Price per generation (USD)</Label>
+                <TooltipProvider>
+                  <Tooltip delayDuration={0}>
+                    <TooltipTrigger asChild>
+                      <HelpCircle className="h-3 w-3 text-muted-foreground cursor-help" />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p className="text-xs max-w-xs">
+                        Due to settings, minimum-price per generation is {settings.price.toFixed(4)} USD.
+                      </p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
               <Input
                 id="price"
                 type="number"
@@ -240,78 +251,6 @@ export default function PromptSettingsPanel({ settings, onUpdate, useScrollArea 
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm text-white">Output Controls</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="space-y-2">
-              <div className="flex items-center gap-1">
-                <Label htmlFor="aspect-ratio" className="text-xs text-white">Aspect Ratio</Label>
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <HelpCircle className="h-3 w-3 text-muted-foreground cursor-help" />
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p className="text-xs max-w-xs">
-                        Seitenverhältnis des generierten Bildes (z.B. 1:1 für quadratisch, 16:9 für Querformat)
-                      </p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </div>
-              <Select 
-                value={settings.aspectRatio || "none"} 
-                onValueChange={(value) => onUpdate({ aspectRatio: value === "none" ? null : value })}
-              >
-                <SelectTrigger className="h-8 text-sm" data-testid="select-aspect-ratio">
-                  <SelectValue placeholder="Optional" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">None (Optional)</SelectItem>
-                  <SelectItem value="1:1">1:1 Square</SelectItem>
-                  <SelectItem value="16:9">16:9 Landscape</SelectItem>
-                  <SelectItem value="9:16">9:16 Portrait</SelectItem>
-                  <SelectItem value="4:3">4:3 Standard</SelectItem>
-                  <SelectItem value="3:4">3:4 Vertical</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <div className="flex items-center gap-1">
-                <Label htmlFor="resolution" className="text-xs text-white">Resolution</Label>
-                <TooltipProvider>
-                  <Tooltip delayDuration={0}>
-                    <TooltipTrigger asChild>
-                      <HelpCircle className="h-3 w-3 text-muted-foreground cursor-help" />
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p className="text-xs max-w-xs">
-                        Auflösung des generierten Bildes
-                      </p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </div>
-              <Select 
-                value={settings.resolution || "none"} 
-                onValueChange={(value) => onUpdate({ resolution: value === "none" ? null : value })}
-              >
-                <SelectTrigger className="h-8 text-sm" data-testid="select-resolution">
-                  <SelectValue placeholder="Optional" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">None (Optional)</SelectItem>
-                  <SelectItem value="1K">1K</SelectItem>
-                  <SelectItem value="2K">2K</SelectItem>
-                  <SelectItem value="4K">4K</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </CardContent>
-        </Card>
 
         {settings.aiModel === "gemini" && (
           <Card>

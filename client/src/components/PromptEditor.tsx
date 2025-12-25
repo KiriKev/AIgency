@@ -1557,15 +1557,6 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
                 >
                   {savePromptMutation.isPending ? 'Releasing...' : 'Release'}
                 </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => setShowLoadDialog(true)}
-                  className="w-full"
-                  data-testid="button-load"
-                >
-                  <FolderOpen className="h-4 w-4 mr-2" />
-                  Laden
-                </Button>
               </div>
             </CardContent>
           </Card>
@@ -1771,15 +1762,6 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
                 data-testid="button-submit"
               >
                 {savePromptMutation.isPending ? 'Releasing...' : 'Release'}
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => setShowLoadDialog(true)}
-                className="w-full"
-                data-testid="button-load"
-              >
-                <FolderOpen className="h-4 w-4 mr-2" />
-                Laden
               </Button>
             </div>
           </div>
