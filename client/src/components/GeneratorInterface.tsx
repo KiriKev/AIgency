@@ -415,67 +415,8 @@ export default function GeneratorInterface({
                     </div>
                   </div>
 
-                  <Separator className="my-2" />
-
-                  <div className="space-y-1.5">
-                    <Label className="text-xs">Model</Label>
-                    <Select value="nano-banana-pro" disabled>
-                      <SelectTrigger className="h-8 text-xs opacity-50 cursor-not-allowed" data-testid="select-model">
-                        <SelectValue placeholder="Nano Banana Pro" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="nano-banana-pro">Nano Banana Pro</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <Label className="text-xs">Aspect ratio</Label>
-                    <div className="grid grid-cols-5 gap-1">
-                      {ASPECT_RATIOS.map(ratio => (
-                        <Button
-                          key={ratio.value}
-                          variant={aspectRatio === ratio.value ? 'default' : 'outline'}
-                          size="sm"
-                          className="h-7 text-xs px-1"
-                          onClick={() => setAspectRatio(ratio.value)}
-                          data-testid={`button-ratio-${ratio.value}`}
-                        >
-                          {ratio.label}
-                        </Button>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <Label className="text-xs">Resolution</Label>
-                    <div className="grid grid-cols-3 gap-1">
-                      {["1K", "2K", "4K"].map(res => (
-                        <Button
-                          key={res}
-                          variant={resolution === res ? 'default' : 'outline'}
-                          size="sm"
-                          className="h-7 text-xs"
-                          onClick={() => setResolution(res)}
-                          data-testid={`button-resolution-${res}`}
-                        >
-                          {res}
-                        </Button>
-                      ))}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Variables Section with Reference Image Upload */}
-            {!isFreeShowcase && promptVariables.length > 0 && (
-              <Card className="border-0 bg-card/50">
-                <CardHeader className="p-3 pb-2">
-                  <CardTitle className="text-sm">Variables</CardTitle>
-                </CardHeader>
-                <CardContent className="p-3 pt-0 space-y-3">
-                  {promptVariables.map((variable) => (
+                  {/* Variables (Everyday object etc.) - directly under Camera Effects */}
+                  {promptVariables.length > 0 && promptVariables.map((variable) => (
                     <div key={variable.id} className="space-y-1.5">
                       <Label className="text-xs text-white">{variable.label}</Label>
                       <div className="flex items-center gap-2">
@@ -534,6 +475,56 @@ export default function GeneratorInterface({
                       )}
                     </div>
                   ))}
+
+                  <Separator className="my-2" />
+
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">Model</Label>
+                    <Select value="nano-banana-pro" disabled>
+                      <SelectTrigger className="h-8 text-xs opacity-50 cursor-not-allowed" data-testid="select-model">
+                        <SelectValue placeholder="Nano Banana Pro" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="nano-banana-pro">Nano Banana Pro</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">Aspect ratio</Label>
+                    <div className="grid grid-cols-5 gap-1">
+                      {ASPECT_RATIOS.map(ratio => (
+                        <Button
+                          key={ratio.value}
+                          variant={aspectRatio === ratio.value ? 'default' : 'outline'}
+                          size="sm"
+                          className="h-7 text-xs px-1"
+                          onClick={() => setAspectRatio(ratio.value)}
+                          data-testid={`button-ratio-${ratio.value}`}
+                        >
+                          {ratio.label}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">Resolution</Label>
+                    <div className="grid grid-cols-3 gap-1">
+                      {["1K", "2K", "4K"].map(res => (
+                        <Button
+                          key={res}
+                          variant={resolution === res ? 'default' : 'outline'}
+                          size="sm"
+                          className="h-7 text-xs"
+                          onClick={() => setResolution(res)}
+                          data-testid={`button-resolution-${res}`}
+                        >
+                          {res}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
             )}
