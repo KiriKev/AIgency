@@ -1205,14 +1205,7 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
         <Card className="flex flex-col overflow-hidden" id="desktop-variables-panel">
             <CardHeader className="pb-2 px-3 shrink-0">
               <div className="flex items-center gap-2">
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <span className="text-[10px] text-muted-foreground cursor-help">Ref</span>
-                  </TooltipTrigger>
-                  <TooltipContent side="top" className="text-xs">
-                    Reference image allowed
-                  </TooltipContent>
-                </Tooltip>
+                <span className="text-[10px] text-white whitespace-nowrap">Allow reference image</span>
                 <CardTitle className="text-base text-white">Variablen</CardTitle>
               </div>
             </CardHeader>
