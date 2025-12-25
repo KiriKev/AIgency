@@ -13,18 +13,20 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Sparkles, Image as ImageIcon, ArrowLeft, Maximize2, Send, MessageCircle, ChevronDown, Copy, Check, Heart, Bookmark } from "lucide-react";
+import { Sparkles, Image as ImageIcon, ArrowLeft, Maximize2, Send, MessageCircle, ChevronDown, Copy, Check, Heart, Bookmark, Plus, X } from "lucide-react";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { Checkbox } from "@/components/ui/checkbox";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useLocation } from "wouter";
 import ImageLightbox from "./ImageLightbox";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { useQuery } from "@tanstack/react-query";
+import type { Variable } from "@shared/schema";
 
 const ASPECT_RATIOS = [
   { value: "1:1", label: "1:1" },
@@ -225,6 +227,33 @@ export default function GeneratorInterface({
   const [lightboxImage, setLightboxImage] = useState<string | null>(null);
   const [commentText, setCommentText] = useState("");
   const [selectedVariation, setSelectedVariation] = useState<string | null>(null);
+  const [variableValues, setVariableValues] = useState<Record<string, string>>({});
+  const [referenceImages, setReferenceImages] = useState<Record<string, string>>({});
+  const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
+
+  const { data: promptVariables = [] } = useQuery<Variable[]>({
+    queryKey: ['/api/prompts', promptId, 'variables'],
+    enabled: !!promptId
+  });
+
+  const handleReferenceImageUpload = (variableId: string, file: File) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      setReferenceImages(prev => ({
+        ...prev,
+        [variableId]: e.target?.result as string
+      }));
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const removeReferenceImage = (variableId: string) => {
+    setReferenceImages(prev => {
+      const newImages = { ...prev };
+      delete newImages[variableId];
+      return newImages;
+    });
+  };
 
   const CAMERA_EFFECTS = [
     { value: "cinematic", label: "Cinematic lighting" },
@@ -435,6 +464,76 @@ export default function GeneratorInterface({
                       ))}
                     </div>
                   </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Variables Section with Reference Image Upload */}
+            {!isFreeShowcase && promptVariables.length > 0 && (
+              <Card className="border-0 bg-card/50">
+                <CardHeader className="p-3 pb-2">
+                  <CardTitle className="text-sm">Variables</CardTitle>
+                </CardHeader>
+                <CardContent className="p-3 pt-0 space-y-3">
+                  {promptVariables.map((variable) => (
+                    <div key={variable.id} className="space-y-1.5">
+                      <Label className="text-xs text-white">{variable.label}</Label>
+                      <div className="flex items-center gap-2">
+                        <Input
+                          value={variableValues[variable.id] || (variable.defaultValue as string) || ''}
+                          onChange={(e) => setVariableValues(prev => ({
+                            ...prev,
+                            [variable.id]: e.target.value
+                          }))}
+                          placeholder={variable.placeholder || `Enter ${variable.label.toLowerCase()}...`}
+                          className="h-8 text-xs flex-1"
+                          data-testid={`input-variable-${variable.id}`}
+                        />
+                        {variable.allowReferenceImage && (
+                          <>
+                            <input
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              ref={(el) => { fileInputRefs.current[variable.id] = el; }}
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) handleReferenceImageUpload(variable.id, file);
+                              }}
+                              data-testid={`input-file-${variable.id}`}
+                            />
+                            {referenceImages[variable.id] ? (
+                              <div className="relative w-8 h-8 rounded-md overflow-hidden border border-border group shrink-0">
+                                <img
+                                  src={referenceImages[variable.id]}
+                                  alt="Reference"
+                                  className="w-full h-full object-cover"
+                                />
+                                <button
+                                  onClick={() => removeReferenceImage(variable.id)}
+                                  className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
+                                  data-testid={`button-remove-ref-${variable.id}`}
+                                >
+                                  <X className="h-3 w-3 text-white" />
+                                </button>
+                              </div>
+                            ) : (
+                              <button
+                                onClick={() => fileInputRefs.current[variable.id]?.click()}
+                                className="w-8 h-8 rounded-md border-2 border-dashed border-border hover:border-primary/50 flex items-center justify-center shrink-0 transition-colors"
+                                data-testid={`button-add-ref-${variable.id}`}
+                              >
+                                <Plus className="h-3.5 w-3.5 text-muted-foreground" />
+                              </button>
+                            )}
+                          </>
+                        )}
+                      </div>
+                      {variable.description && (
+                        <p className="text-[10px] text-muted-foreground">{variable.description}</p>
+                      )}
+                    </div>
+                  ))}
                 </CardContent>
               </Card>
             )}
