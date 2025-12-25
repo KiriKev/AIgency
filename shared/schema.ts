@@ -38,6 +38,8 @@ export const prompts = pgTable("prompts", {
   downloads: integer("downloads").default(0),
   rating: integer("rating").default(0),
   createdAt: text("created_at").default(sql`now()`),
+  isFreeShowcase: boolean("is_free_showcase").default(false),
+  publicPromptText: text("public_prompt_text"),
 });
 
 export const insertPromptSchema = createInsertSchema(prompts).omit({

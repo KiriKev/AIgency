@@ -20,6 +20,8 @@ export interface ArtworkItem {
   imageUrl?: string;
   category?: string;
   tags?: string[];
+  isFreeShowcase?: boolean;
+  publicPromptText?: string;
 }
 
 interface ArtworkCardProps {
@@ -63,6 +65,15 @@ function ArtworkCard({ item, showArtist = true, onArtistClick, onCardClick, vari
           </div>
         )}
         
+        {item.isFreeShowcase && item.publicPromptText && (
+          <Badge 
+            className="absolute top-2 left-2 bg-amber-500 hover:bg-amber-600 text-black font-bold text-[10px] px-1.5 py-0.5 z-10"
+            data-testid={`badge-free-${item.id}`}
+          >
+            FREE
+          </Badge>
+        )}
+
         {variant === 'prompt' && item.price !== undefined && isHovered && (
           <Badge 
             variant={item.isFree ? "secondary" : "default"} 

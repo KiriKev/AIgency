@@ -58,6 +58,8 @@ export default function Generator() {
           artistName={artist?.displayName || "Unknown Artist"}
           artistId={prompt.artistId || undefined}
           imageUrl={prompt.previewImageUrl || ""}
+          isFreeShowcase={prompt.isFreeShowcase || false}
+          publicPromptText={prompt.publicPromptText || undefined}
         />
       </main>
     </div>

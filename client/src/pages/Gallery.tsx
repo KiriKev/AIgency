@@ -28,7 +28,9 @@ export default function Gallery() {
       rating: prompt.rating || 0,
       downloads: prompt.downloads || 0,
       imageUrl: prompt.previewImageUrl || "",
-      category: prompt.category || undefined
+      category: prompt.category || undefined,
+      isFreeShowcase: prompt.isFreeShowcase || false,
+      publicPromptText: prompt.publicPromptText || undefined
     };
   });
 

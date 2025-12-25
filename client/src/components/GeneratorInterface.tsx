@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Sparkles, Image as ImageIcon, ArrowLeft, Maximize2, Send, MessageCircle, ChevronDown, Copy, Check } from "lucide-react";
+import { Sparkles, Image as ImageIcon, ArrowLeft, Maximize2, Send, MessageCircle, ChevronDown, Copy, Check, Heart, Bookmark } from "lucide-react";
 import {
   Collapsible,
   CollapsibleContent,
@@ -203,6 +203,8 @@ interface GeneratorInterfaceProps {
   artistName?: string;
   artistId?: string;
   imageUrl?: string;
+  isFreeShowcase?: boolean;
+  publicPromptText?: string;
 }
 
 export default function GeneratorInterface({ 
@@ -210,7 +212,9 @@ export default function GeneratorInterface({
   title = "Untitled Prompt",
   artistName = "Unknown Artist",
   artistId,
-  imageUrl
+  imageUrl,
+  isFreeShowcase = false,
+  publicPromptText
 }: GeneratorInterfaceProps) {
   const [, setLocation] = useLocation();
   const [evilSlider, setEvilSlider] = useState([75]);
@@ -293,161 +297,217 @@ export default function GeneratorInterface({
       <div className="flex-1 flex overflow-hidden">
         <ScrollArea className="w-[22rem] shrink-0 border-r border-border/50">
           <div className="p-3 space-y-3">
-            <Card className="border-0 bg-card/50">
-              <CardHeader className="p-3 pb-2">
-                <CardTitle className="text-sm">Settings</CardTitle>
-              </CardHeader>
-              <CardContent className="p-3 pt-0 space-y-3">
-                <div className="space-y-1.5">
-                  <div className="flex items-center justify-between">
-                    <Label className="text-xs">Evil</Label>
-                    <span className="text-xs font-mono text-muted-foreground">{evilSlider[0]}%</span>
+            {isFreeShowcase && publicPromptText ? (
+              <Card className="border-0 bg-card/50">
+                <CardHeader className="p-3 pb-2">
+                  <div className="flex items-center gap-2">
+                    <Badge className="bg-amber-500 hover:bg-amber-600 text-black font-bold text-[10px] px-1.5 py-0.5">
+                      FREE
+                    </Badge>
+                    <CardTitle className="text-sm">Prompt</CardTitle>
                   </div>
-                  <Slider
-                    value={evilSlider}
-                    onValueChange={setEvilSlider}
-                    max={100}
-                    step={1}
-                    className="h-1"
-                    data-testid="slider-evil"
-                  />
-                </div>
-
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="finger"
-                    checked={middleFinger}
-                    onCheckedChange={(checked) => setMiddleFinger(checked as boolean)}
-                    className="h-3.5 w-3.5"
-                    data-testid="checkbox-finger"
-                  />
-                  <Label htmlFor="finger" className="text-xs font-normal cursor-pointer">
-                    Middle finger
-                  </Label>
-                </div>
-
-                <div className="space-y-1.5">
-                  <Label className="text-xs">Camera Effects</Label>
+                </CardHeader>
+                <CardContent className="p-3 pt-0 space-y-3">
+                  <div className="relative">
+                    <textarea
+                      readOnly
+                      value={publicPromptText}
+                      className="w-full h-48 p-3 text-xs font-mono bg-background/50 border border-border/50 rounded-md text-muted-foreground resize-none scrollbar-thin"
+                      data-testid="textarea-free-prompt"
+                    />
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="absolute top-2 right-2 h-6 px-2"
+                      onClick={() => {
+                        navigator.clipboard.writeText(publicPromptText);
+                      }}
+                      data-testid="button-copy-prompt"
+                    >
+                      <Copy className="h-3 w-3" />
+                    </Button>
+                  </div>
+                  <p className="text-[10px] text-muted-foreground">
+                    This is a free showcase prompt. Copy and use it in your favorite AI image generator.
+                  </p>
+                </CardContent>
+              </Card>
+            ) : (
+              <Card className="border-0 bg-card/50">
+                <CardHeader className="p-3 pb-2">
+                  <CardTitle className="text-sm">Settings</CardTitle>
+                </CardHeader>
+                <CardContent className="p-3 pt-0 space-y-3">
                   <div className="space-y-1.5">
-                    {CAMERA_EFFECTS.map(effect => (
-                      <div key={effect.value} className="flex items-center space-x-2">
-                        <Checkbox
-                          id={`effect-${effect.value}`}
-                          checked={cameraEffects.includes(effect.value)}
-                          onCheckedChange={() => toggleCameraEffect(effect.value)}
-                          className="h-3.5 w-3.5"
-                          data-testid={`checkbox-effect-${effect.value}`}
-                        />
-                        <Label htmlFor={`effect-${effect.value}`} className="text-xs font-normal cursor-pointer">
-                          {effect.label}
-                        </Label>
+                    <div className="flex items-center justify-between">
+                      <Label className="text-xs">Evil</Label>
+                      <span className="text-xs font-mono text-muted-foreground">{evilSlider[0]}%</span>
+                    </div>
+                    <Slider
+                      value={evilSlider}
+                      onValueChange={setEvilSlider}
+                      max={100}
+                      step={1}
+                      className="h-1"
+                      data-testid="slider-evil"
+                    />
+                  </div>
+
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="finger"
+                      checked={middleFinger}
+                      onCheckedChange={(checked) => setMiddleFinger(checked as boolean)}
+                      className="h-3.5 w-3.5"
+                      data-testid="checkbox-finger"
+                    />
+                    <Label htmlFor="finger" className="text-xs font-normal cursor-pointer">
+                      Middle finger
+                    </Label>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">Camera Effects</Label>
+                    <div className="space-y-1.5">
+                      {CAMERA_EFFECTS.map(effect => (
+                        <div key={effect.value} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={`effect-${effect.value}`}
+                            checked={cameraEffects.includes(effect.value)}
+                            onCheckedChange={() => toggleCameraEffect(effect.value)}
+                            className="h-3.5 w-3.5"
+                            data-testid={`checkbox-effect-${effect.value}`}
+                          />
+                          <Label htmlFor={`effect-${effect.value}`} className="text-xs font-normal cursor-pointer">
+                            {effect.label}
+                          </Label>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <Separator className="my-2" />
+
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">Model</Label>
+                    <Select value="nano-banana-pro" disabled>
+                      <SelectTrigger className="h-8 text-xs opacity-50 cursor-not-allowed" data-testid="select-model">
+                        <SelectValue placeholder="Nano Banana Pro" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="nano-banana-pro">Nano Banana Pro</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">Aspect ratio</Label>
+                    <div className="grid grid-cols-5 gap-1">
+                      {ASPECT_RATIOS.map(ratio => (
+                        <Button
+                          key={ratio.value}
+                          variant={aspectRatio === ratio.value ? 'default' : 'outline'}
+                          size="sm"
+                          className="h-7 text-xs px-1"
+                          onClick={() => setAspectRatio(ratio.value)}
+                          data-testid={`button-ratio-${ratio.value}`}
+                        >
+                          {ratio.label}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">Resolution</Label>
+                    <div className="grid grid-cols-3 gap-1">
+                      {["1K", "2K", "4K"].map(res => (
+                        <Button
+                          key={res}
+                          variant={resolution === res ? 'default' : 'outline'}
+                          size="sm"
+                          className="h-7 text-xs"
+                          onClick={() => setResolution(res)}
+                          data-testid={`button-resolution-${res}`}
+                        >
+                          {res}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {isFreeShowcase && publicPromptText ? (
+              <Card className="border-0 bg-card/50">
+                <CardContent className="p-3 space-y-3">
+                  <div className="flex items-center justify-center gap-4">
+                    <Button variant="outline" size="sm" className="flex-1" data-testid="button-like">
+                      <Heart className="h-4 w-4 mr-2" />
+                      Like
+                    </Button>
+                    <Button variant="outline" size="sm" className="flex-1" data-testid="button-save">
+                      <Bookmark className="h-4 w-4 mr-2" />
+                      Save
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ) : (
+              <>
+                <Card className="border-0 bg-card/50">
+                  <CardHeader className="p-3 pb-2">
+                    <CardTitle className="text-sm">Current Settings</CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-3 pt-0 space-y-2">
+                    <div className="space-y-1 text-xs">
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Evil</span>
+                        <span className="font-mono text-white">{evilSlider[0]}%</span>
                       </div>
-                    ))}
-                  </div>
-                </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Middle Finger</span>
+                        <span className="font-mono text-white">{middleFinger ? "Yes" : "No"}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Camera Effects</span>
+                        <span className="font-mono text-white">{cameraEffects.length > 0 ? cameraEffects.join(", ") : "None"}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Model</span>
+                        <span className="font-mono text-white">Nano Banana Pro</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Aspect Ratio</span>
+                        <span className="font-mono text-white">{aspectRatio}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Resolution</span>
+                        <span className="font-mono text-white">{resolution}</span>
+                      </div>
+                    </div>
 
-                <Separator className="my-2" />
+                    <Button className="w-full h-9" data-testid="button-create">
+                      <Sparkles className="h-3.5 w-3.5 mr-2" />
+                      Create Now
+                    </Button>
+                  </CardContent>
+                </Card>
 
-                <div className="space-y-1.5">
-                  <Label className="text-xs">Model</Label>
-                  <Select value="nano-banana-pro" disabled>
-                    <SelectTrigger className="h-8 text-xs opacity-50 cursor-not-allowed" data-testid="select-model">
-                      <SelectValue placeholder="Nano Banana Pro" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="nano-banana-pro">Nano Banana Pro</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-1.5">
-                  <Label className="text-xs">Aspect ratio</Label>
-                  <div className="grid grid-cols-5 gap-1">
-                    {ASPECT_RATIOS.map(ratio => (
-                      <Button
-                        key={ratio.value}
-                        variant={aspectRatio === ratio.value ? 'default' : 'outline'}
-                        size="sm"
-                        className="h-7 text-xs px-1"
-                        onClick={() => setAspectRatio(ratio.value)}
-                        data-testid={`button-ratio-${ratio.value}`}
-                      >
-                        {ratio.label}
-                      </Button>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="space-y-1.5">
-                  <Label className="text-xs">Resolution</Label>
-                  <div className="grid grid-cols-3 gap-1">
-                    {["1K", "2K", "4K"].map(res => (
-                      <Button
-                        key={res}
-                        variant={resolution === res ? 'default' : 'outline'}
-                        size="sm"
-                        className="h-7 text-xs"
-                        onClick={() => setResolution(res)}
-                        data-testid={`button-resolution-${res}`}
-                      >
-                        {res}
-                      </Button>
-                    ))}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="border-0 bg-card/50">
-              <CardHeader className="p-3 pb-2">
-                <CardTitle className="text-sm">Current Settings</CardTitle>
-              </CardHeader>
-              <CardContent className="p-3 pt-0 space-y-2">
-                <div className="space-y-1 text-xs">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Evil</span>
-                    <span className="font-mono text-white">{evilSlider[0]}%</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Middle Finger</span>
-                    <span className="font-mono text-white">{middleFinger ? "Yes" : "No"}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Camera Effects</span>
-                    <span className="font-mono text-white">{cameraEffects.length > 0 ? cameraEffects.join(", ") : "None"}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Model</span>
-                    <span className="font-mono text-white">Nano Banana Pro</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Aspect Ratio</span>
-                    <span className="font-mono text-white">{aspectRatio}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Resolution</span>
-                    <span className="font-mono text-white">{resolution}</span>
-                  </div>
-                </div>
-
-                <Button className="w-full h-9" data-testid="button-create">
-                  <Sparkles className="h-3.5 w-3.5 mr-2" />
-                  Create Now
-                </Button>
-              </CardContent>
-            </Card>
-
-            <X402LinkSection 
-              settings={{
-                evil: evilSlider[0],
-                middleFinger,
-                cameraEffects,
-                model: "nano-banana-pro",
-                aspectRatio,
-                resolution
-              }}
-              promptId={promptId}
-            />
+                <X402LinkSection 
+                  settings={{
+                    evil: evilSlider[0],
+                    middleFinger,
+                    cameraEffects,
+                    model: "nano-banana-pro",
+                    aspectRatio,
+                    resolution
+                  }}
+                  promptId={promptId}
+                />
+              </>
+            )}
           </div>
         </ScrollArea>
 
