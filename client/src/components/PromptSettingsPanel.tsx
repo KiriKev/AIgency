@@ -133,8 +133,24 @@ export default function PromptSettingsPanel({ settings, onUpdate, useScrollArea 
                   </TooltipProvider>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="create-now" id="create-now" data-testid="radio-create-now" />
-                  <Label htmlFor="create-now" className="text-sm font-normal cursor-pointer flex-1 text-white">Create now</Label>
+                  <RadioGroupItem value="free-prompt" id="free-prompt" data-testid="radio-free-prompt" />
+                  <Label htmlFor="free-prompt" className="text-sm font-normal cursor-pointer flex-1 text-white">Free prompt</Label>
+                  <TooltipProvider>
+                    <Tooltip delayDuration={0}>
+                      <TooltipTrigger asChild>
+                        <HelpCircle className="h-3 w-3 text-muted-foreground cursor-help" />
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p className="text-xs max-w-xs">
+                          Dieser Prompt ist kostenlos nutzbar. Der vollständige Text ist öffentlich sichtbar.
+                        </p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="paid-prompt" id="paid-prompt" data-testid="radio-paid-prompt" />
+                  <Label htmlFor="paid-prompt" className="text-sm font-normal cursor-pointer flex-1 text-white">Paid prompt</Label>
                   <TooltipProvider>
                     <Tooltip delayDuration={0}>
                       <TooltipTrigger asChild>
@@ -149,31 +165,6 @@ export default function PromptSettingsPanel({ settings, onUpdate, useScrollArea 
                   </TooltipProvider>
                 </div>
               </RadioGroup>
-            </div>
-
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="free-prompt"
-                checked={settings.isFreeShowcase || false}
-                onCheckedChange={(checked) => onUpdate({ isFreeShowcase: checked as boolean })}
-                className="h-3.5 w-3.5"
-                data-testid="checkbox-free-prompt"
-              />
-              <Label htmlFor="free-prompt" className="text-xs font-normal cursor-pointer text-white">
-                Free prompt
-              </Label>
-              <TooltipProvider>
-                <Tooltip delayDuration={0}>
-                  <TooltipTrigger asChild>
-                    <HelpCircle className="h-3 w-3 text-muted-foreground cursor-help" />
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p className="text-xs max-w-xs">
-                      Wenn aktiviert, wird der Prompt kostenlos angeboten und der vollständige Text ist öffentlich sichtbar.
-                    </p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
             </div>
 
             <div className="space-y-2">
