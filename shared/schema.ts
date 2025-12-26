@@ -1,159 +1,162 @@
-import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, integer, boolean, jsonb } from "drizzle-orm/pg-core";
-import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
+import { ObjectId } from "mongodb";
 
-export const users = pgTable("users", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  username: text("username").notNull().unique(),
-  password: text("password").notNull(),
+// Zod schema for converting MongoDB ObjectId to string
+const objectIdSchema = z.union([
+  z.string(),
+  z.instanceof(ObjectId),
+]).transform((val) => val instanceof ObjectId ? val.toString() : val);
+
+// ==================== Users ====================
+export const userSchema = z.object({
+  id: z.string().optional(),
+  username: z.string().min(1),
+  password: z.string().min(1),
 });
 
-export const insertUserSchema = createInsertSchema(users).pick({
-  username: true,
-  password: true,
-});
+export const insertUserSchema = userSchema.omit({ id: true });
 
+export type User = z.infer<typeof userSchema>;
 export type InsertUser = z.infer<typeof insertUserSchema>;
-export type User = typeof users.$inferSelect;
 
-export const prompts = pgTable("prompts", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  title: text("title").notNull(),
-  encryptedContent: text("encrypted_content").notNull(),
-  iv: text("iv").notNull(),
-  authTag: text("auth_tag").notNull(),
-  userId: varchar("user_id"),
-  artistId: varchar("artist_id"),
-  category: text("category"),
-  tags: jsonb("tags").$type<string[]>(),
-  aiModel: text("ai_model").default("gemini"),
-  price: integer("price").default(1),
-  aspectRatio: text("aspect_ratio"),
-  photoCount: integer("photo_count").default(1),
-  promptType: text("prompt_type").default("create-now"),
-  uploadedPhotos: jsonb("uploaded_photos").$type<string[]>(),
-  resolution: text("resolution"),
-  previewImageUrl: text("preview_image_url"),
-  downloads: integer("downloads").default(0),
-  rating: integer("rating").default(0),
-  createdAt: text("created_at").default(sql`now()`),
-  isFreeShowcase: boolean("is_free_showcase").default(false),
-  publicPromptText: text("public_prompt_text"),
+// ==================== Prompts ====================
+export const promptSchema = z.object({
+  id: z.string().optional(),
+  title: z.string().min(1),
+  encryptedContent: z.string(),
+  iv: z.string(),
+  authTag: z.string(),
+  userId: z.string().optional(),
+  artistId: z.string().optional(),
+  category: z.string().optional(),
+  tags: z.array(z.string()).optional(),
+  aiModel: z.string().default("gemini"),
+  price: z.number().int().default(1),
+  aspectRatio: z.string().optional(),
+  photoCount: z.number().int().default(1),
+  promptType: z.string().default("create-now"),
+  uploadedPhotos: z.array(z.string()).optional(),
+  resolution: z.string().optional(),
+  previewImageUrl: z.string().optional(),
+  downloads: z.number().int().default(0),
+  rating: z.number().int().default(0),
+  createdAt: z.string().optional(),
+  isFreeShowcase: z.boolean().default(false),
+  publicPromptText: z.string().optional(),
 });
 
-export const insertPromptSchema = createInsertSchema(prompts).omit({
-  id: true,
-});
+export const insertPromptSchema = promptSchema.omit({ id: true, createdAt: true });
 
+export type Prompt = z.infer<typeof promptSchema>;
 export type InsertPrompt = z.infer<typeof insertPromptSchema>;
-export type Prompt = typeof prompts.$inferSelect;
 
+// ==================== Variables ====================
 export interface VariableOption {
   label: string;
   promptValue: string;
 }
 
-export const variables = pgTable("variables", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  promptId: varchar("prompt_id").notNull(),
-  name: text("name").notNull(),
-  label: text("label").notNull(),
-  description: text("description").default(""),
-  type: text("type").notNull(),
-  defaultValue: jsonb("default_value"),
-  required: boolean("required").default(false),
-  allowReferenceImage: boolean("allow_reference_image").default(false),
-  position: integer("position").notNull(),
-  min: integer("min"),
-  max: integer("max"),
-  step: integer("step").default(1),
-  options: jsonb("options").$type<VariableOption[]>(),
-  defaultOptionIndex: integer("default_option_index").default(0),
-  placeholder: text("placeholder"),
+const variableOptionSchema: z.ZodType<VariableOption> = z.object({
+  label: z.string(),
+  promptValue: z.string(),
 });
 
-export const insertVariableSchema = createInsertSchema(variables).omit({
-  id: true,
+export const variableSchema = z.object({
+  id: z.string().optional(),
+  promptId: z.string().min(1),
+  name: z.string().min(1),
+  label: z.string().min(1),
+  description: z.string().default(""),
+  type: z.string().min(1),
+  defaultValue: z.any().optional(), // JSONB -> any (flexible type)
+  required: z.boolean().default(false),
+  allowReferenceImage: z.boolean().default(false),
+  position: z.number().int().min(0),
+  min: z.number().int().optional(),
+  max: z.number().int().optional(),
+  step: z.number().int().default(1),
+  options: z.array(variableOptionSchema).optional(),
+  defaultOptionIndex: z.number().int().default(0),
+  placeholder: z.string().optional(),
 });
 
+export const insertVariableSchema = variableSchema.omit({ id: true });
+
+export type Variable = z.infer<typeof variableSchema>;
 export type InsertVariable = z.infer<typeof insertVariableSchema>;
-export type Variable = typeof variables.$inferSelect;
 
-// Artists table for user profiles
-export const artists = pgTable("artists", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  username: text("username").notNull().unique(),
-  displayName: text("display_name").notNull(),
-  bio: text("bio"),
-  avatarUrl: text("avatar_url"),
-  coverImageUrl: text("cover_image_url"),
-  followerCount: integer("follower_count").default(0),
-  followingCount: integer("following_count").default(0),
+// ==================== Artists ====================
+export const artistSchema = z.object({
+  id: z.string().optional(),
+  username: z.string().min(1),
+  displayName: z.string().min(1),
+  bio: z.string().optional(),
+  avatarUrl: z.string().optional(),
+  coverImageUrl: z.string().optional(),
+  followerCount: z.number().int().default(0),
+  followingCount: z.number().int().default(0),
 });
 
-export const insertArtistSchema = createInsertSchema(artists).omit({
-  id: true,
-});
+export const insertArtistSchema = artistSchema.omit({ id: true });
 
+export type Artist = z.infer<typeof artistSchema>;
 export type InsertArtist = z.infer<typeof insertArtistSchema>;
-export type Artist = typeof artists.$inferSelect;
 
-// Artworks table for generated images
-export const artworks = pgTable("artworks", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  artistId: varchar("artist_id").notNull(),
-  title: text("title").notNull(),
-  description: text("description"),
-  imageUrl: text("image_url").notNull(),
-  promptUsed: text("prompt_used"),
-  promptId: varchar("prompt_id"),
-  likes: integer("likes").default(0),
-  views: integer("views").default(0),
-  isPublic: boolean("is_public").default(true),
-  tags: jsonb("tags"),
-  createdAt: text("created_at").default(sql`now()`),
+// ==================== Artworks ====================
+export const artworkSchema = z.object({
+  id: z.string().optional(),
+  artistId: z.string().min(1),
+  title: z.string().min(1),
+  description: z.string().optional(),
+  imageUrl: z.string().min(1),
+  promptUsed: z.string().optional(),
+  promptId: z.string().optional(),
+  likes: z.number().int().default(0),
+  views: z.number().int().default(0),
+  isPublic: z.boolean().default(true),
+  tags: z.any().optional(), // JSONB -> any
+  createdAt: z.string().optional(),
 });
 
-export const insertArtworkSchema = createInsertSchema(artworks).omit({
-  id: true,
-});
+export const insertArtworkSchema = artworkSchema.omit({ id: true, createdAt: true });
 
+export type Artwork = z.infer<typeof artworkSchema>;
 export type InsertArtwork = z.infer<typeof insertArtworkSchema>;
-export type Artwork = typeof artworks.$inferSelect;
 
-// Generated variations for each prompt (right-side history panel)
-export const generatedVariations = pgTable("generated_variations", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  artworkId: varchar("artwork_id").notNull(),
-  userId: varchar("user_id").notNull(),
-  imageUrl: text("image_url").notNull(),
-  watermarkedImageUrl: text("watermarked_image_url"),
-  isAccepted: boolean("is_accepted").default(false),
-  settings: jsonb("settings"),
-  createdAt: text("created_at").default(sql`now()`),
+// ==================== Generated Variations ====================
+export const generatedVariationSchema = z.object({
+  id: z.string().optional(),
+  artworkId: z.string().min(1),
+  userId: z.string().min(1),
+  imageUrl: z.string().min(1),
+  watermarkedImageUrl: z.string().optional(),
+  isAccepted: z.boolean().default(false),
+  settings: z.any().optional(), // JSONB -> any
+  createdAt: z.string().optional(),
 });
 
-export const insertGeneratedVariationSchema = createInsertSchema(generatedVariations).omit({
+export const insertGeneratedVariationSchema = generatedVariationSchema.omit({
   id: true,
+  createdAt: true
 });
 
+export type GeneratedVariation = z.infer<typeof generatedVariationSchema>;
 export type InsertGeneratedVariation = z.infer<typeof insertGeneratedVariationSchema>;
-export type GeneratedVariation = typeof generatedVariations.$inferSelect;
 
-// Comments on artworks (only users who generated from this artwork can comment)
-export const artworkComments = pgTable("artwork_comments", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  artworkId: varchar("artwork_id").notNull(),
-  userId: varchar("user_id").notNull(),
-  username: text("username").notNull(),
-  content: text("content").notNull(),
-  createdAt: text("created_at").default(sql`now()`),
+// ==================== Artwork Comments ====================
+export const artworkCommentSchema = z.object({
+  id: z.string().optional(),
+  artworkId: z.string().min(1),
+  userId: z.string().min(1),
+  username: z.string().min(1),
+  content: z.string().min(1),
+  createdAt: z.string().optional(),
 });
 
-export const insertArtworkCommentSchema = createInsertSchema(artworkComments).omit({
+export const insertArtworkCommentSchema = artworkCommentSchema.omit({
   id: true,
+  createdAt: true
 });
 
+export type ArtworkComment = z.infer<typeof artworkCommentSchema>;
 export type InsertArtworkComment = z.infer<typeof insertArtworkCommentSchema>;
-export type ArtworkComment = typeof artworkComments.$inferSelect;
