@@ -311,8 +311,8 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
     setShowVariableEditor(true);
     
     toast({
-      title: "Variable erstellt",
-      description: `Variable "${varName}" wurde zum Prompt hinzugefügt.`,
+      title: "Variable Created",
+      description: `Variable "${varName}" was added to the prompt.`,
     });
   };
 
@@ -367,8 +367,8 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
     if (existingVariable && !createNew) {
       // Link to existing variable
       toast({
-        title: "Variable verknüpft",
-        description: `Bestehende Variable "${varName}" wurde eingefügt.`,
+        title: "Variable Linked",
+        description: `Existing variable "${varName}" was inserted.`,
       });
       setOpenVariables([existingVariable.id]);
       setEditingVariableId(existingVariable.id);
@@ -410,8 +410,8 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
       setShowVariableEditor(true);
       
       toast({
-        title: "Variable erstellt",
-        description: `Neue Variable "${finalVarName}" wurde erstellt.`,
+        title: "Variable Created",
+        description: `New variable "${finalVarName}" was created.`,
       });
     }
   };
@@ -529,8 +529,8 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
       
       if (duplicateExists && currentVar && currentVar.name !== newName) {
         toast({
-          title: "Fehler",
-          description: `Eine Variable mit dem Namen "${newName}" existiert bereits. Bitte wähle einen anderen Namen.`,
+          title: "Error",
+          description: `A variable with the name "${newName}" already exists. Please choose a different name.`,
           variant: "destructive"
         });
         return; // Don't update
@@ -666,8 +666,8 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
     const previewText = renderPreviewWithDefaults();
     if (!previewText.trim()) {
       toast({
-        title: "Fehler",
-        description: "Bitte geben Sie einen Prompt ein.",
+        title: "Error",
+        description: "Please enter a prompt.",
         variant: "destructive"
       });
       return;
@@ -681,13 +681,13 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
       const data = await response.json();
       setGeneratedImage(data.imageUrl);
       toast({
-        title: "Generierung abgeschlossen",
-        description: "Ihr Bild wurde erfolgreich generiert."
+        title: "Generation Complete",
+        description: "Your image was generated successfully."
       });
     } catch (error: any) {
       toast({
-        title: "Generierung fehlgeschlagen",
-        description: error.message || "Fehler bei der Bildgenerierung.",
+        title: "Generation Failed",
+        description: error.message || "Error generating image.",
         variant: "destructive"
       });
     } finally {
@@ -707,13 +707,13 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
       const data = await response.json();
       setGeneratedImage(data.imageUrl);
       toast({
-        title: "Generierung abgeschlossen",
-        description: "Ihr Bild wurde erfolgreich generiert."
+        title: "Generation Complete",
+        description: "Your image was generated successfully."
       });
     } catch (error: any) {
       toast({
-        title: "Generierung fehlgeschlagen",
-        description: error.message || "Fehler bei der Bildgenerierung.",
+        title: "Generation Failed",
+        description: error.message || "Error generating image.",
         variant: "destructive"
       });
     } finally {
@@ -779,15 +779,15 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/prompts'] });
       toast({
-        title: "Gespeichert",
-        description: "Ihr Prompt wurde erfolgreich gespeichert."
+        title: "Saved",
+        description: "Your prompt was saved successfully."
       });
     },
     onError: (error) => {
       console.error('Save error:', error);
       toast({
-        title: "Fehler",
-        description: "Beim Speichern ist ein Fehler aufgetreten.",
+        title: "Error",
+        description: "An error occurred while saving.",
         variant: "destructive"
       });
     }
@@ -840,14 +840,14 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
       setShowLoadDialog(false);
       
       toast({
-        title: "Geladen",
-        description: "Prompt wurde erfolgreich geladen."
+        title: "Loaded",
+        description: "Prompt was loaded successfully."
       });
     } catch (error) {
       console.error('Load error:', error);
       toast({
-        title: "Fehler",
-        description: "Beim Laden ist ein Fehler aufgetreten.",
+        title: "Error",
+        description: "An error occurred while loading.",
         variant: "destructive"
       });
     }
@@ -1088,7 +1088,7 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
                 }}
                 onMouseUp={handleTextSelection}
                 onKeyUp={handleTextSelection}
-                placeholder="Schreibe deinen Prompt hier... Nutze [VariableName] für Variablen"
+                placeholder="Write your prompt here... Use [VariableName] for variables"
                 data-testid="textarea-prompt"
               />
               
@@ -1123,7 +1123,7 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
             <div className="flex flex-wrap gap-1">
               {variables.length > 0 && (
                 <div className="flex flex-wrap gap-1 items-center">
-                  <span className="text-xs text-white">Variablen:</span>
+                  <span className="text-xs text-white">Variables:</span>
                   {variables.map((variable) => (
                     <Badge
                       key={variable.id}
@@ -1145,7 +1145,7 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
             </div>
 
             <Card className="p-2 shrink-0">
-              <h4 className="text-xs font-medium text-white mb-1.5">Vorschau</h4>
+              <h4 className="text-xs font-medium text-white mb-1.5">Preview</h4>
               <div className="font-mono text-xs whitespace-pre-wrap break-words text-white max-h-[150px] overflow-y-auto">
                 {renderPreviewWithDefaults()}
               </div>
@@ -1156,15 +1156,15 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
         {/* Variables Panel */}
         <Card className="flex flex-col overflow-hidden" id="desktop-variables-panel">
             <CardHeader className="pb-2 px-3 shrink-0">
-              <CardTitle className="text-base text-white">Variablen</CardTitle>
+              <CardTitle className="text-base text-white">Variables</CardTitle>
             </CardHeader>
             <CardContent className="flex-1 min-h-0 px-3 pb-3">
               <ScrollArea className="h-full pr-4">
                 {variables.length === 0 ? (
                   <p className="text-sm text-white text-center py-8">
-                    Keine Variablen vorhanden.
+                    No variables yet.
                     <br />
-                    Markiere Text oder nutze [Name]
+                    Select text or use [Name]
                   </p>
                 ) : (
                   <Accordion type="multiple" value={openVariables} onValueChange={setOpenVariables}>
@@ -1203,7 +1203,7 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
                                 <Textarea
                                   value={variable.description}
                                   onChange={(e) => updateVariable(variable.id, { description: e.target.value })}
-                                  placeholder="Beschreibung hinzufügen..."
+                                  placeholder="Add description..."
                                   className="min-h-[60px] text-xs"
                                   disabled={promptType === 'showcase'}
                                   data-testid={`input-description-${variable.id}`}
@@ -1244,18 +1244,18 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
                                 <SelectItem value="checkbox">Checkbox</SelectItem>
                                 <SelectItem value="multi-select">Multi-Select</SelectItem>
                                 <SelectItem value="single-select">Single-Select</SelectItem>
-                                <SelectItem value="slider">Regler</SelectItem>
+                                <SelectItem value="slider">Slider</SelectItem>
                               </SelectContent>
                             </Select>
                           </div>
 
                           {variable.type === 'text' && (
                             <div className="space-y-0">
-                              <Label className="text-xs text-white">Default-Wert</Label>
+                              <Label className="text-xs text-white">Default Value</Label>
                               <Textarea
                                 value={variable.defaultValue as string}
                                 onChange={(e) => updateVariable(variable.id, { defaultValue: e.target.value })}
-                                placeholder="Default-Wert"
+                                placeholder="Default Value"
                                 className="min-h-8 text-xs resize-y"
                                 disabled={promptType === 'showcase'}
                                 data-testid={`input-default-${variable.id}`}
@@ -1273,7 +1273,7 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
                                 data-testid={`checkbox-default-${variable.id}`}
                               />
                               <Label htmlFor={`checkbox-${variable.id}`} className="text-xs text-white">
-                                Standardmäßig aktiv
+                                Active by default
                               </Label>
                             </div>
                           )}
@@ -1281,7 +1281,7 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
                           {(variable.type === 'multi-select' || variable.type === 'single-select') && (
                             <div className="space-y-1">
                               <div className="grid grid-cols-2 gap-2">
-                                <Label className="text-xs text-white">Optionen</Label>
+                                <Label className="text-xs text-white">Options</Label>
                                 <Label className="text-xs text-white text-right">Default</Label>
                               </div>
                               <div className="space-y-1">
@@ -1305,12 +1305,12 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
                                           {isDefault && <span className="text-[9px] text-teal-600 dark:text-teal-400 font-medium">Default</span>}
                                         </div>
                                         <div className="flex-1">
-                                          <Label className="text-xs text-white">Sichtbarer Name</Label>
+                                          <Label className="text-xs text-white">Visible Name</Label>
                                           <Input
                                             value={option.visibleName}
                                             onChange={(e) => updateOption(variable.id, index, 'visibleName', e.target.value)}
                                             className="h-7 text-xs mt-0.5"
-                                            placeholder="Sichtbarer Name"
+                                            placeholder="Visible Name"
                                             disabled={promptType === 'showcase'}
                                             data-testid={`input-option-visible-${variable.id}-${index}`}
                                           />
@@ -1327,12 +1327,12 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
                                         </Button>
                                       </div>
                                       <div>
-                                        <Label className="text-xs text-white">Prompt-Wert</Label>
+                                        <Label className="text-xs text-white">Prompt Value</Label>
                                         <Textarea
                                           value={option.promptValue}
                                           onChange={(e) => updateOption(variable.id, index, 'promptValue', e.target.value)}
                                           className="min-h-[50px] text-xs mt-0.5 resize-y"
-                                          placeholder="Prompt-Wert"
+                                          placeholder="Prompt Value"
                                           disabled={promptType === 'showcase'}
                                           data-testid={`input-option-prompt-${variable.id}-${index}`}
                                         />
@@ -1345,7 +1345,7 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
                                 <Card className="p-1.5 bg-muted/50">
                                   <div className="space-y-1">
                                     <div>
-                                      <Label className="text-xs text-white">Sichtbarer Name</Label>
+                                      <Label className="text-xs text-white">Visible Name</Label>
                                       <Input
                                         value={newOptionInput[variable.id]?.split('|||')[0] || ''}
                                         onChange={(e) => {
@@ -1363,7 +1363,7 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
                                       />
                                     </div>
                                     <div>
-                                      <Label className="text-xs text-white">Prompt-Wert</Label>
+                                      <Label className="text-xs text-white">Prompt Value</Label>
                                       <Textarea
                                         value={newOptionInput[variable.id]?.split('|||')[1] || ''}
                                         onChange={(e) => {
@@ -1388,7 +1388,7 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
                                       data-testid={`button-add-option-${variable.id}`}
                                     >
                                       <Plus className="h-4 w-4 mr-1" />
-                                      Option hinzufügen
+                                      Add option
                                     </Button>
                                   </div>
                                 </Card>
@@ -1499,9 +1499,9 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
                 </div>
               ) : (
                 <div className="flex-1 flex items-center justify-center text-center text-white text-sm">
-                  Kein generiertes Bild vorhanden.
+                  No generated image yet.
                   <br />
-                  Klicke auf Generieren.
+                  Click Generate to create one.
                 </div>
               )}
               
@@ -1512,7 +1512,7 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
                   className="w-full"
                   data-testid="button-generate"
                 >
-                  {isGenerating ? 'Generiere...' : 'Generieren'}
+                  {isGenerating ? 'Generating...' : 'Generate'}
                 </Button>
                 <Button
                   variant="outline"
@@ -1541,7 +1541,7 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
               className="text-white"
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
-              Zurück
+              Back
             </Button>
           )}
           <div className="flex-1 min-w-0">
@@ -1577,7 +1577,7 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
                   data-testid="button-show-variables"
                 >
                   <List className="h-4 w-4 mr-1" />
-                  Variablen
+                  Variables
                 </Button>
               </div>
 
@@ -1661,7 +1661,7 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
                         }
                       }
                     }}
-                    placeholder="Schreiben Sie Ihren Prompt... Markieren Sie Text und erstellen Sie Variablen oder nutzen Sie [VariablenName] Syntax."
+                    placeholder="Write your prompt... Select text to create variables or use [VariableName] syntax."
                     className="absolute inset-0 w-full font-mono text-sm resize-none bg-transparent text-transparent caret-white focus:outline-none focus:ring-0 border-0 shadow-none ring-0 focus-visible:ring-0 rounded-none whitespace-pre-wrap overflow-hidden selection:bg-primary/20"
                     style={{ 
                       wordBreak: 'break-word', 
@@ -1718,7 +1718,7 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
                 className="w-full"
                 data-testid="button-generate"
               >
-                {isGenerating ? 'Generiere...' : 'Generieren'}
+                {isGenerating ? 'Generating...' : 'Generate'}
               </Button>
               <Button
                 variant="outline"
@@ -1770,7 +1770,7 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
         {showVariableEditor && (
           <div className="fixed inset-0 bg-background z-50 flex flex-col overflow-hidden">
             <div className="shrink-0 flex items-center justify-between p-4 border-b w-full max-w-full overflow-x-hidden">
-              <h2 className="text-lg font-semibold text-foreground">Variablen</h2>
+              <h2 className="text-lg font-semibold text-foreground">Variables</h2>
               <Button
                 variant="ghost"
                 size="icon"
@@ -1789,9 +1789,9 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
               <div className="p-4 space-y-2 w-full max-w-full overflow-x-hidden">
                 {variables.length === 0 ? (
                   <p className="text-sm text-foreground text-center py-8">
-                    Keine Variablen vorhanden.
+                    No variables yet.
                     <br />
-                    Markiere Text oder nutze [Name]
+                    Select text or use [Name]
                   </p>
                 ) : (
                   <Accordion type="multiple" value={editingVariableId ? [editingVariableId] : openVariables} onValueChange={setOpenVariables}>
@@ -1825,7 +1825,7 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
                             <Textarea
                               value={variable.description}
                               onChange={(e) => updateVariable(variable.id, { description: e.target.value })}
-                              placeholder="Beschreibung hinzufügen..."
+                              placeholder="Add description..."
                               className="min-h-[60px] text-sm text-foreground"
                               disabled={promptType === 'showcase'}
                               data-testid={`input-description-${variable.id}`}
@@ -1854,18 +1854,18 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
                                 <SelectItem value="checkbox">Checkbox</SelectItem>
                                 <SelectItem value="multi-select">Multi-Select</SelectItem>
                                 <SelectItem value="single-select">Single-Select</SelectItem>
-                                <SelectItem value="slider">Regler</SelectItem>
+                                <SelectItem value="slider">Slider</SelectItem>
                               </SelectContent>
                             </Select>
                           </div>
 
                           {variable.type === 'text' && (
                             <div className="space-y-2">
-                              <Label className="text-xs text-white">Default-Wert</Label>
+                              <Label className="text-xs text-white">Default Value</Label>
                               <Textarea
                                 value={variable.defaultValue as string}
                                 onChange={(e) => updateVariable(variable.id, { defaultValue: e.target.value })}
-                                placeholder="Default-Wert"
+                                placeholder="Default Value"
                                 className="min-h-[80px] text-sm"
                                 disabled={promptType === 'showcase'}
                                 data-testid={`input-default-${variable.id}`}
@@ -1883,14 +1883,14 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
                                 data-testid={`checkbox-default-${variable.id}`}
                               />
                               <Label htmlFor={`checkbox-mobile-${variable.id}`} className="text-sm text-white">
-                                Standardmäßig aktiv
+                                Active by default
                               </Label>
                             </div>
                           )}
 
                           {(variable.type === 'multi-select' || variable.type === 'single-select') && (
                             <div className="space-y-2">
-                              <Label className="text-xs text-white">Optionen & Default</Label>
+                              <Label className="text-xs text-white">Options & Default</Label>
                               <div className="space-y-2">
                                 {variable.options?.map((option, index) => {
                                   const isDefault = (variable.defaultOptionIndex ?? 0) === index;
@@ -1926,7 +1926,7 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
                                           />
                                         </div>
                                         <div className="space-y-1">
-                                          <Label className="text-xs text-white">Prompt-Wert</Label>
+                                          <Label className="text-xs text-white">Prompt Value</Label>
                                           <Input
                                             value={option.promptValue}
                                             onChange={(e) => {
@@ -1934,7 +1934,7 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
                                               newOptions[index] = { ...option, promptValue: e.target.value };
                                               updateVariable(variable.id, { options: newOptions });
                                             }}
-                                            placeholder="Prompt-Wert"
+                                            placeholder="Prompt Value"
                                             className="h-8 text-sm"
                                             disabled={promptType === 'showcase'}
                                             data-testid={`input-prompt-value-${variable.id}-${index}`}
@@ -1963,7 +1963,7 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
                                 <Input
                                   value={newOptionInput[variable.id] || ''}
                                   onChange={(e) => setNewOptionInput({ ...newOptionInput, [variable.id]: e.target.value })}
-                                  placeholder="Neue Option"
+                                  placeholder="New option"
                                   className="h-8 text-sm"
                                   disabled={promptType === 'showcase'}
                                   data-testid={`input-new-option-${variable.id}`}
@@ -2013,7 +2013,7 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
                                 </div>
                               </div>
                               <div className="space-y-1">
-                                <Label className="text-xs text-white">Default-Wert</Label>
+                                <Label className="text-xs text-white">Default Value</Label>
                                 <Input
                                   type="number"
                                   value={variable.defaultValue as number}
@@ -2088,15 +2088,15 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Variable löschen?</AlertDialogTitle>
+            <AlertDialogTitle>Delete Variable?</AlertDialogTitle>
             <AlertDialogDescription>
-              Sind Sie sicher, dass Sie diese Variable löschen möchten? Der Text bleibt als normaler Text im Prompt erhalten.
+              Are you sure you want to delete this variable? The text will remain as normal text in the prompt.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel data-testid="button-cancel-delete">Nein</AlertDialogCancel>
+            <AlertDialogCancel data-testid="button-cancel-delete">No</AlertDialogCancel>
             <AlertDialogAction onClick={confirmDeleteVariable} data-testid="button-confirm-delete">
-              Ja, löschen
+              Yes, delete
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -2105,15 +2105,15 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
       <AlertDialog open={unsavedVariableDialog} onOpenChange={setUnsavedVariableDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Ungespeicherte Variablen</AlertDialogTitle>
+            <AlertDialogTitle>Unsaved Variables</AlertDialogTitle>
             <AlertDialogDescription>
-              Sie haben offene Variablen mit möglicherweise ungespeicherten Änderungen. Möchten Sie trotzdem generieren?
+              You have open variables with potentially unsaved changes. Do you want to generate anyway?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel data-testid="button-cancel-generate">Abbrechen</AlertDialogCancel>
+            <AlertDialogCancel data-testid="button-cancel-generate">Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={proceedWithGenerate} data-testid="button-proceed-generate">
-              Generieren
+              Generate
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -2122,9 +2122,9 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
       <AlertDialog open={showValidationDialog} onOpenChange={setShowValidationDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Fehlende Informationen</AlertDialogTitle>
+            <AlertDialogTitle>Missing Information</AlertDialogTitle>
             <AlertDialogDescription>
-              Bitte füllen Sie alle erforderlichen Felder aus: Title, Category und Tags.
+              Please fill in all required fields: Title, Category, and Tags.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -2138,9 +2138,9 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
       <AlertDialog open={showLoadDialog} onOpenChange={setShowLoadDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Prompt laden</AlertDialogTitle>
+            <AlertDialogTitle>Load Prompt</AlertDialogTitle>
             <AlertDialogDescription>
-              Wählen Sie einen gespeicherten Prompt, um ihn zu laden und zu bearbeiten.
+              Select a saved prompt to load and edit.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <ScrollArea className="max-h-[400px]">
@@ -2157,20 +2157,20 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
                     <div className="flex flex-col items-start">
                       <span className="font-medium">{p.title}</span>
                       <span className="text-xs text-foreground">
-                        {p.createdAt ? new Date(p.createdAt).toLocaleDateString() : 'Kürzlich'}
+                        {p.createdAt ? new Date(p.createdAt).toLocaleDateString() : 'Recent'}
                       </span>
                     </div>
                   </Button>
                 ))
               ) : (
                 <p className="text-sm text-foreground text-center py-4">
-                  Keine gespeicherten Prompts gefunden.
+                  No saved prompts found.
                 </p>
               )}
             </div>
           </ScrollArea>
           <AlertDialogFooter>
-            <AlertDialogCancel data-testid="button-cancel-load">Abbrechen</AlertDialogCancel>
+            <AlertDialogCancel data-testid="button-cancel-load">Cancel</AlertDialogCancel>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
@@ -2193,9 +2193,9 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
             </Button>
           </div>
           <AlertDialogHeader className="-mt-4">
-            <AlertDialogTitle>Variable existiert bereits</AlertDialogTitle>
+            <AlertDialogTitle>Variable Already Exists</AlertDialogTitle>
             <AlertDialogDescription>
-              Eine Variable mit dem Namen "<span className="font-medium">{linkOrCreateDialog.varName}</span>" existiert bereits. Was möchten Sie tun?
+              A variable with the name "<span className="font-medium">{linkOrCreateDialog.varName}</span>" already exists. What would you like to do?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <div className="flex flex-col gap-2">
@@ -2205,14 +2205,14 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
               className="w-full"
               data-testid="button-link-variable"
             >
-              Mit bestehender Variable verknüpfen
+              Link to existing variable
             </Button>
             <Button
               onClick={handleCreateNewVariable}
               className="w-full"
               data-testid="button-create-new-variable"
             >
-              Neue Variable erstellen
+              Create new variable
             </Button>
           </div>
         </AlertDialogContent>
