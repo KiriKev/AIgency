@@ -1,0 +1,141 @@
+PROPRIETARY SOFTWARE LICENSE AGREEMENT
+
+Copyright © 2024-2025 Kevin [KiriKev]. All Rights Reserved.
+
+NOTICE: This software and associated documentation files (the "Software") are the 
+proprietary and confidential property of Kevin [KiriKev] (the "Author"). 
+
+By accessing, viewing, or using this Software, you agree to be bound by the terms 
+of this License Agreement.
+
+1. GRANT OF LIMITED LICENSE
+
+   Subject to the terms and conditions of this Agreement, the Author grants you a 
+   limited, non-exclusive, non-transferable, revocable license to:
+   
+   a) View and review the source code for educational and evaluation purposes only;
+   b) Reference general programming concepts and architectural patterns in your own 
+      original work, provided such work does not constitute a derivative or competing 
+      product.
+
+2. RESTRICTIONS
+
+   You MAY NOT, without prior written authorization from the Author:
+   
+   a) Use the Software or any portion thereof for commercial purposes;
+   b) Modify, adapt, translate, or create derivative works based on the Software;
+   c) Distribute, sublicense, lease, rent, loan, or otherwise transfer the Software;
+   d) Reverse engineer, decompile, or disassemble the Software, except to the extent 
+      expressly permitted by applicable law;
+   e) Remove or alter any proprietary notices, labels, or marks on the Software;
+   f) Copy, reproduce, or extract substantial portions of the source code;
+   g) Use the Software to develop competing or substantially similar products;
+   h) Deploy, host, or make the Software available as a service (SaaS);
+   i) Integrate the Software or substantial portions into any other software system.
+
+3. INTELLECTUAL PROPERTY RIGHTS
+
+   All title, ownership rights, and intellectual property rights in and to the Software 
+   remain the exclusive property of the Author. This License does not grant you any 
+   rights to trademarks, service marks, or trade names of the Author.
+
+4. TRADE SECRETS
+
+   The Software contains proprietary algorithms, business logic, and trade secrets. 
+   You agree to maintain the confidentiality of such proprietary information and to 
+   use it only as expressly permitted under this License.
+
+5. NO WARRANTY
+
+   THE SOFTWARE IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESS OR 
+   IMPLIED, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY, 
+   FITNESS FOR A PARTICULAR PURPOSE, AND NON-INFRINGEMENT. THE AUTHOR DOES NOT WARRANT 
+   THAT THE SOFTWARE WILL MEET YOUR REQUIREMENTS OR THAT THE OPERATION OF THE SOFTWARE 
+   WILL BE UNINTERRUPTED OR ERROR-FREE.
+
+6. LIMITATION OF LIABILITY
+
+   IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, INCIDENTAL, INDIRECT, OR 
+   CONSEQUENTIAL DAMAGES WHATSOEVER (INCLUDING, WITHOUT LIMITATION, DAMAGES FOR LOSS 
+   OF BUSINESS PROFITS, BUSINESS INTERRUPTION, LOSS OF BUSINESS INFORMATION, OR ANY 
+   OTHER PECUNIARY LOSS) ARISING OUT OF THE USE OF OR INABILITY TO USE THE SOFTWARE.
+
+7. TERMINATION
+
+   This License is effective until terminated. Your rights under this License will 
+   terminate automatically without notice if you fail to comply with any term hereof. 
+   Upon termination, you must immediately cease all use of the Software and destroy 
+   all copies in your possession.
+
+8. COMMERCIAL LICENSING
+
+   Commercial use of the Software requires a separate commercial license agreement. 
+   For licensing inquiries, contact:
+   
+   Email: [Your Email]
+   GitHub: https://github.com/KiriKev
+   
+9. ENFORCEMENT
+
+   Any violation of this License Agreement may result in:
+   - Immediate termination of all granted rights
+   - Legal action for damages and injunctive relief
+   - DMCA takedown notices and copyright enforcement
+   - Pursuit of maximum civil and criminal penalties under applicable law
+
+10. GOVERNING LAW
+
+    This Agreement shall be governed by and construed in accordance with the laws of 
+    [Your Jurisdiction], without regard to its conflict of law provisions. Any legal 
+    action or proceeding arising under this Agreement shall be brought exclusively in 
+    the courts of [Your Jurisdiction].
+
+11. ENTIRE AGREEMENT
+
+    This Agreement constitutes the entire agreement between you and the Author regarding 
+    the Software and supersedes all prior agreements and understandings, whether written 
+    or oral, relating to the subject matter hereof.
+
+12. SEVERABILITY
+
+    If any provision of this Agreement is held to be unenforceable or invalid, such 
+    provision shall be changed and interpreted to accomplish the objectives of such 
+    provision to the greatest extent possible under applicable law, and the remaining 
+    provisions shall continue in full force and effect.
+
+13. MODIFICATION
+
+    The Author reserves the right to modify this License Agreement at any time. Changes 
+    will be effective upon posting to the repository. Your continued use of the Software 
+    after such posting constitutes acceptance of the modified terms.
+
+14. THIRD-PARTY COMPONENTS
+
+    To the extent the Software includes third-party open source components, such 
+    components are licensed under their respective open source licenses. This proprietary 
+    license applies only to the original work created by the Author.
+
+15. CONTACT INFORMATION
+
+    For questions regarding this License or to request permissions beyond the scope of 
+    this Agreement:
+    
+    Author: Kevin [KiriKev]
+    GitHub: https://github.com/KiriKev/AIgency
+    Email: [Your Contact Email]
+
+---
+
+ACKNOWLEDGMENT
+
+BY ACCESSING, VIEWING, OR USING THIS SOFTWARE, YOU ACKNOWLEDGE THAT YOU HAVE READ 
+THIS AGREEMENT, UNDERSTAND IT, AND AGREE TO BE BOUND BY ITS TERMS AND CONDITIONS.
+
+IF YOU DO NOT AGREE TO THESE TERMS, YOU MUST IMMEDIATELY CEASE ALL USE OF THE SOFTWARE 
+AND DELETE ANY COPIES IN YOUR POSSESSION.
+
+---
+
+Version: 1.0
+Last Updated: December 2024
+Effective Date: Date of first access
