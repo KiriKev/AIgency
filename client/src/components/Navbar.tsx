@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { Search, Coins, User, Plus, Home, Eye, FileEdit, Menu } from "lucide-react";
+import { Search, User, Plus, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -59,38 +59,24 @@ export default function Navbar({ credits = 125, username = "Artist", onSearch }:
               data-testid="link-home"
             >
               <div className="h-8 w-8 rounded-md bg-gradient-to-br from-primary to-chart-2 flex items-center justify-center">
-                <span className="text-white font-bold text-sm">P</span>
+                <span className="text-white font-bold text-xs">Art</span>
               </div>
+              <span className="font-semibold text-foreground hidden sm:inline">Arthub</span>
             </button>
 
-            {/* Navigation Dropdown */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="gap-2 text-white hover:text-white"
-                  data-testid="button-nav-menu"
-                >
-                  <Menu className="h-4 w-4" />
-                  <span className="hidden sm:inline">Navigation</span>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="w-48">
-                <DropdownMenuItem onClick={() => setLocation('/')} data-testid="menu-item-art-hub">
-                  <Home className="h-4 w-4 mr-2" />
-                  Art Hub
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setLocation('/showcase')} data-testid="menu-item-showroom">
-                  <Eye className="h-4 w-4 mr-2" />
-                  Showroom
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setLocation('/editor')} data-testid="menu-item-create">
-                  <FileEdit className="h-4 w-4 mr-2" />
-                  Create Prompt
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            {/* Navigation Links */}
+            <nav className="flex items-center gap-1">
+              <Button
+                variant={location === '/showcase' ? 'secondary' : 'ghost'}
+                size="sm"
+                onClick={() => setLocation('/showcase')}
+                className="gap-2"
+                data-testid="nav-showroom"
+              >
+                <Eye className="h-4 w-4" />
+                <span className="hidden sm:inline">Showroom</span>
+              </Button>
+            </nav>
           </div>
 
           <div className="hidden lg:flex flex-1 max-w-md">
@@ -107,15 +93,15 @@ export default function Navbar({ credits = 125, username = "Artist", onSearch }:
           </div>
 
           <div className="flex items-center gap-2">
-            <div className="flex items-center gap-2 px-2 lg:px-3 py-1.5 rounded-md bg-accent/50 border border-accent-border">
-              <Coins className="h-4 w-4 text-primary" />
-              <span className="font-mono text-sm font-semibold text-foreground" data-testid="text-credits">{credits}</span>
-            </div>
-
-            <Button variant="default" size="sm" className="gap-1.5" data-testid="button-buy-credits">
+            <Button 
+              variant="default" 
+              size="sm" 
+              className="gap-1.5" 
+              onClick={() => setLocation('/editor')}
+              data-testid="button-create-prompt"
+            >
               <Plus className="h-4 w-4" />
-              <Coins className="h-4 w-4" />
-              <span className="hidden sm:inline">Buy Credits</span>
+              <span className="hidden sm:inline">Create Prompt</span>
             </Button>
 
             <DropdownMenu>
