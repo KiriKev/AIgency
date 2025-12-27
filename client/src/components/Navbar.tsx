@@ -70,7 +70,7 @@ export default function Navbar({ credits = 125, username = "Artist", onSearch }:
                 variant={location === '/showcase' ? 'secondary' : 'ghost'}
                 size="sm"
                 onClick={() => setLocation('/showcase')}
-                className="gap-2"
+                className="gap-2 text-white"
                 data-testid="nav-showroom"
               >
                 <Eye className="h-4 w-4" />
