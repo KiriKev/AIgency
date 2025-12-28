@@ -10,6 +10,14 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { useState, useEffect, useRef, createContext, useContext } from "react";
 
 interface NavbarProps {
@@ -27,6 +35,8 @@ export function useNavbarVisibility() {
 export default function Navbar({ credits = 125, username = "Artist", onSearch }: NavbarProps) {
   const [location, setLocation] = useLocation();
   const [showNav, setShowNav] = useState(true);
+  const [authDialog, setAuthDialog] = useState<null | 'login'>(null);
+  const [authEmail, setAuthEmail] = useState("");
   const lastScrollYRef = useRef(0);
   const themeTransitionTimeoutRef = useRef<number | null>(null);
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
@@ -136,6 +146,18 @@ export default function Navbar({ credits = 125, username = "Artist", onSearch }:
               {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
             </Button>
 
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setAuthEmail("");
+                setAuthDialog('login');
+              }}
+              data-testid="button-login"
+            >
+              Log in
+            </Button>
+
             <Button 
               variant="default" 
               size="sm" 
@@ -185,6 +207,56 @@ export default function Navbar({ credits = 125, username = "Artist", onSearch }:
           </div>
         </div>
       </div>
+
+      <Dialog
+        open={authDialog !== null}
+        onOpenChange={(open) => {
+          if (!open) setAuthDialog(null);
+        }}
+      >
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>
+              Welcome back
+            </DialogTitle>
+            <DialogDescription>
+              Log in will be integrated soon. For now, this is a placeholder.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-2">
+            <div className="text-sm font-medium">Email</div>
+            <Input
+              type="email"
+              value={authEmail}
+              onChange={(e) => setAuthEmail(e.target.value)}
+              placeholder="you@example.com"
+              className="h-9"
+              data-testid="input-auth-email"
+            />
+            <div className="text-xs text-muted-foreground">
+              Your teammate can connect this to the real auth provider later.
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setAuthDialog(null)}
+              data-testid="button-auth-cancel"
+            >
+              Cancel
+            </Button>
+            <Button
+              disabled={!authEmail.trim()}
+              onClick={() => setAuthDialog(null)}
+              data-testid="button-auth-continue"
+            >
+              Continue
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </header>
   );
 }
