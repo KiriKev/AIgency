@@ -42,8 +42,24 @@ import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import PromptSettingsPanel from "./PromptSettingsPanel";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 
 type VariableType = 'text' | 'checkbox' | 'multi-select' | 'single-select' | 'slider';
+type PromptType = 'showcase' | 'free-prompt' | 'paid-prompt';
+
+interface PromptSettings {
+  title: string;
+  category: string;
+  tags: string[];
+  aiModel: string;
+  price: number;
+  aspectRatio: string | null;
+  photoCount: number;
+  promptType: PromptType;
+  uploadedPhotos: string[];
+  resolution: string | null;
+  isFreeShowcase?: boolean;
+}
 
 interface SelectOption {
   visibleName: string;
@@ -83,6 +99,7 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [variableToDelete, setVariableToDelete] = useState<string | null>(null);
   const [openVariables, setOpenVariables] = useState<string[]>([]);
+  const [variablesSheetOpen, setVariablesSheetOpen] = useState(false);
   const [newOptionInput, setNewOptionInput] = useState<Record<string, string>>({});
   const [showLoadDialog, setShowLoadDialog] = useState(false);
   
@@ -92,7 +109,7 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
   const [price, setPrice] = useState(0.0001);
   const [aspectRatio, setAspectRatio] = useState<string | null>(null);
   const [photoCount, setPhotoCount] = useState(1);
-  const [promptType, setPromptType] = useState("paid-prompt");
+  const [promptType, setPromptType] = useState<PromptType>("paid-prompt");
   const [uploadedPhotos, setUploadedPhotos] = useState<string[]>([]);
   const [newTag, setNewTag] = useState("");
   const [resolution, setResolution] = useState<string | null>(null);
@@ -109,6 +126,8 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+
+  const isShowcase = promptType === 'showcase';
 
   const { data: savedPrompts = [] } = useQuery<any[]>({
     queryKey: ['/api/prompts'],
@@ -861,7 +880,7 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
     setOpenVariables([]);
   };
 
-  const settingsData = {
+  const settingsData: PromptSettings = {
     title: promptTitle,
     category,
     tags,
@@ -875,7 +894,7 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
     isFreeShowcase
   };
 
-  const handleSettingsUpdate = (updates: Partial<typeof settingsData>) => {
+  const handleSettingsUpdate = (updates: Partial<PromptSettings>) => {
     if (updates.title !== undefined) setPromptTitle(updates.title);
     if (updates.category !== undefined) setCategory(updates.category);
     if (updates.tags !== undefined) setTags(updates.tags);
@@ -956,41 +975,344 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
   return (
     <TooltipProvider>
       {/* Desktop View */}
-      <div className="hidden lg:grid h-[calc(100vh-6rem)] grid-cols-[minmax(200px,_0.75fr)_minmax(350px,_2fr)_minmax(250px,_1.25fr)_minmax(280px,_1.5fr)] gap-1">
-        {/* Settings Panel - always visible */}
+      <div className="hidden md:grid h-[calc(100vh-6rem)] grid-cols-1 lg:grid-cols-[320px_minmax(520px,_1fr)_360px] gap-4">
         <PromptSettingsPanel 
           settings={settingsData}
           onUpdate={handleSettingsUpdate}
         />
 
-        {/* Editor Panel */}
         <Card className="flex flex-col overflow-hidden">
-          <CardHeader className="pb-2 px-3 shrink-0 flex flex-row items-center justify-between gap-2 space-y-0">
-            <CardTitle className="text-base text-white">Prompt Editor</CardTitle>
-            {promptType === 'paid-prompt' && (
-              <Button
-                onClick={createNewEmptyVariable}
-                size="sm"
-                variant="default"
-                className="shrink-0"
-                data-testid="button-add-variable-desktop"
-              >
-                <Plus className="h-3 w-3 mr-1" />
-                Variable
-              </Button>
-            )}
+          <CardHeader className="pb-2 px-4 shrink-0 flex flex-row items-center justify-between gap-2 space-y-0">
+            <CardTitle className="text-base">Prompt Editor</CardTitle>
+            <div className="flex items-center gap-2">
+              {promptType === 'paid-prompt' && (
+                <Sheet open={variablesSheetOpen} onOpenChange={setVariablesSheetOpen}>
+                  <SheetTrigger asChild>
+                    <Button size="sm" variant="outline" data-testid="button-open-variables">
+                      Variables
+                    </Button>
+                  </SheetTrigger>
+                  <SheetContent side="right" className="w-[92vw] max-w-[520px] sm:w-[420px] md:w-[520px]">
+                    <SheetHeader>
+                      <SheetTitle>Variables</SheetTitle>
+                    </SheetHeader>
+                    <div className="mt-4 h-[calc(100vh-8rem)]">
+                      <ScrollArea className="h-full pr-4">
+                        {variables.length === 0 ? (
+                          <p className="text-sm text-muted-foreground text-center py-10">
+                            No variables yet.
+                            <br />
+                            Select text or use [Name]
+                          </p>
+                        ) : (
+                          <Accordion type="multiple" value={openVariables} onValueChange={setOpenVariables}>
+                            {variables.map((variable) => (
+                              <AccordionItem 
+                                key={variable.id} 
+                                value={variable.id}
+                                id={`variable-${variable.id}`}
+                              >
+                                <AccordionTrigger data-testid={`accordion-trigger-${variable.id}`}>
+                                  <div className="flex items-center gap-2 flex-1">
+                                    <span className="text-sm font-medium">{variable.label}</span>
+                                    <Badge variant="outline" className="text-xs">{variable.type}</Badge>
+                                  </div>
+                                </AccordionTrigger>
+                                <AccordionContent className="pt-2 space-y-2">
+                                  <div className="flex items-start gap-2">
+                                    <div className="flex-1">
+                                      <Label className="text-xs">Label</Label>
+                                      <Input
+                                        value={variable.label}
+                                        onChange={(e) => updateVariable(variable.id, { label: e.target.value })}
+                                        className="h-8 text-sm mt-1"
+                                        placeholder="Label"
+                                        disabled={isShowcase}
+                                        data-testid={`input-label-${variable.id}`}
+                                      />
+                                    </div>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-8 w-8 mt-6"
+                                      onClick={() => deleteVariable(variable.id)}
+                                      disabled={isShowcase}
+                                      data-testid={`button-delete-${variable.id}`}
+                                    >
+                                      <Trash2 className="h-4 w-4 text-destructive" />
+                                    </Button>
+                                  </div>
+
+                                  <div className="space-y-1">
+                                    <Label className="text-xs">Internal Name</Label>
+                                    <Badge variant="secondary" className="text-xs font-mono">
+                                      [{variable.name}]
+                                    </Badge>
+                                  </div>
+
+                                  <div className="space-y-1">
+                                    <Label className="text-xs">Type</Label>
+                                    <Select
+                                      value={variable.type}
+                                      onValueChange={(value) => updateVariable(variable.id, { type: value as VariableType })}
+                                      disabled={isShowcase}
+                                    >
+                                      <SelectTrigger className="h-8 text-sm" data-testid={`select-type-${variable.id}`}>
+                                        <SelectValue />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        <SelectItem value="text">Text</SelectItem>
+                                        <SelectItem value="checkbox">Checkbox</SelectItem>
+                                        <SelectItem value="multi-select">Multi-Select</SelectItem>
+                                        <SelectItem value="single-select">Single-Select</SelectItem>
+                                        <SelectItem value="slider">Slider</SelectItem>
+                                      </SelectContent>
+                                    </Select>
+                                  </div>
+
+                                  {variable.type === 'text' && (
+                                    <div className="space-y-1">
+                                      <Label className="text-xs">Default Value</Label>
+                                      <Textarea
+                                        value={(variable.defaultValue as string) || ''}
+                                        onChange={(e) => updateVariable(variable.id, { defaultValue: e.target.value })}
+                                        placeholder="Default Value"
+                                        className="min-h-10 text-sm resize-y"
+                                        disabled={isShowcase}
+                                        data-testid={`input-default-${variable.id}`}
+                                      />
+                                    </div>
+                                  )}
+
+                                  {variable.type === 'checkbox' && (
+                                    <div className="flex items-center space-x-2">
+                                      <Checkbox
+                                        id={`checkbox-${variable.id}`}
+                                        checked={Boolean(variable.defaultValue)}
+                                        onCheckedChange={(checked) => updateVariable(variable.id, { defaultValue: checked })}
+                                        disabled={isShowcase}
+                                        data-testid={`checkbox-default-${variable.id}`}
+                                      />
+                                      <Label htmlFor={`checkbox-${variable.id}`} className="text-sm">
+                                        Active by default
+                                      </Label>
+                                    </div>
+                                  )}
+
+                                  {(variable.type === 'multi-select' || variable.type === 'single-select') && (
+                                    <div className="space-y-2">
+                                      <Label className="text-xs">Options</Label>
+                                      <div className="space-y-2">
+                                        {variable.options?.map((option, index) => {
+                                          const isDefault = (variable.defaultOptionIndex ?? 0) === index;
+                                          return (
+                                            <Card key={index} className={isDefault ? 'border-primary/50' : undefined}>
+                                              <CardContent className="p-3 space-y-2">
+                                                <div className="flex items-center gap-2">
+                                                  <Checkbox
+                                                    checked={isDefault}
+                                                    onCheckedChange={(checked) => {
+                                                      if (checked) updateVariable(variable.id, { defaultOptionIndex: index });
+                                                    }}
+                                                    disabled={isShowcase}
+                                                    data-testid={`checkbox-default-option-${variable.id}-${index}`}
+                                                  />
+                                                  <Input
+                                                    value={option.visibleName}
+                                                    onChange={(e) => updateOption(variable.id, index, 'visibleName', e.target.value)}
+                                                    className="h-8 text-sm"
+                                                    placeholder="Visible Name"
+                                                    disabled={isShowcase}
+                                                    data-testid={`input-option-visible-${variable.id}-${index}`}
+                                                  />
+                                                  <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    className="h-8 w-8"
+                                                    onClick={() => removeOption(variable.id, index)}
+                                                    disabled={isShowcase}
+                                                    data-testid={`button-remove-option-${variable.id}-${index}`}
+                                                  >
+                                                    <X className="h-4 w-4" />
+                                                  </Button>
+                                                </div>
+                                                <Textarea
+                                                  value={option.promptValue}
+                                                  onChange={(e) => updateOption(variable.id, index, 'promptValue', e.target.value)}
+                                                  className="min-h-[60px] text-sm resize-y"
+                                                  placeholder="Prompt Value"
+                                                  disabled={isShowcase}
+                                                  data-testid={`input-option-prompt-${variable.id}-${index}`}
+                                                />
+                                              </CardContent>
+                                            </Card>
+                                          );
+                                        })}
+
+                                        <Card>
+                                          <CardContent className="p-3 space-y-2">
+                                            <Input
+                                              value={newOptionInput[variable.id]?.split('|||')[0] || ''}
+                                              onChange={(e) => {
+                                                const currentValue = newOptionInput[variable.id] || '|||';
+                                                const parts = currentValue.split('|||');
+                                                setNewOptionInput({
+                                                  ...newOptionInput,
+                                                  [variable.id]: `${e.target.value}|||${parts[1] || ''}`
+                                                });
+                                              }}
+                                              placeholder="Visible Name"
+                                              className="h-8 text-sm"
+                                              disabled={isShowcase}
+                                              data-testid={`input-new-option-visible-${variable.id}`}
+                                            />
+                                            <Textarea
+                                              value={newOptionInput[variable.id]?.split('|||')[1] || ''}
+                                              onChange={(e) => {
+                                                const currentValue = newOptionInput[variable.id] || '|||';
+                                                const parts = currentValue.split('|||');
+                                                setNewOptionInput({
+                                                  ...newOptionInput,
+                                                  [variable.id]: `${parts[0] || ''}|||${e.target.value}`
+                                                });
+                                              }}
+                                              placeholder="Prompt Value"
+                                              className="min-h-[60px] text-sm resize-y"
+                                              disabled={isShowcase}
+                                              data-testid={`input-new-option-prompt-${variable.id}`}
+                                            />
+                                            <Button
+                                              size="sm"
+                                              onClick={() => addOption(variable.id)}
+                                              className="w-full"
+                                              disabled={isShowcase || !newOptionInput[variable.id]?.split('|||').every(p => p.trim())}
+                                              data-testid={`button-add-option-${variable.id}`}
+                                            >
+                                              <Plus className="h-4 w-4 mr-1" />
+                                              Add option
+                                            </Button>
+                                          </CardContent>
+                                        </Card>
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  {variable.type === 'slider' && (
+                                    <div className="space-y-2">
+                                      <div className="grid grid-cols-2 gap-2">
+                                        <div>
+                                          <Label className="text-xs">Min</Label>
+                                          <Input
+                                            type="number"
+                                            value={variable.min || 0}
+                                            onChange={(e) => updateVariable(variable.id, { min: parseInt(e.target.value) })}
+                                            className="h-8 text-sm"
+                                            disabled={isShowcase}
+                                            data-testid={`input-min-${variable.id}`}
+                                          />
+                                        </div>
+                                        <div>
+                                          <Label className="text-xs">Max</Label>
+                                          <Input
+                                            type="number"
+                                            value={variable.max || 100}
+                                            onChange={(e) => updateVariable(variable.id, { max: parseInt(e.target.value) })}
+                                            className="h-8 text-sm"
+                                            disabled={isShowcase}
+                                            data-testid={`input-max-${variable.id}`}
+                                          />
+                                        </div>
+                                      </div>
+                                      <div>
+                                        <Label className="text-xs">Default: {variable.defaultValue as number}</Label>
+                                        <Slider
+                                          value={[Number(variable.defaultValue) || 0]}
+                                          onValueChange={([value]) => updateVariable(variable.id, { defaultValue: value })}
+                                          min={variable.min || 0}
+                                          max={variable.max || 100}
+                                          step={1}
+                                          disabled={isShowcase}
+                                          data-testid={`slider-default-${variable.id}`}
+                                        />
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  <div className="flex items-center gap-4 pt-1">
+                                    <div className="flex items-center space-x-2">
+                                      <Checkbox
+                                        id={`required-${variable.id}`}
+                                        checked={variable.required}
+                                        onCheckedChange={(checked) => updateVariable(variable.id, { required: checked as boolean })}
+                                        data-testid={`checkbox-required-${variable.id}`}
+                                      />
+                                      <Label htmlFor={`required-${variable.id}`} className="text-sm">
+                                        Required
+                                      </Label>
+                                    </div>
+                                    <div className="flex items-center space-x-2">
+                                      <Checkbox
+                                        id={`allow-ref-image-${variable.id}`}
+                                        checked={variable.allowReferenceImage || false}
+                                        onCheckedChange={(checked) => updateVariable(variable.id, { allowReferenceImage: checked as boolean })}
+                                        data-testid={`checkbox-allow-ref-image-${variable.id}`}
+                                      />
+                                      <Label htmlFor={`allow-ref-image-${variable.id}`} className="text-sm">
+                                        allow reference image
+                                      </Label>
+                                    </div>
+                                  </div>
+
+                                  <Button
+                                    variant="default"
+                                    size="sm"
+                                    onClick={() => {
+                                      setOpenVariables(openVariables.filter(id => id !== variable.id));
+                                    }}
+                                    className="w-full"
+                                    data-testid={`button-save-variable-${variable.id}`}
+                                  >
+                                    Done
+                                  </Button>
+                                </AccordionContent>
+                              </AccordionItem>
+                            ))}
+                          </Accordion>
+                        )}
+                      </ScrollArea>
+                    </div>
+                  </SheetContent>
+                </Sheet>
+              )}
+
+              {promptType === 'paid-prompt' && (
+                <Button
+                  onClick={() => {
+                    createNewEmptyVariable();
+                    setVariablesSheetOpen(true);
+                  }}
+                  size="sm"
+                  variant="default"
+                  data-testid="button-add-variable-desktop"
+                >
+                  <Plus className="h-3 w-3 mr-1" />
+                  Add
+                </Button>
+              )}
+            </div>
           </CardHeader>
-          <CardContent className="flex-1 min-h-0 flex flex-col gap-2 px-3 pb-3 relative">
-            <div 
+
+          <CardContent className="flex-1 min-h-0 flex flex-col gap-3 px-4 pb-4">
+            <div
               ref={editorContainerRef}
-              className="relative flex-1 border border-border rounded-md min-h-[200px]" 
+              className="relative flex-1 rounded-lg min-h-[240px] border bg-background"
               onClick={() => textareaRef.current?.focus()}
               style={{ resize: 'vertical', overflow: 'hidden' }}
             >
-              <div 
-                className="absolute inset-0 font-mono text-sm whitespace-pre-wrap pointer-events-none overflow-hidden select-none text-white"
-                style={{ 
-                  wordBreak: 'break-word', 
+              <div
+                className="absolute inset-0 font-mono text-sm whitespace-pre-wrap pointer-events-none overflow-hidden select-none text-foreground"
+                style={{
+                  wordBreak: 'break-word',
                   overflowWrap: 'anywhere',
                   padding: '8px 12px',
                   lineHeight: '1.625',
@@ -1005,9 +1327,12 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
                     if (variable) {
                       const isOpen = openVariables.includes(variable.id);
                       return (
-                        <span key={index} className={`select-none cursor-pointer pointer-events-auto ${isOpen ? 'text-orange-400 dark:text-orange-300' : 'text-teal-400 dark:text-teal-300'}`}
+                        <span
+                          key={index}
+                          className={`select-none cursor-pointer pointer-events-auto ${isOpen ? 'text-primary' : 'text-primary/80'}`}
                           onClick={(e) => {
                             e.preventDefault();
+                            setVariablesSheetOpen(true);
                             setOpenVariables([...openVariables, variable.id]);
                             const element = document.getElementById(`variable-${variable.id}`);
                             if (element) {
@@ -1016,13 +1341,17 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
                           }}
                           onMouseDown={(e) => e.preventDefault()}
                           data-testid={`badge-inline-variable-${variable.id}`}
-                        >[{varName}]</span>
+                        >
+                          [{varName}]
+                        </span>
                       );
                     }
                   }
+
                   return <span key={index} className="select-none">{part}</span>;
                 })}
               </div>
+
               <Textarea
                 ref={textareaRef}
                 value={prompt}
@@ -1031,55 +1360,49 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
                 onKeyDown={(e) => {
                   if (!textareaRef.current) return;
                   const pos = textareaRef.current.selectionStart;
-                  
-                  // Check if cursor is inside a variable
+
                   const beforeCursor = prompt.substring(0, pos);
                   const afterCursor = prompt.substring(pos);
-                  
+
                   const openBracketBefore = beforeCursor.lastIndexOf('[');
                   const closeBracketBefore = beforeCursor.lastIndexOf(']');
                   const closeBracketAfter = afterCursor.indexOf(']');
-                  
-                  // If cursor is inside [variable]
+
                   if (openBracketBefore > closeBracketBefore && closeBracketAfter !== -1) {
                     const newPos = pos + closeBracketAfter + 1;
                     e.preventDefault();
                     textareaRef.current.setSelectionRange(newPos, newPos);
                   }
                 }}
-                onClick={(e) => {
+                onClick={() => {
                   if (!textareaRef.current) return;
-                  
-                  // Clear selection on single click
+
                   const start = textareaRef.current.selectionStart;
                   const end = textareaRef.current.selectionEnd;
                   if (start === end) {
                     clearSelection();
                   }
-                  
+
                   setTimeout(() => {
                     if (!textareaRef.current) return;
                     const pos = textareaRef.current.selectionStart;
-                    
-                    // Find if cursor is inside a variable
+
                     const beforeCursor = prompt.substring(0, pos);
                     const afterCursor = prompt.substring(pos);
-                    
+
                     const openBracketBefore = beforeCursor.lastIndexOf('[');
                     const closeBracketBefore = beforeCursor.lastIndexOf(']');
                     const closeBracketAfter = afterCursor.indexOf(']');
-                    
-                    // If cursor is inside [variable]
+
                     if (openBracketBefore > closeBracketBefore && closeBracketAfter !== -1) {
-                      // Move cursor to after the ]
                       const newPos = pos + closeBracketAfter + 1;
                       textareaRef.current.setSelectionRange(newPos, newPos);
                     }
                   }, 0);
                 }}
                 className="absolute inset-0 font-mono text-sm bg-transparent text-transparent caret-foreground z-[1] selection:bg-primary/30 whitespace-pre-wrap overflow-hidden border-0 shadow-none ring-0 focus:ring-0 focus:outline-none focus-visible:ring-0 rounded-none"
-                style={{ 
-                  wordBreak: 'break-word', 
+                style={{
+                  wordBreak: 'break-word',
                   overflowWrap: 'anywhere',
                   resize: 'none',
                   padding: '8px 12px',
@@ -1091,8 +1414,7 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
                 placeholder="Write your prompt here... Use [VariableName] for variables"
                 data-testid="textarea-prompt"
               />
-              
-              {/* Floating "+ Variable" button - inside container with higher z-index */}
+
               {promptType === 'paid-prompt' && selectedText && selectionRange && buttonPosition && (
                 <Button
                   ref={buttonRef}
@@ -1119,413 +1441,59 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
                 </Button>
               )}
             </div>
-            
-            <div className="flex flex-wrap gap-1">
-              {variables.length > 0 && (
-                <div className="flex flex-wrap gap-1 items-center">
-                  <span className="text-xs text-white">Variables:</span>
-                  {variables.map((variable) => (
-                    <Badge
-                      key={variable.id}
-                      className="text-xs cursor-pointer hover-elevate bg-teal-500/20 text-teal-700 dark:text-teal-300 border border-teal-500/30 rounded-full px-2.5 py-0.5"
-                      onClick={() => {
-                        setOpenVariables([...openVariables, variable.id]);
-                        const element = document.getElementById(`variable-${variable.id}`);
-                        if (element) {
-                          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                        }
-                      }}
-                      data-testid={`badge-variable-link-${variable.id}`}
-                    >
-                      [{variable.name}]
-                    </Badge>
-                  ))}
-                </div>
-              )}
-            </div>
 
-            <Card className="p-2 shrink-0">
-              <h4 className="text-xs font-medium text-white mb-1.5">Preview</h4>
-              <div className="font-mono text-xs whitespace-pre-wrap break-words text-white max-h-[150px] overflow-y-auto">
+            <Card className="p-3">
+              <div className="text-xs font-medium text-muted-foreground">Preview</div>
+              <div className="mt-2 font-mono text-xs whitespace-pre-wrap break-words max-h-[150px] overflow-y-auto">
                 {renderPreviewWithDefaults()}
               </div>
             </Card>
           </CardContent>
         </Card>
 
-        {/* Variables Panel */}
-        <Card className="flex flex-col overflow-hidden" id="desktop-variables-panel">
-            <CardHeader className="pb-2 px-3 shrink-0">
-              <CardTitle className="text-base text-white">Variables</CardTitle>
-            </CardHeader>
-            <CardContent className="flex-1 min-h-0 px-3 pb-3">
-              <ScrollArea className="h-full pr-4">
-                {variables.length === 0 ? (
-                  <p className="text-sm text-white text-center py-8">
-                    No variables yet.
-                    <br />
-                    Select text or use [Name]
-                  </p>
-                ) : (
-                  <Accordion type="multiple" value={openVariables} onValueChange={setOpenVariables}>
-                    {variables.map((variable) => (
-                      <AccordionItem 
-                        key={variable.id} 
-                        value={variable.id}
-                        id={`variable-${variable.id}`}
-                      >
-                        <AccordionTrigger className="hover-elevate px-2 rounded" data-testid={`accordion-trigger-${variable.id}`}>
-                          <div className="flex items-center gap-2 flex-1">
-                            <span className="text-sm font-medium text-white">{variable.label}</span>
-                            <Badge variant="outline" className="text-xs">{variable.type}</Badge>
-                          </div>
-                        </AccordionTrigger>
-                        <AccordionContent className="px-1.5 pt-1 space-y-1">
-                          <div className="flex items-start gap-1">
-                            <div className="flex-1">
-                              <Label className="text-xs text-white">Label</Label>
-                              <Input
-                                value={variable.label}
-                                onChange={(e) => updateVariable(variable.id, { label: e.target.value })}
-                                className="h-7 text-xs mt-0.5"
-                                placeholder="Label"
-                                disabled={promptType === 'showcase'}
-                                data-testid={`input-label-${variable.id}`}
-                              />
-                            </div>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Button variant="ghost" size="icon" className="h-7 w-7 mt-4">
-                                  <HelpCircle className="h-3.5 w-3.5" />
-                                </Button>
-                              </TooltipTrigger>
-                              <TooltipContent side="left" className="w-64">
-                                <Textarea
-                                  value={variable.description}
-                                  onChange={(e) => updateVariable(variable.id, { description: e.target.value })}
-                                  placeholder="Add description..."
-                                  className="min-h-[60px] text-xs"
-                                  disabled={promptType === 'showcase'}
-                                  data-testid={`input-description-${variable.id}`}
-                                />
-                              </TooltipContent>
-                            </Tooltip>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-7 w-7 mt-4"
-                              onClick={() => deleteVariable(variable.id)}
-                              disabled={promptType === 'showcase'}
-                              data-testid={`button-delete-${variable.id}`}
-                            >
-                              <Trash2 className="h-3.5 w-3.5 text-destructive" />
-                            </Button>
-                          </div>
-
-                          <div className="space-y-0">
-                            <Label className="text-xs text-white">Interner Name</Label>
-                            <Badge variant="secondary" className="text-xs font-mono">
-                              {variable.name}
-                            </Badge>
-                          </div>
-
-                          <div className="space-y-0">
-                            <Label className="text-xs text-white">Typ</Label>
-                            <Select
-                              value={variable.type}
-                              onValueChange={(value) => updateVariable(variable.id, { type: value as VariableType })}
-                              disabled={promptType === 'showcase'}
-                            >
-                              <SelectTrigger className="h-7 text-xs" data-testid={`select-type-${variable.id}`}>
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="text">Text</SelectItem>
-                                <SelectItem value="checkbox">Checkbox</SelectItem>
-                                <SelectItem value="multi-select">Multi-Select</SelectItem>
-                                <SelectItem value="single-select">Single-Select</SelectItem>
-                                <SelectItem value="slider">Slider</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
-
-                          {variable.type === 'text' && (
-                            <div className="space-y-0">
-                              <Label className="text-xs text-white">Default Value</Label>
-                              <Textarea
-                                value={variable.defaultValue as string}
-                                onChange={(e) => updateVariable(variable.id, { defaultValue: e.target.value })}
-                                placeholder="Default Value"
-                                className="min-h-8 text-xs resize-y"
-                                disabled={promptType === 'showcase'}
-                                data-testid={`input-default-${variable.id}`}
-                              />
-                            </div>
-                          )}
-
-                          {variable.type === 'checkbox' && (
-                            <div className="flex items-center space-x-2">
-                              <Checkbox
-                                id={`checkbox-${variable.id}`}
-                                checked={variable.defaultValue as boolean}
-                                onCheckedChange={(checked) => updateVariable(variable.id, { defaultValue: checked })}
-                                disabled={promptType === 'showcase'}
-                                data-testid={`checkbox-default-${variable.id}`}
-                              />
-                              <Label htmlFor={`checkbox-${variable.id}`} className="text-xs text-white">
-                                Active by default
-                              </Label>
-                            </div>
-                          )}
-
-                          {(variable.type === 'multi-select' || variable.type === 'single-select') && (
-                            <div className="space-y-1">
-                              <div className="grid grid-cols-2 gap-2">
-                                <Label className="text-xs text-white">Options</Label>
-                                <Label className="text-xs text-white text-right">Default</Label>
-                              </div>
-                              <div className="space-y-1">
-                                {variable.options?.map((option, index) => {
-                                  const isDefault = (variable.defaultOptionIndex ?? 0) === index;
-                                  return (
-                                  <Card key={index} className={`p-1.5 ${isDefault ? 'border-teal-500/50 bg-teal-500/5' : ''}`}>
-                                    <div className="space-y-1">
-                                      <div className="flex items-center gap-1">
-                                        <div className="flex flex-col items-center gap-0.5 mt-4">
-                                          <Checkbox
-                                            checked={isDefault}
-                                            onCheckedChange={(checked) => {
-                                              if (checked) {
-                                                updateVariable(variable.id, { defaultOptionIndex: index });
-                                              }
-                                            }}
-                                            disabled={promptType === 'showcase'}
-                                            data-testid={`checkbox-default-option-${variable.id}-${index}`}
-                                          />
-                                          {isDefault && <span className="text-[9px] text-teal-600 dark:text-teal-400 font-medium">Default</span>}
-                                        </div>
-                                        <div className="flex-1">
-                                          <Label className="text-xs text-white">Visible Name</Label>
-                                          <Input
-                                            value={option.visibleName}
-                                            onChange={(e) => updateOption(variable.id, index, 'visibleName', e.target.value)}
-                                            className="h-7 text-xs mt-0.5"
-                                            placeholder="Visible Name"
-                                            disabled={promptType === 'showcase'}
-                                            data-testid={`input-option-visible-${variable.id}-${index}`}
-                                          />
-                                        </div>
-                                        <Button
-                                          variant="ghost"
-                                          size="icon"
-                                          className="h-7 w-7 mt-4"
-                                          onClick={() => removeOption(variable.id, index)}
-                                          disabled={promptType === 'showcase'}
-                                          data-testid={`button-remove-option-${variable.id}-${index}`}
-                                        >
-                                          <X className="h-3.5 w-3.5" />
-                                        </Button>
-                                      </div>
-                                      <div>
-                                        <Label className="text-xs text-white">Prompt Value</Label>
-                                        <Textarea
-                                          value={option.promptValue}
-                                          onChange={(e) => updateOption(variable.id, index, 'promptValue', e.target.value)}
-                                          className="min-h-[50px] text-xs mt-0.5 resize-y"
-                                          placeholder="Prompt Value"
-                                          disabled={promptType === 'showcase'}
-                                          data-testid={`input-option-prompt-${variable.id}-${index}`}
-                                        />
-                                      </div>
-                                    </div>
-                                  </Card>
-                                  );
-                                })}
-                                
-                                <Card className="p-1.5 bg-muted/50">
-                                  <div className="space-y-1">
-                                    <div>
-                                      <Label className="text-xs text-white">Visible Name</Label>
-                                      <Input
-                                        value={newOptionInput[variable.id]?.split('|||')[0] || ''}
-                                        onChange={(e) => {
-                                          const currentValue = newOptionInput[variable.id] || '|||';
-                                          const parts = currentValue.split('|||');
-                                          setNewOptionInput({
-                                            ...newOptionInput,
-                                            [variable.id]: `${e.target.value}|||${parts[1] || ''}`
-                                          });
-                                        }}
-                                        placeholder="z.B. Professional"
-                                        className="h-7 text-xs mt-0.5"
-                                        disabled={promptType === 'showcase'}
-                                        data-testid={`input-new-option-visible-${variable.id}`}
-                                      />
-                                    </div>
-                                    <div>
-                                      <Label className="text-xs text-white">Prompt Value</Label>
-                                      <Textarea
-                                        value={newOptionInput[variable.id]?.split('|||')[1] || ''}
-                                        onChange={(e) => {
-                                          const currentValue = newOptionInput[variable.id] || '|||';
-                                          const parts = currentValue.split('|||');
-                                          setNewOptionInput({
-                                            ...newOptionInput,
-                                            [variable.id]: `${parts[0] || ''}|||${e.target.value}`
-                                          });
-                                        }}
-                                        placeholder="z.B. professional, detailed"
-                                        className="min-h-[50px] text-xs mt-0.5 resize-y"
-                                        disabled={promptType === 'showcase'}
-                                        data-testid={`input-new-option-prompt-${variable.id}`}
-                                      />
-                                    </div>
-                                    <Button
-                                      size="sm"
-                                      onClick={() => addOption(variable.id)}
-                                      className="w-full"
-                                      disabled={promptType === 'showcase' || !newOptionInput[variable.id]?.split('|||').every(p => p.trim())}
-                                      data-testid={`button-add-option-${variable.id}`}
-                                    >
-                                      <Plus className="h-4 w-4 mr-1" />
-                                      Add option
-                                    </Button>
-                                  </div>
-                                </Card>
-                              </div>
-                            </div>
-                          )}
-
-                          {variable.type === 'slider' && (
-                            <div className="space-y-1">
-                              <div className="grid grid-cols-2 gap-1.5">
-                                <div className="space-y-0">
-                                  <Label className="text-xs text-white">Min</Label>
-                                  <Input
-                                    type="number"
-                                    value={variable.min || 0}
-                                    onChange={(e) => updateVariable(variable.id, { min: parseInt(e.target.value) })}
-                                    className="h-7 text-xs"
-                                    disabled={promptType === 'showcase'}
-                                    data-testid={`input-min-${variable.id}`}
-                                  />
-                                </div>
-                                <div className="space-y-0">
-                                  <Label className="text-xs text-white">Max</Label>
-                                  <Input
-                                    type="number"
-                                    value={variable.max || 100}
-                                    onChange={(e) => updateVariable(variable.id, { max: parseInt(e.target.value) })}
-                                    className="h-7 text-xs"
-                                    disabled={promptType === 'showcase'}
-                                    data-testid={`input-max-${variable.id}`}
-                                  />
-                                </div>
-                              </div>
-                              <div className="space-y-0">
-                                <Label className="text-xs text-white">Default: {variable.defaultValue as number}</Label>
-                                <Slider
-                                  value={[variable.defaultValue as number || 0]}
-                                  onValueChange={([value]) => updateVariable(variable.id, { defaultValue: value })}
-                                  min={variable.min || 0}
-                                  max={variable.max || 100}
-                                  step={1}
-                                  disabled={promptType === 'showcase'}
-                                  data-testid={`slider-default-${variable.id}`}
-                                />
-                              </div>
-                            </div>
-                          )}
-
-                          <div className="flex items-center gap-4 pt-1">
-                            <div className="flex items-center space-x-2">
-                              <Checkbox
-                                id={`required-${variable.id}`}
-                                checked={variable.required}
-                                onCheckedChange={(checked) => updateVariable(variable.id, { required: checked as boolean })}
-                                data-testid={`checkbox-required-${variable.id}`}
-                              />
-                              <Label htmlFor={`required-${variable.id}`} className="text-xs text-white">
-                                Pflichtfeld
-                              </Label>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                              <Checkbox
-                                id={`allow-ref-image-${variable.id}`}
-                                checked={variable.allowReferenceImage || false}
-                                onCheckedChange={(checked) => updateVariable(variable.id, { allowReferenceImage: checked as boolean })}
-                                data-testid={`checkbox-allow-ref-image-${variable.id}`}
-                              />
-                              <Label htmlFor={`allow-ref-image-${variable.id}`} className="text-xs text-white">
-                                allow reference image
-                              </Label>
-                            </div>
-                          </div>
-                          
-                          <Button
-                            variant="default"
-                            size="sm"
-                            onClick={() => {
-                              setOpenVariables(openVariables.filter(id => id !== variable.id));
-                            }}
-                            className="w-full mt-2"
-                            data-testid={`button-save-variable-${variable.id}`}
-                          >
-                            Fertig
-                          </Button>
-                        </AccordionContent>
-                      </AccordionItem>
-                    ))}
-                  </Accordion>
-                )}
-              </ScrollArea>
-            </CardContent>
-          </Card>
-
-        {/* Generation Panel */}
         <Card className="flex flex-col overflow-hidden">
-            <CardHeader className="pb-2 px-3 shrink-0">
-              <CardTitle className="text-sm text-white">Generierung</CardTitle>
-            </CardHeader>
-            <CardContent className="flex-1 min-h-0 flex flex-col gap-2 px-3 pb-3">
-              {generatedImage ? (
-                <div className="flex-1 flex flex-col">
-                  <img 
-                    src={generatedImage} 
-                    alt="Generated by Gemini" 
-                    className="w-full h-auto rounded-md border"
-                    data-testid="generated-image"
-                  />
-                </div>
-              ) : (
-                <div className="flex-1 flex items-center justify-center text-center text-white text-sm">
-                  No generated image yet.
-                  <br />
-                  Click Generate to create one.
-                </div>
-              )}
-              
-              <div className="space-y-2 mt-auto">
-                <Button
-                  onClick={handleGenerate}
-                  disabled={isGenerating}
-                  className="w-full"
-                  data-testid="button-generate"
-                >
-                  {isGenerating ? 'Generating...' : 'Generate'}
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={handleSubmit}
-                  disabled={isGenerating || savePromptMutation.isPending}
-                  className="w-full"
-                  data-testid="button-submit"
-                >
-                  {savePromptMutation.isPending ? 'Releasing...' : 'Release'}
-                </Button>
+          <CardHeader className="pb-2 px-4 shrink-0">
+            <CardTitle className="text-sm">Generation</CardTitle>
+          </CardHeader>
+          <CardContent className="flex-1 min-h-0 flex flex-col gap-3 px-4 pb-4">
+            {generatedImage ? (
+              <div className="flex-1 flex flex-col">
+                <img 
+                  src={generatedImage} 
+                  alt="Generated by Gemini" 
+                  className="w-full h-auto rounded-md border"
+                  data-testid="generated-image"
+                />
               </div>
-            </CardContent>
-          </Card>
+            ) : (
+              <div className="flex-1 flex items-center justify-center text-center text-muted-foreground text-sm">
+                No generated image yet.
+                <br />
+                Click Generate to create one.
+              </div>
+            )}
+
+            <div className="space-y-2 mt-auto">
+              <Button
+                onClick={handleGenerate}
+                disabled={isGenerating}
+                className="w-full"
+                data-testid="button-generate"
+              >
+                {isGenerating ? 'Generating...' : 'Generate'}
+              </Button>
+              <Button
+                variant="outline"
+                onClick={handleSubmit}
+                disabled={isGenerating || savePromptMutation.isPending}
+                className="w-full"
+                data-testid="button-submit"
+              >
+                {savePromptMutation.isPending ? 'Releasing...' : 'Release'}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Mobile View */}

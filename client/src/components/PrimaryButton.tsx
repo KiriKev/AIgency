@@ -27,3 +27,5 @@ export default function PrimaryButton({ text, onClick, isLoading = false }: Prim
     </button>
   );
 }
+
+export {};

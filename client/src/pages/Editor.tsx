@@ -11,7 +11,7 @@ export default function Editor() {
     <div className="min-h-screen bg-background pt-16">
       <Navbar />
       
-      <main className="w-full px-2 py-2">
+      <main className="w-full px-3 lg:px-8 py-3">
         <PromptEditor onBack={() => setLocation('/')} />
       </main>
     </div>

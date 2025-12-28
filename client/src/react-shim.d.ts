@@ -7,3 +7,5 @@ declare namespace JSX {
     [elemName: string]: any;
   }
 }
+
+export {};
