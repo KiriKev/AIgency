@@ -100,7 +100,7 @@ export default function FilterBar({ onFilterChange }: FilterBarProps) {
           </div>
 
           <Select value={sortBy} onValueChange={setSortBy}>
-            <SelectTrigger className="w-[150px]" data-testid="select-sort">
+            <SelectTrigger className="w-[150px] text-white" data-testid="select-sort">
               <SelectValue placeholder="Sort by" />
             </SelectTrigger>
             <SelectContent>

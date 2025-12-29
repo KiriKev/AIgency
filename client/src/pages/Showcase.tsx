@@ -2,6 +2,7 @@ import { useState } from "react";
 import Navbar from "@/components/Navbar";
 import FilterBar from "@/components/FilterBar";
 import PromptCard from "@/components/PromptCard";
+import CompactPromptCreator from "@/components/CompactPromptCreator";
 import { useLocation } from "wouter";
 
 export default function Showcase() {
@@ -103,7 +104,7 @@ export default function Showcase() {
       <Navbar />
       <FilterBar onFilterChange={(f) => console.log('Filters:', f)} />
       
-      <main className="w-full px-2 py-2">
+      <main className="w-full px-2 py-2 pb-32">
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-1 auto-rows-[200px]">
           {mockPrompts.map((prompt, idx) => {
             const spans = idx % 7 === 0 ? 'row-span-2 col-span-2' : idx % 5 === 0 ? 'row-span-2' : '';
@@ -118,6 +119,8 @@ export default function Showcase() {
           })}
         </div>
       </main>
+
+      <CompactPromptCreator />
     </div>
   );
 }

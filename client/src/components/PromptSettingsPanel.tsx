@@ -23,6 +23,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { X, Upload, Image as ImageIcon } from "lucide-react";
 import { useState } from "react";
 
+type PromptType = 'showcase' | 'free-prompt' | 'paid-prompt';
+
 interface PromptSettings {
   title: string;
   category: string;
@@ -31,7 +33,7 @@ interface PromptSettings {
   price: number;
   aspectRatio: string | null;
   photoCount: number;
-  promptType: string;
+  promptType: PromptType;
   uploadedPhotos: string[];
   resolution: string | null;
   isFreeShowcase?: boolean;
@@ -90,14 +92,14 @@ export default function PromptSettingsPanel({ settings, onUpdate, useScrollArea 
   };
 
   const content = (
-    <div className="space-y-2 p-3 pr-2 bg-transparent">
+    <div className="space-y-4">
         <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm text-white">Prompt Meta</CardTitle>
+          <CardHeader className="pb-2 px-4">
+            <CardTitle className="text-sm">PROMPT META</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-3">
+          <CardContent className="space-y-3 px-4 pb-4">
             <div className="space-y-2">
-              <Label htmlFor="title" className="text-xs text-white">Title</Label>
+              <Label htmlFor="title" className="text-xs">Title</Label>
               <Input
                 id="title"
                 value={settings.title}
@@ -109,16 +111,16 @@ export default function PromptSettingsPanel({ settings, onUpdate, useScrollArea 
             </div>
 
             <div className="space-y-2">
-              <Label className="text-xs text-white">Prompt Type</Label>
+              <Label className="text-xs">Prompt Type</Label>
               <RadioGroup 
                 value={settings.promptType} 
-                onValueChange={(value) => onUpdate({ promptType: value })}
+                onValueChange={(value) => onUpdate({ promptType: value as PromptType })}
                 className="space-y-2"
                 data-testid="radio-prompt-type"
               >
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="showcase" id="showcase" data-testid="radio-showcase" />
-                  <Label htmlFor="showcase" className="text-sm font-normal cursor-pointer flex-1 text-white">Showcase</Label>
+                  <Label htmlFor="showcase" className="text-sm font-normal cursor-pointer flex-1">Showcase</Label>
                   <TooltipProvider>
                     <Tooltip delayDuration={0}>
                       <TooltipTrigger asChild>
@@ -134,7 +136,7 @@ export default function PromptSettingsPanel({ settings, onUpdate, useScrollArea 
                 </div>
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="free-prompt" id="free-prompt" data-testid="radio-free-prompt" />
-                  <Label htmlFor="free-prompt" className="text-sm font-normal cursor-pointer flex-1 text-white">Free prompt</Label>
+                  <Label htmlFor="free-prompt" className="text-sm font-normal cursor-pointer flex-1">Free prompt</Label>
                   <TooltipProvider>
                     <Tooltip delayDuration={0}>
                       <TooltipTrigger asChild>
@@ -150,7 +152,7 @@ export default function PromptSettingsPanel({ settings, onUpdate, useScrollArea 
                 </div>
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="paid-prompt" id="paid-prompt" data-testid="radio-paid-prompt" />
-                  <Label htmlFor="paid-prompt" className="text-sm font-normal cursor-pointer flex-1 text-white">Paid prompt</Label>
+                  <Label htmlFor="paid-prompt" className="text-sm font-normal cursor-pointer flex-1">Paid prompt</Label>
                   <TooltipProvider>
                     <Tooltip delayDuration={0}>
                       <TooltipTrigger asChild>
@@ -168,7 +170,7 @@ export default function PromptSettingsPanel({ settings, onUpdate, useScrollArea 
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="category" className="text-xs text-white">Category</Label>
+              <Label htmlFor="category" className="text-xs">Category</Label>
               <Select value={settings.category} onValueChange={(value) => onUpdate({ category: value })}>
                 <SelectTrigger className="h-8 text-sm" data-testid="select-category">
                   <SelectValue placeholder="select category" />
@@ -186,7 +188,7 @@ export default function PromptSettingsPanel({ settings, onUpdate, useScrollArea 
             </div>
 
             <div className="space-y-2">
-              <Label className="text-xs text-white">Tags</Label>
+              <Label className="text-xs">Tags</Label>
               <div className="flex gap-2">
                 <Input
                   value={newTag}
@@ -223,12 +225,12 @@ export default function PromptSettingsPanel({ settings, onUpdate, useScrollArea 
         </Card>
 
         <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm text-white">AI Model & Pricing</CardTitle>
+          <CardHeader className="pb-2 px-4">
+            <CardTitle className="text-sm">AI MODEL & PRICING</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-3">
+          <CardContent className="space-y-3 px-4 pb-4">
             <div className="space-y-2">
-              <Label htmlFor="ai-model" className="text-xs text-white">AI Model</Label>
+              <Label htmlFor="ai-model" className="text-xs">AI Model</Label>
               <Select value="nano-banana-pro" disabled>
                 <SelectTrigger className="h-8 text-sm opacity-50 cursor-not-allowed" data-testid="select-ai-model">
                   <SelectValue placeholder="Nano Banana Pro" />
@@ -242,7 +244,7 @@ export default function PromptSettingsPanel({ settings, onUpdate, useScrollArea 
             {settings.promptType === 'paid-prompt' && (
               <div className="space-y-2">
                 <div className="flex items-center gap-1">
-                  <Label htmlFor="price" className="text-xs text-white">Price per generation (USD)</Label>
+                  <Label htmlFor="price" className="text-xs">Price per generation (USD)</Label>
                   <TooltipProvider>
                     <Tooltip delayDuration={0}>
                       <TooltipTrigger asChild>
@@ -274,12 +276,12 @@ export default function PromptSettingsPanel({ settings, onUpdate, useScrollArea 
 
         {settings.aiModel === "gemini" && settings.promptType === 'paid-prompt' && (
           <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm text-white">Gemini Assets</CardTitle>
+            <CardHeader className="pb-2 px-4">
+              <CardTitle className="text-sm">Gemini Assets</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3">
+            <CardContent className="space-y-3 px-4 pb-4">
               <div className="space-y-2">
-                <Label htmlFor="photo-count" className="text-xs text-white">Photo Count</Label>
+                <Label htmlFor="photo-count" className="text-xs">Photo Count</Label>
                 <Select 
                   value={settings.photoCount.toString()} 
                   onValueChange={(value) => {
@@ -304,7 +306,7 @@ export default function PromptSettingsPanel({ settings, onUpdate, useScrollArea 
               </div>
 
               <div className="space-y-2">
-                <Label className="text-xs text-white">
+                <Label className="text-xs">
                   Upload Photos ({settings.uploadedPhotos.length}/{settings.photoCount})
                 </Label>
                 

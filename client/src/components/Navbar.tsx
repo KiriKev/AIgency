@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { Search, Coins, User, Plus, Home, Eye, FileEdit, Menu } from "lucide-react";
+import { Search, User, Plus, Eye, Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -10,6 +10,14 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { useState, useEffect, useRef, createContext, useContext } from "react";
 
 interface NavbarProps {
@@ -27,7 +35,41 @@ export function useNavbarVisibility() {
 export default function Navbar({ credits = 125, username = "Artist", onSearch }: NavbarProps) {
   const [location, setLocation] = useLocation();
   const [showNav, setShowNav] = useState(true);
+  const [authDialog, setAuthDialog] = useState<null | 'login'>(null);
+  const [authEmail, setAuthEmail] = useState("");
   const lastScrollYRef = useRef(0);
+  const themeTransitionTimeoutRef = useRef<number | null>(null);
+  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
+    const stored = localStorage.getItem('theme');
+    if (stored === 'light' || stored === 'dark') return stored;
+    const prefersDark = window.matchMedia?.('(prefers-color-scheme: dark)')?.matches;
+    return prefersDark ? 'dark' : 'light';
+  });
+
+  useEffect(() => {
+    const root = document.documentElement;
+    root.classList.add('theme-transition');
+    if (themeTransitionTimeoutRef.current) {
+      window.clearTimeout(themeTransitionTimeoutRef.current);
+    }
+
+    if (theme === 'dark') root.classList.add('dark');
+    else root.classList.remove('dark');
+    localStorage.setItem('theme', theme);
+
+    themeTransitionTimeoutRef.current = window.setTimeout(() => {
+      root.classList.remove('theme-transition');
+      themeTransitionTimeoutRef.current = null;
+    }, 320);
+
+    return () => {
+      if (themeTransitionTimeoutRef.current) {
+        window.clearTimeout(themeTransitionTimeoutRef.current);
+        themeTransitionTimeoutRef.current = null;
+      }
+      root.classList.remove('theme-transition');
+    };
+  }, [theme]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -47,53 +89,40 @@ export default function Navbar({ credits = 125, username = "Artist", onSearch }:
   }, []);
 
   return (
-    <header className={`fixed top-0 left-0 right-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 transition-transform duration-300 ${
-      showNav ? 'translate-y-0' : '-translate-y-full'
+    <header className={`fixed top-0 left-0 right-0 z-50 w-full border-b bg-background/85 backdrop-blur supports-[backdrop-filter]:bg-background/70 transition-transform duration-300 ${
+      showNav ? 'translate-y-0' : '-translate-y-24'
     }`}>
-      <div className="w-full px-3 lg:px-8">
-        <div className="flex h-16 items-center justify-between gap-2 lg:gap-6">
-          <div className="flex items-center gap-4">
-            <button 
-              onClick={() => setLocation('/')}
-              className="flex items-center gap-2 hover-elevate active-elevate-2 rounded-md px-2 py-2" 
-              data-testid="link-home"
-            >
-              <div className="h-8 w-8 rounded-md bg-gradient-to-br from-primary to-chart-2 flex items-center justify-center">
-                <span className="text-white font-bold text-sm">P</span>
-              </div>
-            </button>
+      <div className="w-full px-3 sm:px-4 lg:px-10">
+        <div className="mx-auto max-w-7xl">
+          <div className="flex h-14 items-center justify-between gap-2 sm:gap-3">
+            <div className="flex items-center gap-2 sm:gap-4">
+              <button 
+                onClick={() => setLocation('/')}
+                className="flex items-center gap-2 rounded-md px-2 py-2" 
+                data-testid="link-home"
+              >
+                <div className="h-7 w-7 rounded-md bg-primary/10 flex items-center justify-center">
+                  <span className="text-primary font-semibold text-xs">A</span>
+                </div>
+                <span className="font-semibold text-foreground hidden sm:inline">AIgency</span>
+              </button>
 
-            {/* Navigation Dropdown */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
+              {/* Navigation Links */}
+              <nav className="flex items-center gap-1">
                 <Button
-                  variant="outline"
+                  variant={location === '/showcase' ? 'secondary' : 'ghost'}
                   size="sm"
-                  className="gap-2 text-white hover:text-white"
-                  data-testid="button-nav-menu"
+                  onClick={() => setLocation('/showcase')}
+                  className="gap-2"
+                  data-testid="nav-showroom"
                 >
-                  <Menu className="h-4 w-4" />
-                  <span className="hidden sm:inline">Navigation</span>
+                  <Eye className="h-4 w-4" />
+                  <span className="hidden sm:inline">Showroom</span>
                 </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="w-48">
-                <DropdownMenuItem onClick={() => setLocation('/')} data-testid="menu-item-art-hub">
-                  <Home className="h-4 w-4 mr-2" />
-                  Art Hub
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setLocation('/showcase')} data-testid="menu-item-showroom">
-                  <Eye className="h-4 w-4 mr-2" />
-                  Showroom
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setLocation('/editor')} data-testid="menu-item-create">
-                  <FileEdit className="h-4 w-4 mr-2" />
-                  Create Prompt
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
+              </nav>
+            </div>
 
-          <div className="hidden lg:flex flex-1 max-w-md">
+          <div className="hidden md:flex flex-1 max-w-md lg:max-w-xl">
             <div className="relative w-full">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
@@ -107,20 +136,42 @@ export default function Navbar({ credits = 125, username = "Artist", onSearch }:
           </div>
 
           <div className="flex items-center gap-2">
-            <div className="flex items-center gap-2 px-2 lg:px-3 py-1.5 rounded-md bg-accent/50 border border-accent-border">
-              <Coins className="h-4 w-4 text-primary" />
-              <span className="font-mono text-sm font-semibold text-foreground" data-testid="text-credits">{credits}</span>
-            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+              aria-label="Toggle theme"
+              data-testid="button-theme-toggle"
+            >
+              {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+            </Button>
 
-            <Button variant="default" size="sm" className="gap-1.5" data-testid="button-buy-credits">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setAuthEmail("");
+                setAuthDialog('login');
+              }}
+              data-testid="button-login"
+            >
+              Log in
+            </Button>
+
+            <Button 
+              variant="default" 
+              size="sm" 
+              className="gap-1.5" 
+              onClick={() => setLocation('/editor')}
+              data-testid="button-create-prompt"
+            >
               <Plus className="h-4 w-4" />
-              <Coins className="h-4 w-4" />
-              <span className="hidden sm:inline">Buy Credits</span>
+              <span className="hidden sm:inline">Create Prompt</span>
             </Button>
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="hover-elevate active-elevate-2 rounded-full" data-testid="button-user-menu">
+                <button className="rounded-full" data-testid="button-user-menu">
                   <Avatar className="h-9 w-9">
                     <AvatarFallback className="bg-primary text-primary-foreground">
                       {username.charAt(0)}
@@ -153,8 +204,59 @@ export default function Navbar({ credits = 125, username = "Artist", onSearch }:
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
+          </div>
         </div>
       </div>
+
+      <Dialog
+        open={authDialog !== null}
+        onOpenChange={(open) => {
+          if (!open) setAuthDialog(null);
+        }}
+      >
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>
+              Welcome back
+            </DialogTitle>
+            <DialogDescription>
+              Log in will be integrated soon. For now, this is a placeholder.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-2">
+            <div className="text-sm font-medium">Email</div>
+            <Input
+              type="email"
+              value={authEmail}
+              onChange={(e) => setAuthEmail(e.target.value)}
+              placeholder="you@example.com"
+              className="h-9"
+              data-testid="input-auth-email"
+            />
+            <div className="text-xs text-muted-foreground">
+              Your teammate can connect this to the real auth provider later.
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setAuthDialog(null)}
+              data-testid="button-auth-cancel"
+            >
+              Cancel
+            </Button>
+            <Button
+              disabled={!authEmail.trim()}
+              onClick={() => setAuthDialog(null)}
+              data-testid="button-auth-continue"
+            >
+              Continue
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </header>
   );
 }
