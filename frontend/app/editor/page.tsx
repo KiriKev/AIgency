@@ -1,20 +1,16 @@
-"use client"
+"use client";
 
-
-import Navbar from "@/components/Navbar";
 import PromptEditor from "@/components/PromptEditor";
-import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 export default function Editor() {
-    const router = useRouter();
+  const router = useRouter();
 
-    return (
-        <div className="min-h-screen bg-background pt-16">
-            <main className="w-full px-2 py-2">
-                <PromptEditor onBack={() => router.push('/')} />
-            </main>
-        </div>
-    );
+  return (
+    <div className="h-screen bg-background overflow-hidden">
+      <main className="w-full h-full pt-16 px-3 lg:px-8 py-3 overflow-hidden">
+        <PromptEditor onBack={() => router.push("/")} />
+      </main>
+    </div>
+  );
 }

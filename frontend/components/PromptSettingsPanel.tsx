@@ -1,6 +1,3 @@
-"use client"
-
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,6 +23,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { X, Upload, Image as ImageIcon } from "lucide-react";
 import { useState } from "react";
 
+type PromptType = "showcase" | "free-prompt" | "paid-prompt";
+
 interface PromptSettings {
   title: string;
   category: string;
@@ -34,7 +33,7 @@ interface PromptSettings {
   price: number;
   aspectRatio: string | null;
   photoCount: number;
-  promptType: string;
+  promptType: PromptType;
   uploadedPhotos: string[];
   resolution: string | null;
   isFreeShowcase?: boolean;
@@ -46,9 +45,15 @@ interface PromptSettingsPanelProps {
   useScrollArea?: boolean;
 }
 
-export default function PromptSettingsPanel({ settings, onUpdate, useScrollArea = true }: PromptSettingsPanelProps) {
+export default function PromptSettingsPanel({
+  settings,
+  onUpdate,
+  useScrollArea = true,
+}: PromptSettingsPanelProps) {
   const [newTag, setNewTag] = useState("");
-  const [hoveredPhotoIndex, setHoveredPhotoIndex] = useState<number | null>(null);
+  const [hoveredPhotoIndex, setHoveredPhotoIndex] = useState<number | null>(
+    null
+  );
 
   const addTag = () => {
     if (newTag.trim() && !settings.tags.includes(newTag.trim())) {
@@ -58,7 +63,7 @@ export default function PromptSettingsPanel({ settings, onUpdate, useScrollArea 
   };
 
   const removeTag = (tagToRemove: string) => {
-    onUpdate({ tags: settings.tags.filter(t => t !== tagToRemove) });
+    onUpdate({ tags: settings.tags.filter((t) => t !== tagToRemove) });
   };
 
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -73,7 +78,7 @@ export default function PromptSettingsPanel({ settings, onUpdate, useScrollArea 
 
     const filesToProcess = Array.from(files).slice(0, remainingSlots);
 
-    filesToProcess.forEach(file => {
+    filesToProcess.forEach((file) => {
       const reader = new FileReader();
       reader.onloadend = () => {
         const base64 = reader.result as string;
@@ -88,19 +93,21 @@ export default function PromptSettingsPanel({ settings, onUpdate, useScrollArea 
 
   const removePhoto = (index: number) => {
     onUpdate({
-      uploadedPhotos: settings.uploadedPhotos.filter((_, i) => i !== index)
+      uploadedPhotos: settings.uploadedPhotos.filter((_, i) => i !== index),
     });
   };
 
   const content = (
-    <div className="space-y-2 p-3 pr-2 bg-transparent">
+    <div className="space-y-4">
       <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm text-foreground">Prompt Meta</CardTitle>
+        <CardHeader className="pb-2 px-4">
+          <CardTitle className="text-sm">PROMPT META</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-3">
+        <CardContent className="space-y-3 px-4 pb-4">
           <div className="space-y-2">
-            <Label htmlFor="title" className="text-xs text-foreground">Title</Label>
+            <Label htmlFor="title" className="text-xs">
+              Title
+            </Label>
             <Input
               id="title"
               value={settings.title}
@@ -112,16 +119,27 @@ export default function PromptSettingsPanel({ settings, onUpdate, useScrollArea 
           </div>
 
           <div className="space-y-2">
-            <Label className="text-xs text-foreground">Prompt Type</Label>
+            <Label className="text-xs">Prompt Type</Label>
             <RadioGroup
               value={settings.promptType}
-              onValueChange={(value) => onUpdate({ promptType: value })}
+              onValueChange={(value) =>
+                onUpdate({ promptType: value as PromptType })
+              }
               className="space-y-2"
               data-testid="radio-prompt-type"
             >
               <div className="flex items-center space-x-2">
-                <RadioGroupItem value="showcase" id="showcase" data-testid="radio-showcase" />
-                <Label htmlFor="showcase" className="text-sm font-normal cursor-pointer flex-1 text-foreground">Showcase</Label>
+                <RadioGroupItem
+                  value="showcase"
+                  id="showcase"
+                  data-testid="radio-showcase"
+                />
+                <Label
+                  htmlFor="showcase"
+                  className="text-sm font-normal cursor-pointer flex-1"
+                >
+                  Showcase
+                </Label>
                 <TooltipProvider>
                   <Tooltip delayDuration={0}>
                     <TooltipTrigger asChild>
@@ -129,15 +147,26 @@ export default function PromptSettingsPanel({ settings, onUpdate, useScrollArea 
                     </TooltipTrigger>
                     <TooltipContent>
                       <p className="text-xs max-w-xs">
-                        Zeige den Prompt nur zur Ansicht. Andere können ihn nicht nutzen. Alle Variablen-Bearbeitungsfelder sind deaktiviert.
+                        Zeige den Prompt nur zur Ansicht. Andere können ihn
+                        nicht nutzen. Alle Variablen-Bearbeitungsfelder sind
+                        deaktiviert.
                       </p>
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
               </div>
               <div className="flex items-center space-x-2">
-                <RadioGroupItem value="free-prompt" id="free-prompt" data-testid="radio-free-prompt" />
-                <Label htmlFor="free-prompt" className="text-sm font-normal cursor-pointer flex-1 text-foreground">Free prompt</Label>
+                <RadioGroupItem
+                  value="free-prompt"
+                  id="free-prompt"
+                  data-testid="radio-free-prompt"
+                />
+                <Label
+                  htmlFor="free-prompt"
+                  className="text-sm font-normal cursor-pointer flex-1"
+                >
+                  Free prompt
+                </Label>
                 <TooltipProvider>
                   <Tooltip delayDuration={0}>
                     <TooltipTrigger asChild>
@@ -145,15 +174,25 @@ export default function PromptSettingsPanel({ settings, onUpdate, useScrollArea 
                     </TooltipTrigger>
                     <TooltipContent>
                       <p className="text-xs max-w-xs">
-                        Dieser Prompt ist kostenlos nutzbar. Der vollständige Text ist öffentlich sichtbar.
+                        Dieser Prompt ist kostenlos nutzbar. Der vollständige
+                        Text ist öffentlich sichtbar.
                       </p>
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
               </div>
               <div className="flex items-center space-x-2">
-                <RadioGroupItem value="paid-prompt" id="paid-prompt" data-testid="radio-paid-prompt" />
-                <Label htmlFor="paid-prompt" className="text-sm font-normal cursor-pointer flex-1 text-foreground">Paid prompt</Label>
+                <RadioGroupItem
+                  value="paid-prompt"
+                  id="paid-prompt"
+                  data-testid="radio-paid-prompt"
+                />
+                <Label
+                  htmlFor="paid-prompt"
+                  className="text-sm font-normal cursor-pointer flex-1"
+                >
+                  Paid prompt
+                </Label>
                 <TooltipProvider>
                   <Tooltip delayDuration={0}>
                     <TooltipTrigger asChild>
@@ -161,7 +200,8 @@ export default function PromptSettingsPanel({ settings, onUpdate, useScrollArea 
                     </TooltipTrigger>
                     <TooltipContent>
                       <p className="text-xs max-w-xs">
-                        Enables instant generation. Users can adjust variables and create images directly.
+                        Ermöglicht sofortige Generierung. Nutzer können Variable
+                        anpassen und direkt Bilder erstellen.
                       </p>
                     </TooltipContent>
                   </Tooltip>
@@ -171,9 +211,17 @@ export default function PromptSettingsPanel({ settings, onUpdate, useScrollArea 
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="category" className="text-xs text-foreground">Category</Label>
-            <Select value={settings.category} onValueChange={(value) => onUpdate({ category: value })}>
-              <SelectTrigger className="h-8 text-sm" data-testid="select-category">
+            <Label htmlFor="category" className="text-xs">
+              Category
+            </Label>
+            <Select
+              value={settings.category}
+              onValueChange={(value) => onUpdate({ category: value })}
+            >
+              <SelectTrigger
+                className="h-8 text-sm"
+                data-testid="select-category"
+              >
                 <SelectValue placeholder="select category" />
               </SelectTrigger>
               <SelectContent>
@@ -189,12 +237,12 @@ export default function PromptSettingsPanel({ settings, onUpdate, useScrollArea 
           </div>
 
           <div className="space-y-2">
-            <Label className="text-xs text-foreground">Tags</Label>
+            <Label className="text-xs">Tags</Label>
             <div className="flex gap-2">
               <Input
                 value={newTag}
                 onChange={(e) => setNewTag(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && addTag()}
+                onKeyDown={(e) => e.key === "Enter" && addTag()}
                 placeholder="select tags..."
                 className="h-8 text-sm flex-1"
                 data-testid="input-new-tag"
@@ -226,14 +274,19 @@ export default function PromptSettingsPanel({ settings, onUpdate, useScrollArea 
       </Card>
 
       <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm text-foreground">AI Model & Pricing</CardTitle>
+        <CardHeader className="pb-2 px-4">
+          <CardTitle className="text-sm">AI MODEL & PRICING</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-3">
+        <CardContent className="space-y-3 px-4 pb-4">
           <div className="space-y-2">
-            <Label htmlFor="ai-model" className="text-xs">AI Model</Label>
+            <Label htmlFor="ai-model" className="text-xs">
+              AI Model
+            </Label>
             <Select value="nano-banana-pro" disabled>
-              <SelectTrigger className="h-8 text-sm opacity-50 cursor-not-allowed" data-testid="select-ai-model">
+              <SelectTrigger
+                className="h-8 text-sm opacity-50 cursor-not-allowed"
+                data-testid="select-ai-model"
+              >
                 <SelectValue placeholder="Nano Banana Pro" />
               </SelectTrigger>
               <SelectContent>
@@ -242,10 +295,12 @@ export default function PromptSettingsPanel({ settings, onUpdate, useScrollArea 
             </Select>
           </div>
 
-          {settings.promptType === 'paid-prompt' && (
+          {settings.promptType === "paid-prompt" && (
             <div className="space-y-2">
               <div className="flex items-center gap-1">
-                <Label htmlFor="price" className="text-xs text-foreground">Price per generation (USD)</Label>
+                <Label htmlFor="price" className="text-xs">
+                  Price per generation (USD)
+                </Label>
                 <TooltipProvider>
                   <Tooltip delayDuration={0}>
                     <TooltipTrigger asChild>
@@ -253,7 +308,8 @@ export default function PromptSettingsPanel({ settings, onUpdate, useScrollArea 
                     </TooltipTrigger>
                     <TooltipContent>
                       <p className="text-xs max-w-xs">
-                        Due to settings, minimum-price per generation is {settings.price.toFixed(4)} USD.
+                        Due to settings, minimum-price per generation is{" "}
+                        {settings.price.toFixed(4)} USD.
                       </p>
                     </TooltipContent>
                   </Tooltip>
@@ -265,7 +321,14 @@ export default function PromptSettingsPanel({ settings, onUpdate, useScrollArea 
                 step="0.0001"
                 min="0.0001"
                 value={settings.price}
-                onChange={(e) => onUpdate({ price: Math.max(0.0001, parseFloat(e.target.value) || 0.0001) })}
+                onChange={(e) =>
+                  onUpdate({
+                    price: Math.max(
+                      0.0001,
+                      parseFloat(e.target.value) || 0.0001
+                    ),
+                  })
+                }
                 className="h-8 text-sm"
                 data-testid="input-price"
               />
@@ -274,113 +337,124 @@ export default function PromptSettingsPanel({ settings, onUpdate, useScrollArea 
         </CardContent>
       </Card>
 
-
-      {settings.aiModel === "gemini" && settings.promptType === 'paid-prompt' && (
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm text-foreground">Gemini Assets</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="space-y-2">
-              <Label htmlFor="photo-count" className="text-xs text-foreground">Photo Count</Label>
-              <Select
-                value={settings.photoCount.toString()}
-                onValueChange={(value) => {
-                  const newCount = Math.min(parseInt(value), 20);
-                  onUpdate({ photoCount: newCount });
-                  if (settings.uploadedPhotos.length > newCount) {
-                    onUpdate({ uploadedPhotos: settings.uploadedPhotos.slice(0, newCount) });
-                  }
-                }}
-              >
-                <SelectTrigger className="h-8 text-sm" data-testid="select-photo-count">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {Array.from({ length: 20 }, (_, i) => i + 1).map(num => (
-                    <SelectItem key={num} value={num.toString()}>
-                      {num} {num === 1 ? 'Photo' : 'Photos'}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label className="text-xs text-foreground">
-                Upload Photos ({settings.uploadedPhotos.length}/{settings.photoCount})
-              </Label>
-
-              {settings.uploadedPhotos.length < settings.photoCount && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="w-full"
-                  onClick={() => document.getElementById('photo-upload')?.click()}
-                  data-testid="button-upload-photo"
+      {settings.aiModel === "gemini" &&
+        settings.promptType === "paid-prompt" && (
+          <Card>
+            <CardHeader className="pb-2 px-4">
+              <CardTitle className="text-sm">Gemini Assets</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3 px-4 pb-4">
+              <div className="space-y-2">
+                <Label htmlFor="photo-count" className="text-xs">
+                  Photo Count
+                </Label>
+                <Select
+                  value={settings.photoCount.toString()}
+                  onValueChange={(value) => {
+                    const newCount = Math.min(parseInt(value), 20);
+                    onUpdate({ photoCount: newCount });
+                    if (settings.uploadedPhotos.length > newCount) {
+                      onUpdate({
+                        uploadedPhotos: settings.uploadedPhotos.slice(
+                          0,
+                          newCount
+                        ),
+                      });
+                    }
+                  }}
                 >
-                  <Upload className="h-3 w-3 mr-2" />
-                  Upload Photo
-                </Button>
-              )}
+                  <SelectTrigger
+                    className="h-8 text-sm"
+                    data-testid="select-photo-count"
+                  >
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Array.from({ length: 20 }, (_, i) => i + 1).map((num) => (
+                      <SelectItem key={num} value={num.toString()}>
+                        {num} {num === 1 ? "Photo" : "Photos"}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
 
-              <input
-                id="photo-upload"
-                type="file"
-                accept="image/*"
-                multiple
-                className="hidden"
-                onChange={handlePhotoUpload}
-              />
+              <div className="space-y-2">
+                <Label className="text-xs">
+                  Upload Photos ({settings.uploadedPhotos.length}/
+                  {settings.photoCount})
+                </Label>
 
-              {settings.uploadedPhotos.length > 0 && (
-                <div className="relative h-32 mt-2">
-                  {settings.uploadedPhotos.map((photo, index) => (
-                    <div
-                      key={index}
-                      className="absolute top-0 left-0 w-full transition-all duration-300"
-                      style={{
-                        transform: `translateY(${index === hoveredPhotoIndex ? index * 8 : index * 4}px)`,
-                        zIndex: settings.uploadedPhotos.length - index,
-                      }}
-                      onMouseEnter={() => setHoveredPhotoIndex(index)}
-                      onMouseLeave={() => setHoveredPhotoIndex(null)}
-                      data-testid={`photo-preview-${index}`}
-                    >
-                      <div className="relative bg-card border rounded-md overflow-hidden hover-elevate">
-                        <img
-                          src={photo}
-                          alt={`Upload ${index + 1}`}
-                          className="w-full h-24 object-cover"
-                        />
-                        {hoveredPhotoIndex === index && (
-                          <button
-                            onClick={() => removePhoto(index)}
-                            className="absolute top-1 right-1 bg-destructive text-destructive-foreground rounded-full p-1 hover-elevate"
-                            data-testid={`button-delete-photo-${index}`}
-                          >
-                            <X className="h-3 w-3" />
-                          </button>
-                        )}
-                        <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white text-xs p-1 text-center">
-                          Photo {index + 1}
+                {settings.uploadedPhotos.length < settings.photoCount && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full"
+                    onClick={() =>
+                      document.getElementById("photo-upload")?.click()
+                    }
+                    data-testid="button-upload-photo"
+                  >
+                    <Upload className="h-3 w-3 mr-2" />
+                    Upload Photo
+                  </Button>
+                )}
+
+                <input
+                  id="photo-upload"
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  className="hidden"
+                  onChange={handlePhotoUpload}
+                />
+
+                {settings.uploadedPhotos.length > 0 && (
+                  <div className="relative h-32 mt-2">
+                    {settings.uploadedPhotos.map((photo, index) => (
+                      <div
+                        key={index}
+                        className="absolute top-0 left-0 w-full transition-all duration-300"
+                        style={{
+                          transform: `translateY(${index === hoveredPhotoIndex ? index * 8 : index * 4}px)`,
+                          zIndex: settings.uploadedPhotos.length - index,
+                        }}
+                        onMouseEnter={() => setHoveredPhotoIndex(index)}
+                        onMouseLeave={() => setHoveredPhotoIndex(null)}
+                        data-testid={`photo-preview-${index}`}
+                      >
+                        <div className="relative bg-card border rounded-md overflow-hidden hover-elevate">
+                          <img
+                            src={photo}
+                            alt={`Upload ${index + 1}`}
+                            className="w-full h-24 object-cover"
+                          />
+                          {hoveredPhotoIndex === index && (
+                            <button
+                              onClick={() => removePhoto(index)}
+                              className="absolute top-1 right-1 bg-destructive text-destructive-foreground rounded-full p-1 hover-elevate"
+                              data-testid={`button-delete-photo-${index}`}
+                            >
+                              <X className="h-3 w-3" />
+                            </button>
+                          )}
+                          <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white text-xs p-1 text-center">
+                            Photo {index + 1}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      )}
+                    ))}
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        )}
     </div>
   );
 
   return useScrollArea ? (
-    <ScrollArea className="h-full bg-transparent">
-      {content}
-    </ScrollArea>
+    <ScrollArea className="h-full bg-transparent">{content}</ScrollArea>
   ) : (
     content
   );

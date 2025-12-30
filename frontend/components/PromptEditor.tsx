@@ -1,6 +1,3 @@
-"use client"
-
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -39,22 +36,50 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Plus, Trash2, HelpCircle, X, FolderOpen, Settings, FileText, Sparkles, List, ArrowLeft } from "lucide-react";
+import {
+  Plus,
+  Trash2,
+  X,
+  Settings,
+  FileText,
+  Sparkles,
+  List,
+  ArrowLeft,
+} from "lucide-react";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
-import { useQueryClient } from "@tanstack/react-query";
 import PromptSettingsPanel from "./PromptSettingsPanel";
 
-export type VariableType = 'text' | 'checkbox' | 'multi-select' | 'single-select' | 'slider';
+type VariableType =
+  | "text"
+  | "checkbox"
+  | "multi-select"
+  | "single-select"
+  | "slider";
+type PromptType = "showcase" | "free-prompt" | "paid-prompt";
 
-export interface SelectOption {
+interface PromptSettings {
+  title: string;
+  category: string;
+  tags: string[];
+  aiModel: string;
+  price: number;
+  aspectRatio: string | null;
+  photoCount: number;
+  promptType: PromptType;
+  uploadedPhotos: string[];
+  resolution: string | null;
+  isFreeShowcase?: boolean;
+}
+
+interface SelectOption {
   visibleName: string;
   promptValue: string;
 }
 
-export interface Variable {
+interface Variable {
   id: string;
   name: string;
   label: string;
@@ -75,20 +100,28 @@ interface PromptEditorProps {
 }
 
 export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
-
   const [currentPromptId, setCurrentPromptId] = useState<string | null>(null);
   const [promptTitle, setPromptTitle] = useState("");
   const [prompt, setPrompt] = useState("");
   const [variables, setVariables] = useState<Variable[]>([]);
+  const [selectedVariableId, setSelectedVariableId] = useState<string | null>(
+    null
+  );
+  const [caretPosition, setCaretPosition] = useState(0);
   const [selectedText, setSelectedText] = useState("");
-  const [selectionRange, setSelectionRange] = useState<{ start: number; end: number } | null>(null);
+  const [selectionRange, setSelectionRange] = useState<{
+    start: number;
+    end: number;
+  } | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
   const [unsavedVariableDialog, setUnsavedVariableDialog] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [variableToDelete, setVariableToDelete] = useState<string | null>(null);
   const [openVariables, setOpenVariables] = useState<string[]>([]);
-  const [newOptionInput, setNewOptionInput] = useState<Record<string, string>>({});
+  const [newOptionInput, setNewOptionInput] = useState<Record<string, string>>(
+    {}
+  );
   const [showLoadDialog, setShowLoadDialog] = useState(false);
 
   const [category, setCategory] = useState("");
@@ -97,55 +130,77 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
   const [price, setPrice] = useState(0.0001);
   const [aspectRatio, setAspectRatio] = useState<string | null>(null);
   const [photoCount, setPhotoCount] = useState(1);
-  const [promptType, setPromptType] = useState("paid-prompt");
+  const [promptType, setPromptType] = useState<PromptType>("paid-prompt");
   const [uploadedPhotos, setUploadedPhotos] = useState<string[]>([]);
   const [newTag, setNewTag] = useState("");
   const [resolution, setResolution] = useState<string | null>(null);
   const [isFreeShowcase, setIsFreeShowcase] = useState(false);
   const [showValidationDialog, setShowValidationDialog] = useState(false);
-  const [buttonPosition, setButtonPosition] = useState<{ top: number; left: number } | null>(null);
+  const [buttonPosition, setButtonPosition] = useState<{
+    top: number;
+    left: number;
+  } | null>(null);
   const [linkOrCreateDialog, setLinkOrCreateDialog] = useState<{
     open: boolean;
     varName: string;
     selectedText: string;
     selectionRange: { start: number; end: number } | null;
-  }>({ open: false, varName: '', selectedText: '', selectionRange: null });
+  }>({ open: false, varName: "", selectedText: "", selectionRange: null });
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
-  const queryClient = useQueryClient();
+  const isShowcase = promptType === "showcase";
 
   const { data: savedPrompts = [] } = useQuery<any[]>({
-    queryKey: ['/api/prompts'],
-    enabled: showLoadDialog
+    queryKey: ["/api/prompts"],
+    enabled: showLoadDialog,
   });
 
-  const getCaretCoordinates = (element: HTMLTextAreaElement, position: number) => {
+  const getCaretCoordinates = (
+    element: HTMLTextAreaElement,
+    position: number
+  ) => {
     // Create mirror div
-    const div = document.createElement('div');
+    const div = document.createElement("div");
     const style = window.getComputedStyle(element);
     const properties = [
-      'fontFamily', 'fontSize', 'fontWeight', 'letterSpacing', 'lineHeight',
-      'padding', 'paddingTop', 'paddingRight', 'paddingBottom', 'paddingLeft',
-      'borderWidth', 'borderStyle', 'borderLeftWidth', 'borderRightWidth',
-      'borderTopWidth', 'borderBottomWidth', 'boxSizing', 'wordWrap',
-      'whiteSpace', 'width', 'height'
+      "fontFamily",
+      "fontSize",
+      "fontWeight",
+      "letterSpacing",
+      "lineHeight",
+      "padding",
+      "paddingTop",
+      "paddingRight",
+      "paddingBottom",
+      "paddingLeft",
+      "borderWidth",
+      "borderStyle",
+      "borderLeftWidth",
+      "borderRightWidth",
+      "borderTopWidth",
+      "borderBottomWidth",
+      "boxSizing",
+      "wordWrap",
+      "whiteSpace",
+      "width",
+      "height",
     ];
 
-    properties.forEach(prop => {
+    properties.forEach((prop) => {
       div.style[prop as any] = style[prop as any];
     });
 
-    div.style.position = 'absolute';
-    div.style.visibility = 'hidden';
-    div.style.top = '0';
-    div.style.left = '0';
-    div.style.whiteSpace = 'pre-wrap';
-    div.style.wordWrap = 'break-word';
-    div.style.overflowWrap = 'break-word';
-    div.style.overflow = 'hidden';
+    div.style.position = "absolute";
+    div.style.visibility = "hidden";
+    div.style.top = "0";
+    div.style.left = "0";
+    div.style.whiteSpace = "pre-wrap";
+    div.style.wordWrap = "break-word";
+    div.style.overflowWrap = "break-word";
+    div.style.overflow = "hidden";
 
     document.body.appendChild(div);
 
@@ -154,14 +209,14 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
     div.textContent = textBeforeCaret;
 
     // Add a span to measure caret position
-    const span = document.createElement('span');
-    span.textContent = '|';
+    const span = document.createElement("span");
+    span.textContent = "|";
     div.appendChild(span);
 
     const coordinates = {
       top: span.offsetTop,
       left: span.offsetLeft,
-      height: span.offsetHeight
+      height: span.offsetHeight,
     };
 
     document.body.removeChild(div);
@@ -249,8 +304,8 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
       clearSelection();
     };
 
-    document.addEventListener('mousedown', handleOutsideClick);
-    return () => document.removeEventListener('mousedown', handleOutsideClick);
+    document.addEventListener("mousedown", handleOutsideClick);
+    return () => document.removeEventListener("mousedown", handleOutsideClick);
   }, []);
 
   const checkIfInsideVariable = (start: number, end: number): boolean => {
@@ -261,20 +316,23 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
       const varStart = match.index;
       const varEnd = match.index + match[0].length;
 
-      if ((start >= varStart && start < varEnd) || (end > varStart && end <= varEnd)) {
+      if (
+        (start >= varStart && start < varEnd) ||
+        (end > varStart && end <= varEnd)
+      ) {
         return true;
       }
     }
     return false;
   };
 
-  const createNewEmptyVariable = () => {
+  const createNewEmptyVariable = (insertPosition?: number) => {
     const baseVarName = "NewVariable";
     let counter = 1;
     let varName = baseVarName;
 
     // Find a unique name
-    while (variables.some(v => v.name === varName)) {
+    while (variables.some((v) => v.name === varName)) {
       varName = `${baseVarName}${counter}`;
       counter++;
     }
@@ -283,11 +341,11 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
       id: varName,
       name: varName,
       label: varName,
-      description: '',
-      type: 'text',
-      defaultValue: '',
+      description: "",
+      type: "text",
+      defaultValue: "",
       required: false,
-      position: variables.length
+      position: variables.length,
     };
 
     setVariables([...variables, newVariable]);
@@ -295,19 +353,31 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
 
     // Add the variable placeholder to the prompt
     const varPlaceholder = `[${varName}]`;
-    const currentPos = textareaRef.current?.selectionStart || prompt.length;
+    const currentPos =
+      insertPosition ??
+      textareaRef.current?.selectionStart ??
+      caretPosition ??
+      prompt.length;
     const newPrompt =
       prompt.substring(0, currentPos) +
-      (prompt.length > 0 && currentPos > 0 && prompt[currentPos - 1] !== ' ' ? ' ' : '') +
+      (prompt.length > 0 && currentPos > 0 && prompt[currentPos - 1] !== " "
+        ? " "
+        : "") +
       varPlaceholder +
-      ' ' +
+      " " +
       prompt.substring(currentPos);
     setPrompt(newPrompt);
+    setCaretPosition(currentPos + varPlaceholder.length + 1);
 
     // Focus and move cursor after the variable
     setTimeout(() => {
       if (textareaRef.current) {
-        const newCursorPos = currentPos + varPlaceholder.length + (prompt.length > 0 && currentPos > 0 && prompt[currentPos - 1] !== ' ' ? 2 : 1);
+        const newCursorPos =
+          currentPos +
+          varPlaceholder.length +
+          (prompt.length > 0 && currentPos > 0 && prompt[currentPos - 1] !== " "
+            ? 2
+            : 1);
         textareaRef.current.focus();
         textareaRef.current.setSelectionRange(newCursorPos, newCursorPos);
       }
@@ -321,13 +391,15 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
       title: "Variable Created",
       description: `Variable "${varName}" was added to the prompt.`,
     });
+
+    return varName;
   };
 
   const createVariableFromSelection = () => {
     if (!selectedText || !selectionRange) return;
 
-    const varName = selectedText.replace(/\s+/g, '_').replace(/[^\w-]/g, '');
-    const existingVariable = variables.find(v => v.name === varName);
+    const varName = selectedText.replace(/\s+/g, "_").replace(/[^\w-]/g, "");
+    const existingVariable = variables.find((v) => v.name === varName);
 
     if (existingVariable) {
       // Variable exists - show dialog asking what to do
@@ -335,7 +407,7 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
         open: true,
         varName,
         selectedText,
-        selectionRange
+        selectionRange,
       });
     } else {
       // No existing variable - create new one directly
@@ -350,7 +422,7 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
     createNew: boolean
   ) => {
     const varPlaceholder = `[${varName}]`;
-    const existingVariable = variables.find(v => v.name === varName);
+    const existingVariable = variables.find((v) => v.name === varName);
 
     // Replace selected text with the variable placeholder
     const newPrompt =
@@ -386,7 +458,7 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
       if (createNew && existingVariable) {
         // Generate unique name by adding number suffix
         let counter = 2;
-        while (variables.some(v => v.name === `${varName}_${counter}`)) {
+        while (variables.some((v) => v.name === `${varName}_${counter}`)) {
           counter++;
         }
         finalVarName = `${varName}_${counter}`;
@@ -404,14 +476,14 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
         id: finalVarName,
         name: finalVarName,
         label: originalText,
-        description: '',
-        type: 'text',
+        description: "",
+        type: "text",
         defaultValue: originalText,
         required: false,
-        position: variables.length
+        position: variables.length,
       };
 
-      setVariables(prev => [...prev, newVariable]);
+      setVariables((prev) => [...prev, newVariable]);
       setOpenVariables([finalVarName]);
       setEditingVariableId(finalVarName);
       setShowVariableEditor(true);
@@ -424,19 +496,37 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
   };
 
   const handleLinkVariable = () => {
-    const { varName, selectedText: origText, selectionRange: range } = linkOrCreateDialog;
+    const {
+      varName,
+      selectedText: origText,
+      selectionRange: range,
+    } = linkOrCreateDialog;
     if (range) {
       performVariableCreation(varName, origText, range, false);
     }
-    setLinkOrCreateDialog({ open: false, varName: '', selectedText: '', selectionRange: null });
+    setLinkOrCreateDialog({
+      open: false,
+      varName: "",
+      selectedText: "",
+      selectionRange: null,
+    });
   };
 
   const handleCreateNewVariable = () => {
-    const { varName, selectedText: origText, selectionRange: range } = linkOrCreateDialog;
+    const {
+      varName,
+      selectedText: origText,
+      selectionRange: range,
+    } = linkOrCreateDialog;
     if (range) {
       performVariableCreation(varName, origText, range, true);
     }
-    setLinkOrCreateDialog({ open: false, varName: '', selectedText: '', selectionRange: null });
+    setLinkOrCreateDialog({
+      open: false,
+      varName: "",
+      selectedText: "",
+      selectionRange: null,
+    });
   };
 
   useEffect(() => {
@@ -449,31 +539,31 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
         uniqueVarNames.add(match[1]);
       }
 
-      setVariables(prev => {
+      setVariables((prev) => {
         // Keep existing variables that are still in the prompt
-        const existingVars = prev.filter(v => uniqueVarNames.has(v.name));
-        const existingNames = new Set(existingVars.map(v => v.name));
+        const existingVars = prev.filter((v) => uniqueVarNames.has(v.name));
+        const existingNames = new Set(existingVars.map((v) => v.name));
 
         // Create new variables for names that don't exist yet
         const newVars: Variable[] = [];
-        uniqueVarNames.forEach(varName => {
+        uniqueVarNames.forEach((varName) => {
           if (!existingNames.has(varName)) {
             newVars.push({
               id: varName,
               name: varName,
               label: varName,
-              description: '',
-              type: 'text',
-              defaultValue: '',
+              description: "",
+              type: "text",
+              defaultValue: "",
               required: true,
-              position: existingVars.length + newVars.length
+              position: existingVars.length + newVars.length,
             });
           }
         });
 
         // Open newly created variables
         if (newVars.length > 0) {
-          setOpenVariables(prev => [...prev, ...newVars.map(v => v.id)]);
+          setOpenVariables((prev) => [...prev, ...newVars.map((v) => v.id)]);
         }
 
         return [...existingVars, ...newVars];
@@ -501,8 +591,8 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
       }
     };
 
-    textarea.addEventListener('scroll', handleScroll);
-    return () => textarea.removeEventListener('scroll', handleScroll);
+    textarea.addEventListener("scroll", handleScroll);
+    return () => textarea.removeEventListener("scroll", handleScroll);
   }, [selectionRange, updateButtonPosition]);
 
   const deleteVariable = (varId: string) => {
@@ -513,14 +603,17 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
   const confirmDeleteVariable = () => {
     if (!variableToDelete) return;
 
-    const variable = variables.find(v => v.id === variableToDelete);
+    const variable = variables.find((v) => v.id === variableToDelete);
     if (!variable) return;
 
-    const placeholderRegex = new RegExp(`\\[${variable.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\]`, 'g');
-    const newPrompt = prompt.replace(placeholderRegex, '');
+    const placeholderRegex = new RegExp(
+      `\\[${variable.name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\]`,
+      "g"
+    );
+    const newPrompt = prompt.replace(placeholderRegex, "");
     setPrompt(newPrompt);
 
-    setVariables(variables.filter(v => v.id !== variableToDelete));
+    setVariables(variables.filter((v) => v.id !== variableToDelete));
     setDeleteDialogOpen(false);
     setVariableToDelete(null);
   };
@@ -529,16 +622,18 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
     // Check for duplicate name if name is being updated
     if (updates.name !== undefined) {
       const newName = updates.name;
-      const currentVar = variables.find(v => v.id === varId);
+      const currentVar = variables.find((v) => v.id === varId);
 
       // Check if this name already exists (excluding the current variable)
-      const duplicateExists = variables.some(v => v.id !== varId && v.name === newName);
+      const duplicateExists = variables.some(
+        (v) => v.id !== varId && v.name === newName
+      );
 
       if (duplicateExists && currentVar && currentVar.name !== newName) {
         toast({
           title: "Error",
           description: `A variable with the name "${newName}" already exists. Please choose a different name.`,
-          variant: "destructive"
+          variant: "destructive",
         });
         return; // Don't update
       }
@@ -551,27 +646,31 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
         setPrompt(newPrompt);
 
         // Update the variable ID as well since it's based on name
-        setVariables(variables.map(v =>
-          v.id === varId ? { ...v, ...updates, id: newName } : v
-        ));
+        setVariables(
+          variables.map((v) =>
+            v.id === varId ? { ...v, ...updates, id: newName } : v
+          )
+        );
         return;
       }
     }
 
-    setVariables(variables.map(v =>
-      v.id === varId ? { ...v, ...updates } : v
-    ));
+    setVariables(
+      variables.map((v) => (v.id === varId ? { ...v, ...updates } : v))
+    );
   };
 
   const handleVariableLinkClick = (varName: string) => {
-    const variable = variables.find(v => v.name === varName || v.label === varName);
+    const variable = variables.find(
+      (v) => v.name === varName || v.label === varName
+    );
     if (variable) {
       setOpenVariables([variable.id]);
 
       setTimeout(() => {
         const element = document.getElementById(`variable-${variable.id}`);
         if (element) {
-          element.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+          element.scrollIntoView({ behavior: "smooth", block: "nearest" });
         }
       }, 100);
     }
@@ -593,7 +692,7 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
       }
 
       const varName = match[1];
-      const variable = variables.find(v => v.name === varName);
+      const variable = variables.find((v) => v.name === varName);
       const displayText = variable ? variable.label : varName;
 
       parts.push(
@@ -613,9 +712,7 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
 
     if (lastIndex < prompt.length) {
       parts.push(
-        <span key={`text-${lastIndex}`}>
-          {prompt.substring(lastIndex)}
-        </span>
+        <span key={`text-${lastIndex}`}>{prompt.substring(lastIndex)}</span>
       );
     }
 
@@ -623,40 +720,45 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
   };
 
   const addOption = (varId: string) => {
-    const input = newOptionInput[varId] || '';
+    const input = newOptionInput[varId] || "";
     if (!input.trim()) return;
 
-    const parts = input.split('|||');
-    const visibleName = parts[0]?.trim() || '';
-    const promptValue = parts[1]?.trim() || '';
+    const parts = input.split("|||");
+    const visibleName = parts[0]?.trim() || "";
+    const promptValue = parts[1]?.trim() || "";
 
     if (!visibleName || !promptValue) return;
 
-    const variable = variables.find(v => v.id === varId);
+    const variable = variables.find((v) => v.id === varId);
     if (!variable) return;
 
     const newOption: SelectOption = {
       visibleName,
-      promptValue
+      promptValue,
     };
 
     updateVariable(varId, {
-      options: [...(variable.options || []), newOption]
+      options: [...(variable.options || []), newOption],
     });
 
-    setNewOptionInput({ ...newOptionInput, [varId]: '' });
+    setNewOptionInput({ ...newOptionInput, [varId]: "" });
   };
 
   const removeOption = (varId: string, index: number) => {
-    const variable = variables.find(v => v.id === varId);
+    const variable = variables.find((v) => v.id === varId);
     if (!variable || !variable.options) return;
 
     const newOptions = variable.options.filter((_, i) => i !== index);
     updateVariable(varId, { options: newOptions });
   };
 
-  const updateOption = (varId: string, index: number, field: 'visibleName' | 'promptValue', value: string) => {
-    const variable = variables.find(v => v.id === varId);
+  const updateOption = (
+    varId: string,
+    index: number,
+    field: "visibleName" | "promptValue",
+    value: string
+  ) => {
+    const variable = variables.find((v) => v.id === varId);
     if (!variable || !variable.options) return;
 
     const newOptions = [...variable.options];
@@ -675,7 +777,7 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
       toast({
         title: "Error",
         description: "Please enter a prompt.",
-        variant: "destructive"
+        variant: "destructive",
       });
       return;
     }
@@ -684,18 +786,20 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
     setGeneratedImage(null);
 
     try {
-      const response = await apiRequest('POST', '/api/generate-image', { prompt: previewText });
+      const response = await apiRequest("POST", "/api/generate-image", {
+        prompt: previewText,
+      });
       const data = await response.json();
       setGeneratedImage(data.imageUrl);
       toast({
         title: "Generation Complete",
-        description: "Your image was generated successfully."
+        description: "Your image was generated successfully.",
       });
     } catch (error: any) {
       toast({
         title: "Generation Failed",
         description: error.message || "Error generating image.",
-        variant: "destructive"
+        variant: "destructive",
       });
     } finally {
       setIsGenerating(false);
@@ -710,18 +814,20 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
     setGeneratedImage(null);
 
     try {
-      const response = await apiRequest('POST', '/api/generate-image', { prompt: previewText });
+      const response = await apiRequest("POST", "/api/generate-image", {
+        prompt: previewText,
+      });
       const data = await response.json();
       setGeneratedImage(data.imageUrl);
       toast({
         title: "Generation Complete",
-        description: "Your image was generated successfully."
+        description: "Your image was generated successfully.",
       });
     } catch (error: any) {
       toast({
         title: "Generation Failed",
         description: error.message || "Error generating image.",
-        variant: "destructive"
+        variant: "destructive",
       });
     } finally {
       setIsGenerating(false);
@@ -744,21 +850,27 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
         photoCount,
         promptType,
         uploadedPhotos,
-        resolution
+        resolution,
       };
 
       if (currentPromptId) {
-        const response = await apiRequest('PATCH', `/api/prompts/${currentPromptId}`, promptData);
+        const response = await apiRequest(
+          "PATCH",
+          `/api/prompts/${currentPromptId}`,
+          promptData
+        );
         savedPrompt = await response.json();
 
-        const existingVarsResponse = await fetch(`/api/prompts/${currentPromptId}/variables`);
+        const existingVarsResponse = await fetch(
+          `/api/prompts/${currentPromptId}/variables`
+        );
         const existingVars = await existingVarsResponse.json();
 
         for (const existingVar of existingVars) {
-          await apiRequest('DELETE', `/api/variables/${existingVar.id}`, {});
+          await apiRequest("DELETE", `/api/variables/${existingVar.id}`, {});
         }
       } else {
-        const response = await apiRequest('POST', '/api/prompts', promptData);
+        const response = await apiRequest("POST", "/api/prompts", promptData);
         savedPrompt = await response.json();
       }
 
@@ -774,30 +886,29 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
           position: variable.position,
           min: variable.min ?? null,
           max: variable.max ?? null,
-          options: variable.options ?? null
+          options: variable.options ?? null,
         };
 
-        await apiRequest('POST', '/api/variables', variableData);
+        await apiRequest("POST", "/api/variables", variableData);
       }
 
       setCurrentPromptId(savedPrompt.id);
       return savedPrompt;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/prompts'] });
       toast({
         title: "Saved",
-        description: "Your prompt was saved successfully."
+        description: "Your prompt was saved successfully.",
       });
     },
     onError: (error) => {
-      console.error('Save error:', error);
+      console.error("Save error:", error);
       toast({
         title: "Error",
         description: "An error occurred while saving.",
-        variant: "destructive"
+        variant: "destructive",
       });
-    }
+    },
   });
 
   const handleSubmit = () => {
@@ -814,48 +925,52 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
       const promptResponse = await fetch(`/api/prompts/${promptId}`);
       const promptData = await promptResponse.json();
 
-      const variablesResponse = await fetch(`/api/prompts/${promptId}/variables`);
+      const variablesResponse = await fetch(
+        `/api/prompts/${promptId}/variables`
+      );
       const variablesData = await variablesResponse.json();
 
       setCurrentPromptId(promptId);
       setPromptTitle(promptData.title);
       setPrompt(promptData.content);
-      setCategory(promptData.category || '');
+      setCategory(promptData.category || "");
       setTags(promptData.tags || []);
-      setAiModel(promptData.aiModel || 'gemini');
+      setAiModel(promptData.aiModel || "gemini");
       setPrice((promptData.price || 1) / 10000);
       setAspectRatio(promptData.aspectRatio || null);
       setPhotoCount(promptData.photoCount || 1);
       setResolution(promptData.resolution || null);
-      setPromptType(promptData.promptType || 'create-now');
+      setPromptType(promptData.promptType || "create-now");
       setUploadedPhotos(promptData.uploadedPhotos || []);
 
-      setVariables(variablesData.map((v: any) => ({
-        id: v.id,
-        name: v.name,
-        label: v.label,
-        description: v.description || '',
-        type: v.type,
-        defaultValue: v.defaultValue,
-        required: v.required,
-        position: v.position,
-        min: v.min,
-        max: v.max,
-        options: v.options
-      })));
+      setVariables(
+        variablesData.map((v: any) => ({
+          id: v.id,
+          name: v.name,
+          label: v.label,
+          description: v.description || "",
+          type: v.type,
+          defaultValue: v.defaultValue,
+          required: v.required,
+          position: v.position,
+          min: v.min,
+          max: v.max,
+          options: v.options,
+        }))
+      );
       setOpenVariables([]);
       setShowLoadDialog(false);
 
       toast({
         title: "Loaded",
-        description: "Prompt was loaded successfully."
+        description: "Prompt was loaded successfully.",
       });
     } catch (error) {
-      console.error('Load error:', error);
+      console.error("Load error:", error);
       toast({
         title: "Error",
         description: "An error occurred while loading.",
-        variant: "destructive"
+        variant: "destructive",
       });
     }
   };
@@ -868,7 +983,7 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
     setOpenVariables([]);
   };
 
-  const settingsData = {
+  const settingsData: PromptSettings = {
     title: promptTitle,
     category,
     tags,
@@ -879,10 +994,10 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
     promptType,
     uploadedPhotos,
     resolution,
-    isFreeShowcase
+    isFreeShowcase,
   };
 
-  const handleSettingsUpdate = (updates: Partial<typeof settingsData>) => {
+  const handleSettingsUpdate = (updates: Partial<PromptSettings>) => {
     if (updates.title !== undefined) setPromptTitle(updates.title);
     if (updates.category !== undefined) setCategory(updates.category);
     if (updates.tags !== undefined) setTags(updates.tags);
@@ -891,27 +1006,34 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
     if (updates.aspectRatio !== undefined) setAspectRatio(updates.aspectRatio);
     if (updates.photoCount !== undefined) setPhotoCount(updates.photoCount);
     if (updates.promptType !== undefined) setPromptType(updates.promptType);
-    if (updates.uploadedPhotos !== undefined) setUploadedPhotos(updates.uploadedPhotos);
+    if (updates.uploadedPhotos !== undefined)
+      setUploadedPhotos(updates.uploadedPhotos);
     if (updates.resolution !== undefined) setResolution(updates.resolution);
-    if (updates.isFreeShowcase !== undefined) setIsFreeShowcase(updates.isFreeShowcase);
+    if (updates.isFreeShowcase !== undefined)
+      setIsFreeShowcase(updates.isFreeShowcase);
   };
 
   const renderPreviewWithDefaults = () => {
     let previewText = prompt;
 
-    variables.forEach(variable => {
+    variables.forEach((variable) => {
       const placeholder = `[${variable.name}]`;
-      let defaultDisplay = '';
+      let defaultDisplay = "";
 
-      if (variable.type === 'text') {
-        defaultDisplay = (variable.defaultValue as string) || '';
-      } else if (variable.type === 'checkbox') {
-        defaultDisplay = (variable.defaultValue as boolean) ? variable.label : '';
-      } else if (variable.type === 'multi-select' || variable.type === 'single-select') {
+      if (variable.type === "text") {
+        defaultDisplay = (variable.defaultValue as string) || "";
+      } else if (variable.type === "checkbox") {
+        defaultDisplay = (variable.defaultValue as boolean)
+          ? variable.label
+          : "";
+      } else if (
+        variable.type === "multi-select" ||
+        variable.type === "single-select"
+      ) {
         const defaultIndex = variable.defaultOptionIndex ?? 0;
         const defaultOption = variable.options?.[defaultIndex];
-        defaultDisplay = defaultOption?.promptValue || '';
-      } else if (variable.type === 'slider') {
+        defaultDisplay = defaultOption?.promptValue || "";
+      } else if (variable.type === "slider") {
         defaultDisplay = String(variable.defaultValue || variable.min || 0);
       }
 
@@ -922,9 +1044,13 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
     return previewText;
   };
 
-  const [mobileTab, setMobileTab] = useState<'settings' | 'editor' | 'generation'>('settings');
+  const [mobileTab, setMobileTab] = useState<
+    "settings" | "editor" | "generation"
+  >("settings");
   const [showVariableEditor, setShowVariableEditor] = useState(false);
-  const [editingVariableId, setEditingVariableId] = useState<string | null>(null);
+  const [editingVariableId, setEditingVariableId] = useState<string | null>(
+    null
+  );
   const scrollYRef = useRef(0);
   const mobileContainerRef = useRef<HTMLDivElement>(null);
 
@@ -938,11 +1064,11 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
       const scrollY = mobileContainer.scrollTop;
       scrollYRef.current = scrollY;
       // Lock the mobile container's vertical scroll
-      mobileContainer.style.overflowY = 'hidden';
+      mobileContainer.style.overflowY = "hidden";
     } else {
       // Restore mobile container scroll
       const savedScroll = scrollYRef.current;
-      mobileContainer.style.overflowY = 'auto';
+      mobileContainer.style.overflowY = "auto";
       // Use requestAnimationFrame to ensure DOM has updated before setting scroll
       requestAnimationFrame(() => {
         if (mobileContainer) {
@@ -955,7 +1081,7 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
     // Cleanup on unmount - always restore overflow
     return () => {
       if (mobileContainer) {
-        mobileContainer.style.overflowY = 'auto';
+        mobileContainer.style.overflowY = "auto";
       }
     };
   }, [showVariableEditor]);
@@ -963,122 +1089,160 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
   return (
     <TooltipProvider>
       {/* Desktop View */}
-      <div className="hidden lg:grid h-[calc(100vh-6rem)] grid-cols-[minmax(200px,_0.75fr)_minmax(350px,_2fr)_minmax(250px,_1.25fr)_minmax(280px,_1.5fr)] gap-1">
-        {/* Settings Panel - always visible */}
-        <PromptSettingsPanel
-          settings={settingsData}
-          onUpdate={handleSettingsUpdate}
-        />
+      <div className="hidden md:flex lg:grid h-full w-full overflow-y-hidden md:overflow-x-auto lg:overflow-x-hidden md:snap-x md:snap-mandatory md:gap-4 lg:gap-4 grid-cols-1 lg:grid-cols-[clamp(220px,18vw,280px)_minmax(0,1fr)_clamp(260px,22vw,340px)_clamp(260px,24vw,360px)]">
+        <div className="min-w-0 h-full overflow-hidden md:snap-start md:shrink-0 md:w-[88vw] md:max-w-[520px] lg:w-auto lg:max-w-none lg:shrink">
+          <PromptSettingsPanel
+            settings={settingsData}
+            onUpdate={handleSettingsUpdate}
+          />
+        </div>
 
-        {/* Editor Panel */}
-        <Card className="flex flex-col overflow-hidden">
-          <CardHeader className="pb-2 px-3 shrink-0 flex flex-row items-center justify-between gap-2 space-y-0">
-            <CardTitle className="text-base text-foreground">Prompt Editor</CardTitle>
-            {promptType === 'paid-prompt' && (
-              <Button
-                onClick={createNewEmptyVariable}
-                size="sm"
-                variant="default"
-                className="shrink-0"
-                data-testid="button-add-variable-desktop"
-              >
-                <Plus className="h-3 w-3 mr-1" />
-                Variable
-              </Button>
-            )}
+        <Card className="flex flex-col overflow-hidden min-h-0 min-w-0 md:snap-start md:shrink-0 md:w-[88vw] md:max-w-[760px] lg:w-auto lg:max-w-none lg:shrink">
+          <CardHeader className="pb-2 px-4 shrink-0 flex flex-row items-center justify-between gap-2 space-y-0">
+            <CardTitle className="text-base">Prompt Editor</CardTitle>
+            <div className="flex items-center gap-2">
+              {promptType === "paid-prompt" && (
+                <Button
+                  onClick={() => {
+                    const createdId = createNewEmptyVariable(caretPosition);
+                    if (createdId) {
+                      setSelectedVariableId(createdId);
+                      setOpenVariables([createdId]);
+                      const element = document.getElementById(
+                        `variable-${createdId}`
+                      );
+                      if (element) {
+                        element.scrollIntoView({
+                          behavior: "smooth",
+                          block: "center",
+                        });
+                      }
+                    }
+                  }}
+                  size="sm"
+                  variant="default"
+                  data-testid="button-add-variable-desktop"
+                >
+                  <Plus className="h-3 w-3 mr-1" />
+                  Add
+                </Button>
+              )}
+            </div>
           </CardHeader>
-          <CardContent className="flex-1 min-h-0 flex flex-col gap-2 px-3 pb-3 relative">
+
+          <CardContent className="flex-1 min-h-0 flex flex-col gap-2 px-4 pb-4">
             <div
               ref={editorContainerRef}
-              className="relative flex-1 border border-border rounded-md min-h-[200px]"
+              className="relative flex-1 rounded-lg min-h-[240px] border bg-background"
               onClick={() => textareaRef.current?.focus()}
-              style={{ resize: 'vertical', overflow: 'hidden' }}
+              style={{ resize: "vertical", overflow: "hidden" }}
             >
               <div
-                className="absolute inset-0 font-mono text-sm whitespace-pre-wrap pointer-events-none overflow-hidden select-none text-white"
+                className="absolute inset-0 font-mono text-sm whitespace-pre-wrap pointer-events-none overflow-hidden select-none text-foreground"
                 style={{
-                  wordBreak: 'break-word',
-                  overflowWrap: 'anywhere',
-                  padding: '8px 12px',
-                  lineHeight: '1.625',
-                  boxSizing: 'border-box'
+                  wordBreak: "break-word",
+                  overflowWrap: "anywhere",
+                  padding: "8px 12px",
+                  lineHeight: "1.625",
+                  boxSizing: "border-box",
                 }}
               >
                 {prompt.split(/(\[[^\]]+\])/).map((part, index) => {
                   const match = part.match(/\[([^\]]+)\]/);
                   if (match) {
                     const varName = match[1];
-                    const variable = variables.find(v => v.name === varName);
+                    const variable = variables.find((v) => v.name === varName);
                     if (variable) {
                       const isOpen = openVariables.includes(variable.id);
                       return (
-                        <span key={index} className={`select-none cursor-pointer pointer-events-auto ${isOpen ? 'text-orange-400 dark:text-orange-300' : 'text-teal-400 dark:text-teal-300'}`}
+                        <span
+                          key={index}
+                          className={`select-none cursor-pointer pointer-events-auto ${isOpen ? "text-primary" : "text-primary/80"}`}
                           onClick={(e) => {
                             e.preventDefault();
-                            setOpenVariables([...openVariables, variable.id]);
-                            const element = document.getElementById(`variable-${variable.id}`);
+                            setSelectedVariableId(variable.id);
+                            setOpenVariables([variable.id]);
+                            const element = document.getElementById(
+                              `variable-${variable.id}`
+                            );
                             if (element) {
-                              element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                              element.scrollIntoView({
+                                behavior: "smooth",
+                                block: "center",
+                              });
                             }
                           }}
                           onMouseDown={(e) => e.preventDefault()}
                           data-testid={`badge-inline-variable-${variable.id}`}
-                        >[{varName}]</span>
+                        >
+                          [{varName}]
+                        </span>
                       );
                     }
                   }
-                  return <span key={index} className="select-none">{part}</span>;
+
+                  return (
+                    <span key={index} className="select-none">
+                      {part}
+                    </span>
+                  );
                 })}
               </div>
+
               <Textarea
                 ref={textareaRef}
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
-                onSelect={handleTextSelection}
+                onSelect={(e) => {
+                  setCaretPosition(e.currentTarget.selectionStart);
+                  handleTextSelection();
+                }}
                 onKeyDown={(e) => {
                   if (!textareaRef.current) return;
                   const pos = textareaRef.current.selectionStart;
 
-                  // Check if cursor is inside a variable
                   const beforeCursor = prompt.substring(0, pos);
                   const afterCursor = prompt.substring(pos);
 
-                  const openBracketBefore = beforeCursor.lastIndexOf('[');
-                  const closeBracketBefore = beforeCursor.lastIndexOf(']');
-                  const closeBracketAfter = afterCursor.indexOf(']');
+                  const openBracketBefore = beforeCursor.lastIndexOf("[");
+                  const closeBracketBefore = beforeCursor.lastIndexOf("]");
+                  const closeBracketAfter = afterCursor.indexOf("]");
 
-                  // If cursor is inside [variable]
-                  if (openBracketBefore > closeBracketBefore && closeBracketAfter !== -1) {
+                  if (
+                    openBracketBefore > closeBracketBefore &&
+                    closeBracketAfter !== -1
+                  ) {
                     const newPos = pos + closeBracketAfter + 1;
                     e.preventDefault();
                     textareaRef.current.setSelectionRange(newPos, newPos);
                   }
                 }}
-                onClick={(e) => {
+                onClick={() => {
                   if (!textareaRef.current) return;
 
-                  // Clear selection on single click
                   const start = textareaRef.current.selectionStart;
                   const end = textareaRef.current.selectionEnd;
                   if (start === end) {
                     clearSelection();
                   }
 
+                  setCaretPosition(start);
+
                   setTimeout(() => {
                     if (!textareaRef.current) return;
                     const pos = textareaRef.current.selectionStart;
 
-                    // Find if cursor is inside a variable
                     const beforeCursor = prompt.substring(0, pos);
                     const afterCursor = prompt.substring(pos);
 
-                    const openBracketBefore = beforeCursor.lastIndexOf('[');
-                    const closeBracketBefore = beforeCursor.lastIndexOf(']');
-                    const closeBracketAfter = afterCursor.indexOf(']');
+                    const openBracketBefore = beforeCursor.lastIndexOf("[");
+                    const closeBracketBefore = beforeCursor.lastIndexOf("]");
+                    const closeBracketAfter = afterCursor.indexOf("]");
 
-                    // If cursor is inside [variable]
-                    if (openBracketBefore > closeBracketBefore && closeBracketAfter !== -1) {
-                      // Move cursor to after the ]
+                    if (
+                      openBracketBefore > closeBracketBefore &&
+                      closeBracketAfter !== -1
+                    ) {
                       const newPos = pos + closeBracketAfter + 1;
                       textareaRef.current.setSelectionRange(newPos, newPos);
                     }
@@ -1086,415 +1250,510 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
                 }}
                 className="absolute inset-0 font-mono text-sm bg-transparent text-transparent caret-foreground z-[1] selection:bg-primary/30 whitespace-pre-wrap overflow-hidden border-0 shadow-none ring-0 focus:ring-0 focus:outline-none focus-visible:ring-0 rounded-none"
                 style={{
-                  wordBreak: 'break-word',
-                  overflowWrap: 'anywhere',
-                  resize: 'none',
-                  padding: '8px 12px',
-                  lineHeight: '1.625',
-                  boxSizing: 'border-box'
+                  wordBreak: "break-word",
+                  overflowWrap: "anywhere",
+                  resize: "none",
+                  padding: "8px 12px",
+                  lineHeight: "1.625",
+                  boxSizing: "border-box",
                 }}
                 onMouseUp={handleTextSelection}
-                onKeyUp={handleTextSelection}
+                onKeyUp={() => {
+                  if (textareaRef.current) {
+                    setCaretPosition(textareaRef.current.selectionStart);
+                  }
+                  handleTextSelection();
+                }}
                 placeholder="Write your prompt here... Use [VariableName] for variables"
                 data-testid="textarea-prompt"
               />
 
-              {/* Floating "+ Variable" button - inside container with higher z-index */}
-              {promptType === 'paid-prompt' && selectedText && selectionRange && buttonPosition && (
-                <Button
-                  ref={buttonRef}
-                  size="sm"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    createVariableFromSelection();
-                  }}
-                  onMouseDown={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                  }}
-                  className="absolute shadow-xl cursor-pointer bg-primary text-primary-foreground border-2 border-background pointer-events-auto"
-                  style={{
-                    top: `${buttonPosition.top}px`,
-                    left: `${buttonPosition.left}px`,
-                    zIndex: 50,
-                  }}
-                  data-testid="button-create-variable"
-                >
-                  <Plus className="h-3 w-3 mr-1" />
-                  Variable
-                </Button>
-              )}
+              {promptType === "paid-prompt" &&
+                selectedText &&
+                selectionRange &&
+                buttonPosition && (
+                  <Button
+                    ref={buttonRef}
+                    size="sm"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      createVariableFromSelection();
+                    }}
+                    onMouseDown={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                    }}
+                    className="absolute shadow-xl cursor-pointer bg-primary text-primary-foreground border-2 border-background pointer-events-auto"
+                    style={{
+                      top: `${buttonPosition.top}px`,
+                      left: `${buttonPosition.left}px`,
+                      zIndex: 50,
+                    }}
+                    data-testid="button-create-variable"
+                  >
+                    <Plus className="h-3 w-3 mr-1" />
+                    Variable
+                  </Button>
+                )}
             </div>
 
-            <div className="flex flex-wrap gap-1">
-              {variables.length > 0 && (
-                <div className="flex flex-wrap gap-1 items-center">
-                  <span className="text-xs text-foreground">Variables:</span>
-                  {variables.map((variable) => (
-                    <Badge
-                      key={variable.id}
-                      className="text-xs cursor-pointer hover-elevate bg-teal-500/20 text-teal-700 dark:text-teal-300 border border-teal-500/30 rounded-full px-2.5 py-0.5"
-                      onClick={() => {
-                        setOpenVariables([...openVariables, variable.id]);
-                        const element = document.getElementById(`variable-${variable.id}`);
-                        if (element) {
-                          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                        }
-                      }}
-                      data-testid={`badge-variable-link-${variable.id}`}
-                    >
-                      [{variable.name}]
-                    </Badge>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <Card className="p-2 shrink-0">
-              <h4 className="text-xs font-medium text-foreground mb-1.5">Preview</h4>
-              <div className="font-mono text-xs whitespace-pre-wrap break-words text-foreground max-h-[150px] overflow-y-auto">
+            <div className="border-t border-border/50 pt-3">
+              <div className="text-xs font-medium text-muted-foreground">
+                Preview
+              </div>
+              <div className="mt-2 rounded-md bg-background/40 p-3 font-mono text-xs whitespace-pre-wrap break-words max-h-[150px] overflow-y-auto">
                 {renderPreviewWithDefaults()}
               </div>
-            </Card>
+            </div>
           </CardContent>
         </Card>
 
-        {/* Variables Panel */}
-        <Card className="flex flex-col overflow-hidden" id="desktop-variables-panel">
-          <CardHeader className="pb-2 px-3 shrink-0">
-            <CardTitle className="text-base text-foreground">Variables</CardTitle>
-          </CardHeader>
-          <CardContent className="flex-1 min-h-0 px-3 pb-3">
-            <ScrollArea className="h-full pr-4">
-              {variables.length === 0 ? (
-                <p className="text-sm text-foreground text-center py-8">
-                  No variables yet.
-                  <br />
-                  Select text or use [Name]
-                </p>
-              ) : (
-                <Accordion type="multiple" value={openVariables} onValueChange={setOpenVariables}>
-                  {variables.map((variable) => (
-                    <AccordionItem
-                      key={variable.id}
-                      value={variable.id}
-                      id={`variable-${variable.id}`}
-                    >
-                      <AccordionTrigger className="hover-elevate px-2 rounded" data-testid={`accordion-trigger-${variable.id}`}>
-                        <div className="flex items-center gap-2 flex-1">
-                          <span className="text-sm font-medium text-foreground">{variable.label}</span>
-                          <Badge variant="outline" className="text-xs">{variable.type}</Badge>
-                        </div>
-                      </AccordionTrigger>
-                      <AccordionContent className="px-1.5 pt-1 space-y-1">
-                        <div className="flex items-start gap-1">
-                          <div className="flex-1">
-                            <Label className="text-xs text-foreground">Label</Label>
-                            <Input
-                              value={variable.label}
-                              onChange={(e) => updateVariable(variable.id, { label: e.target.value })}
-                              className="h-7 text-xs mt-0.5"
-                              placeholder="Label"
-                              disabled={promptType === 'showcase'}
-                              data-testid={`input-label-${variable.id}`}
-                            />
+        {promptType === "paid-prompt" && (
+          <Card className="flex flex-col overflow-hidden min-h-0 min-w-0 md:snap-start md:shrink-0 md:w-[88vw] md:max-w-[520px] lg:w-auto lg:max-w-none lg:shrink">
+            <CardHeader className="pb-2 px-4 shrink-0">
+              <div className="flex items-center justify-between gap-2">
+                <CardTitle className="text-sm">Variables</CardTitle>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    const createdId = createNewEmptyVariable(caretPosition);
+                    if (createdId) {
+                      setSelectedVariableId(createdId);
+                      setOpenVariables([createdId]);
+                      const element = document.getElementById(
+                        `variable-${createdId}`
+                      );
+                      if (element) {
+                        element.scrollIntoView({
+                          behavior: "smooth",
+                          block: "center",
+                        });
+                      }
+                    }
+                  }}
+                  disabled={isShowcase}
+                  data-testid="button-add-variable-inspector"
+                >
+                  <Plus className="h-3 w-3 mr-1" />
+                  Add
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent className="flex-1 min-h-0 px-4 pb-4">
+              <ScrollArea className="h-full pr-2">
+                {variables.length === 0 ? (
+                  <p className="text-sm text-muted-foreground text-center py-10">
+                    No variables yet.
+                    <br />
+                    Select text or use [Name]
+                  </p>
+                ) : (
+                  <Accordion
+                    type="multiple"
+                    value={openVariables}
+                    onValueChange={setOpenVariables}
+                  >
+                    {variables.map((variable) => (
+                      <AccordionItem
+                        key={variable.id}
+                        value={variable.id}
+                        id={`variable-${variable.id}`}
+                      >
+                        <AccordionTrigger
+                          className={
+                            selectedVariableId === variable.id
+                              ? "text-primary"
+                              : undefined
+                          }
+                          data-testid={`accordion-trigger-${variable.id}`}
+                        >
+                          <div className="flex items-center gap-2 flex-1">
+                            <span className="text-sm font-medium">
+                              {variable.label}
+                            </span>
+                            <Badge variant="outline" className="text-xs">
+                              {variable.type}
+                            </Badge>
                           </div>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button variant="ghost" size="icon" className="h-7 w-7 mt-4">
-                                <HelpCircle className="h-3.5 w-3.5" />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent side="left" className="w-64">
-                              <Textarea
-                                value={variable.description}
-                                onChange={(e) => updateVariable(variable.id, { description: e.target.value })}
-                                placeholder="Add description..."
-                                className="min-h-[60px] text-xs"
-                                disabled={promptType === 'showcase'}
-                                data-testid={`input-description-${variable.id}`}
+                        </AccordionTrigger>
+                        <AccordionContent className="pt-2 space-y-2">
+                          <div className="flex items-start gap-2">
+                            <div className="flex-1">
+                              <Label className="text-xs">Label</Label>
+                              <Input
+                                value={variable.label}
+                                onChange={(e) =>
+                                  updateVariable(variable.id, {
+                                    label: e.target.value,
+                                  })
+                                }
+                                className="h-8 text-sm mt-1"
+                                placeholder="Label"
+                                disabled={isShowcase}
+                                data-testid={`input-label-${variable.id}`}
                               />
-                            </TooltipContent>
-                          </Tooltip>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-7 w-7 mt-4"
-                            onClick={() => deleteVariable(variable.id)}
-                            disabled={promptType === 'showcase'}
-                            data-testid={`button-delete-${variable.id}`}
-                          >
-                            <Trash2 className="h-3.5 w-3.5 text-destructive" />
-                          </Button>
-                        </div>
-
-                        <div className="space-y-0">
-                          <Label className="text-xs text-foreground">Internal Name</Label>
-                          <Badge variant="secondary" className="text-xs font-mono">
-                            {variable.name}
-                          </Badge>
-                        </div>
-
-                        <div className="space-y-0">
-                          <Label className="text-xs text-foreground">Type</Label>
-                          <Select
-                            value={variable.type}
-                            onValueChange={(value) => updateVariable(variable.id, { type: value as VariableType })}
-                            disabled={promptType === 'showcase'}
-                          >
-                            <SelectTrigger className="h-7 text-xs" data-testid={`select-type-${variable.id}`}>
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="text">Text</SelectItem>
-                              <SelectItem value="checkbox">Checkbox</SelectItem>
-                              <SelectItem value="multi-select">Multi-Select</SelectItem>
-                              <SelectItem value="single-select">Single-Select</SelectItem>
-                              <SelectItem value="slider">Slider</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-
-                        {variable.type === 'text' && (
-                          <div className="space-y-0">
-                            <Label className="text-xs text-foreground">Default Value</Label>
-                            <Textarea
-                              value={variable.defaultValue as string}
-                              onChange={(e) => updateVariable(variable.id, { defaultValue: e.target.value })}
-                              placeholder="Default Value"
-                              className="min-h-8 text-xs resize-y"
-                              disabled={promptType === 'showcase'}
-                              data-testid={`input-default-${variable.id}`}
-                            />
-                          </div>
-                        )}
-
-                        {variable.type === 'checkbox' && (
-                          <div className="flex items-center space-x-2">
-                            <Checkbox
-                              id={`checkbox-${variable.id}`}
-                              checked={variable.defaultValue as boolean}
-                              onCheckedChange={(checked) => updateVariable(variable.id, { defaultValue: checked })}
-                              disabled={promptType === 'showcase'}
-                              data-testid={`checkbox-default-${variable.id}`}
-                            />
-                            <Label htmlFor={`checkbox-${variable.id}`} className="text-xs text-foreground">
-                              Active by default
-                            </Label>
-                          </div>
-                        )}
-
-                        {(variable.type === 'multi-select' || variable.type === 'single-select') && (
-                          <div className="space-y-1">
-                            <div className="grid grid-cols-2 gap-2">
-                              <Label className="text-xs text-foreground">Options</Label>
-                              <Label className="text-xs text-foreground text-right">Default</Label>
                             </div>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 mt-6"
+                              onClick={() => deleteVariable(variable.id)}
+                              disabled={isShowcase}
+                              data-testid={`button-delete-${variable.id}`}
+                            >
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                          </div>
+
+                          <div className="space-y-1">
+                            <Label className="text-xs">Internal Name</Label>
+                            <Badge
+                              variant="secondary"
+                              className="text-xs font-mono"
+                            >
+                              [{variable.name}]
+                            </Badge>
+                          </div>
+
+                          <div className="space-y-1">
+                            <Label className="text-xs">Type</Label>
+                            <Select
+                              value={variable.type}
+                              onValueChange={(value) =>
+                                updateVariable(variable.id, {
+                                  type: value as VariableType,
+                                })
+                              }
+                              disabled={isShowcase}
+                            >
+                              <SelectTrigger
+                                className="h-8 text-sm"
+                                data-testid={`select-type-${variable.id}`}
+                              >
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="text">Text</SelectItem>
+                                <SelectItem value="checkbox">
+                                  Checkbox
+                                </SelectItem>
+                                <SelectItem value="multi-select">
+                                  Multi-Select
+                                </SelectItem>
+                                <SelectItem value="single-select">
+                                  Single-Select
+                                </SelectItem>
+                                <SelectItem value="slider">Slider</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+
+                          <div className="flex items-center gap-4 pt-1 flex-wrap">
+                            <div className="flex items-center space-x-2">
+                              <Checkbox
+                                id={`required-${variable.id}`}
+                                checked={variable.required}
+                                onCheckedChange={(checked) =>
+                                  updateVariable(variable.id, {
+                                    required: checked as boolean,
+                                  })
+                                }
+                                data-testid={`checkbox-required-${variable.id}`}
+                              />
+                              <Label
+                                htmlFor={`required-${variable.id}`}
+                                className="text-sm"
+                              >
+                                Required
+                              </Label>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <Checkbox
+                                id={`allow-ref-image-${variable.id}`}
+                                checked={variable.allowReferenceImage || false}
+                                onCheckedChange={(checked) =>
+                                  updateVariable(variable.id, {
+                                    allowReferenceImage: checked as boolean,
+                                  })
+                                }
+                                data-testid={`checkbox-allow-ref-image-${variable.id}`}
+                              />
+                              <Label
+                                htmlFor={`allow-ref-image-${variable.id}`}
+                                className="text-sm"
+                              >
+                                allow reference image
+                              </Label>
+                            </div>
+                          </div>
+
+                          {variable.type === "text" && (
                             <div className="space-y-1">
-                              {variable.options?.map((option, index) => {
-                                const isDefault = (variable.defaultOptionIndex ?? 0) === index;
-                                return (
-                                  <Card key={index} className={`p-1.5 ${isDefault ? 'border-teal-500/50 bg-teal-500/5' : ''}`}>
-                                    <div className="space-y-1">
-                                      <div className="flex items-center gap-1">
-                                        <div className="flex flex-col items-center gap-0.5 mt-4">
+                              <Label className="text-xs">Default Value</Label>
+                              <Textarea
+                                value={(variable.defaultValue as string) || ""}
+                                onChange={(e) =>
+                                  updateVariable(variable.id, {
+                                    defaultValue: e.target.value,
+                                  })
+                                }
+                                placeholder="Default Value"
+                                className="min-h-10 text-sm resize-y"
+                                disabled={isShowcase}
+                                data-testid={`input-default-${variable.id}`}
+                              />
+                            </div>
+                          )}
+
+                          {variable.type === "checkbox" && (
+                            <div className="flex items-center space-x-2">
+                              <Checkbox
+                                id={`checkbox-${variable.id}`}
+                                checked={Boolean(variable.defaultValue)}
+                                onCheckedChange={(checked) =>
+                                  updateVariable(variable.id, {
+                                    defaultValue: checked,
+                                  })
+                                }
+                                disabled={isShowcase}
+                                data-testid={`checkbox-default-${variable.id}`}
+                              />
+                              <Label
+                                htmlFor={`checkbox-${variable.id}`}
+                                className="text-sm"
+                              >
+                                Active by default
+                              </Label>
+                            </div>
+                          )}
+
+                          {(variable.type === "multi-select" ||
+                            variable.type === "single-select") && (
+                            <div className="space-y-2">
+                              <Label className="text-xs">Options</Label>
+                              <div className="space-y-2">
+                                {variable.options?.map((option, index) => {
+                                  const isDefault =
+                                    (variable.defaultOptionIndex ?? 0) ===
+                                    index;
+                                  return (
+                                    <Card
+                                      key={index}
+                                      className={
+                                        isDefault
+                                          ? "border-primary/50"
+                                          : undefined
+                                      }
+                                    >
+                                      <CardContent className="p-3 space-y-2">
+                                        <div className="flex items-center gap-2">
                                           <Checkbox
                                             checked={isDefault}
                                             onCheckedChange={(checked) => {
-                                              if (checked) {
-                                                updateVariable(variable.id, { defaultOptionIndex: index });
-                                              }
+                                              if (checked)
+                                                updateVariable(variable.id, {
+                                                  defaultOptionIndex: index,
+                                                });
                                             }}
-                                            disabled={promptType === 'showcase'}
+                                            disabled={isShowcase}
                                             data-testid={`checkbox-default-option-${variable.id}-${index}`}
                                           />
-                                          {isDefault && <span className="text-[9px] text-teal-600 dark:text-teal-400 font-medium">Default</span>}
-                                        </div>
-                                        <div className="flex-1">
-                                          <Label className="text-xs text-foreground">Visible Name</Label>
                                           <Input
                                             value={option.visibleName}
-                                            onChange={(e) => updateOption(variable.id, index, 'visibleName', e.target.value)}
-                                            className="h-7 text-xs mt-0.5"
+                                            onChange={(e) =>
+                                              updateOption(
+                                                variable.id,
+                                                index,
+                                                "visibleName",
+                                                e.target.value
+                                              )
+                                            }
+                                            className="h-8 text-sm"
                                             placeholder="Visible Name"
-                                            disabled={promptType === 'showcase'}
+                                            disabled={isShowcase}
                                             data-testid={`input-option-visible-${variable.id}-${index}`}
                                           />
+                                          <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-8 w-8"
+                                            onClick={() =>
+                                              removeOption(variable.id, index)
+                                            }
+                                            disabled={isShowcase}
+                                            data-testid={`button-remove-option-${variable.id}-${index}`}
+                                          >
+                                            <X className="h-4 w-4" />
+                                          </Button>
                                         </div>
-                                        <Button
-                                          variant="ghost"
-                                          size="icon"
-                                          className="h-7 w-7 mt-4"
-                                          onClick={() => removeOption(variable.id, index)}
-                                          disabled={promptType === 'showcase'}
-                                          data-testid={`button-remove-option-${variable.id}-${index}`}
-                                        >
-                                          <X className="h-3.5 w-3.5" />
-                                        </Button>
-                                      </div>
-                                      <div>
-                                        <Label className="text-xs text-foreground">Prompt Value</Label>
                                         <Textarea
                                           value={option.promptValue}
-                                          onChange={(e) => updateOption(variable.id, index, 'promptValue', e.target.value)}
-                                          className="min-h-[50px] text-xs mt-0.5 resize-y"
+                                          onChange={(e) =>
+                                            updateOption(
+                                              variable.id,
+                                              index,
+                                              "promptValue",
+                                              e.target.value
+                                            )
+                                          }
+                                          className="min-h-[60px] text-sm resize-y"
                                           placeholder="Prompt Value"
-                                          disabled={promptType === 'showcase'}
+                                          disabled={isShowcase}
                                           data-testid={`input-option-prompt-${variable.id}-${index}`}
                                         />
-                                      </div>
-                                    </div>
-                                  </Card>
-                                );
-                              })}
+                                      </CardContent>
+                                    </Card>
+                                  );
+                                })}
 
-                              <Card className="p-1.5 bg-muted/50">
-                                <div className="space-y-1">
-                                  <div>
-                                    <Label className="text-xs text-foreground">Visible Name</Label>
+                                <Card>
+                                  <CardContent className="p-3 space-y-2">
                                     <Input
-                                      value={newOptionInput[variable.id]?.split('|||')[0] || ''}
+                                      value={
+                                        newOptionInput[variable.id]?.split(
+                                          "|||"
+                                        )[0] || ""
+                                      }
                                       onChange={(e) => {
-                                        const currentValue = newOptionInput[variable.id] || '|||';
-                                        const parts = currentValue.split('|||');
+                                        const currentValue =
+                                          newOptionInput[variable.id] || "|||";
+                                        const parts = currentValue.split("|||");
                                         setNewOptionInput({
                                           ...newOptionInput,
-                                          [variable.id]: `${e.target.value}|||${parts[1] || ''}`
+                                          [variable.id]: `${e.target.value}|||${parts[1] || ""}`,
                                         });
                                       }}
-                                      placeholder="e.g. Professional"
-                                      className="h-7 text-xs mt-0.5"
-                                      disabled={promptType === 'showcase'}
+                                      placeholder="Visible Name"
+                                      className="h-8 text-sm"
+                                      disabled={isShowcase}
                                       data-testid={`input-new-option-visible-${variable.id}`}
                                     />
-                                  </div>
-                                  <div>
-                                    <Label className="text-xs text-foreground">Prompt Value</Label>
                                     <Textarea
-                                      value={newOptionInput[variable.id]?.split('|||')[1] || ''}
+                                      value={
+                                        newOptionInput[variable.id]?.split(
+                                          "|||"
+                                        )[1] || ""
+                                      }
                                       onChange={(e) => {
-                                        const currentValue = newOptionInput[variable.id] || '|||';
-                                        const parts = currentValue.split('|||');
+                                        const currentValue =
+                                          newOptionInput[variable.id] || "|||";
+                                        const parts = currentValue.split("|||");
                                         setNewOptionInput({
                                           ...newOptionInput,
-                                          [variable.id]: `${parts[0] || ''}|||${e.target.value}`
+                                          [variable.id]: `${parts[0] || ""}|||${e.target.value}`,
                                         });
                                       }}
-                                      placeholder="e.g. professional, detailed"
-                                      className="min-h-[50px] text-xs mt-0.5 resize-y"
-                                      disabled={promptType === 'showcase'}
+                                      placeholder="Prompt Value"
+                                      className="min-h-[60px] text-sm resize-y"
+                                      disabled={isShowcase}
                                       data-testid={`input-new-option-prompt-${variable.id}`}
                                     />
-                                  </div>
-                                  <Button
-                                    size="sm"
-                                    onClick={() => addOption(variable.id)}
-                                    className="w-full"
-                                    disabled={promptType === 'showcase' || !newOptionInput[variable.id]?.split('|||').every(p => p.trim())}
-                                    data-testid={`button-add-option-${variable.id}`}
-                                  >
-                                    <Plus className="h-4 w-4 mr-1" />
-                                    Add option
-                                  </Button>
+                                    <Button
+                                      size="sm"
+                                      onClick={() => addOption(variable.id)}
+                                      className="w-full"
+                                      disabled={
+                                        isShowcase ||
+                                        !newOptionInput[variable.id]
+                                          ?.split("|||")
+                                          .every((p) => p.trim())
+                                      }
+                                      data-testid={`button-add-option-${variable.id}`}
+                                    >
+                                      <Plus className="h-4 w-4 mr-1" />
+                                      Add option
+                                    </Button>
+                                  </CardContent>
+                                </Card>
+                              </div>
+                            </div>
+                          )}
+
+                          {variable.type === "slider" && (
+                            <div className="space-y-2">
+                              <div className="grid grid-cols-2 gap-2">
+                                <div>
+                                  <Label className="text-xs">Min</Label>
+                                  <Input
+                                    type="number"
+                                    value={variable.min || 0}
+                                    onChange={(e) =>
+                                      updateVariable(variable.id, {
+                                        min: parseInt(e.target.value),
+                                      })
+                                    }
+                                    className="h-8 text-sm"
+                                    disabled={isShowcase}
+                                    data-testid={`input-min-${variable.id}`}
+                                  />
                                 </div>
-                              </Card>
-                            </div>
-                          </div>
-                        )}
-
-                        {variable.type === 'slider' && (
-                          <div className="space-y-1">
-                            <div className="grid grid-cols-2 gap-1.5">
-                              <div className="space-y-0">
-                                <Label className="text-xs text-foreground">Min</Label>
-                                <Input
-                                  type="number"
-                                  value={variable.min || 0}
-                                  onChange={(e) => updateVariable(variable.id, { min: parseInt(e.target.value) })}
-                                  className="h-7 text-xs"
-                                  disabled={promptType === 'showcase'}
-                                  data-testid={`input-min-${variable.id}`}
+                                <div>
+                                  <Label className="text-xs">Max</Label>
+                                  <Input
+                                    type="number"
+                                    value={variable.max || 100}
+                                    onChange={(e) =>
+                                      updateVariable(variable.id, {
+                                        max: parseInt(e.target.value),
+                                      })
+                                    }
+                                    className="h-8 text-sm"
+                                    disabled={isShowcase}
+                                    data-testid={`input-max-${variable.id}`}
+                                  />
+                                </div>
+                              </div>
+                              <div>
+                                <Label className="text-xs">
+                                  Default: {variable.defaultValue as number}
+                                </Label>
+                                <Slider
+                                  value={[Number(variable.defaultValue) || 0]}
+                                  onValueChange={([value]) =>
+                                    updateVariable(variable.id, {
+                                      defaultValue: value,
+                                    })
+                                  }
+                                  min={variable.min || 0}
+                                  max={variable.max || 100}
+                                  step={1}
+                                  disabled={isShowcase}
+                                  data-testid={`slider-default-${variable.id}`}
                                 />
                               </div>
-                              <div className="space-y-0">
-                                <Label className="text-xs text-foreground">Max</Label>
-                                <Input
-                                  type="number"
-                                  value={variable.max || 100}
-                                  onChange={(e) => updateVariable(variable.id, { max: parseInt(e.target.value) })}
-                                  className="h-7 text-xs"
-                                  disabled={promptType === 'showcase'}
-                                  data-testid={`input-max-${variable.id}`}
-                                />
-                              </div>
                             </div>
-                            <div className="space-y-0">
-                              <Label className="text-xs text-foreground">Default: {variable.defaultValue as number}</Label>
-                              <Slider
-                                value={[variable.defaultValue as number || 0]}
-                                onValueChange={([value]) => updateVariable(variable.id, { defaultValue: value })}
-                                min={variable.min || 0}
-                                max={variable.max || 100}
-                                step={1}
-                                disabled={promptType === 'showcase'}
-                                data-testid={`slider-default-${variable.id}`}
-                              />
-                            </div>
-                          </div>
-                        )}
+                          )}
 
-                        <div className="flex items-center gap-4 pt-1">
-                          <div className="flex items-center space-x-2">
-                            <Checkbox
-                              id={`required-${variable.id}`}
-                              checked={variable.required}
-                              onCheckedChange={(checked) => updateVariable(variable.id, { required: checked as boolean })}
-                              data-testid={`checkbox-required-${variable.id}`}
-                            />
-                            <Label htmlFor={`required-${variable.id}`} className="text-xs text-foreground">
-                              Required
-                            </Label>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <Checkbox
-                              id={`allow-ref-image-${variable.id}`}
-                              checked={variable.allowReferenceImage || false}
-                              onCheckedChange={(checked) => updateVariable(variable.id, { allowReferenceImage: checked as boolean })}
-                              data-testid={`checkbox-allow-ref-image-${variable.id}`}
-                            />
-                            <Label htmlFor={`allow-ref-image-${variable.id}`} className="text-xs text-foreground">
-                              allow reference image
-                            </Label>
-                          </div>
-                        </div>
+                          <Button
+                            variant="default"
+                            size="sm"
+                            onClick={() => {
+                              setOpenVariables(
+                                openVariables.filter((id) => id !== variable.id)
+                              );
+                            }}
+                            className="w-full"
+                            data-testid={`button-save-variable-${variable.id}`}
+                          >
+                            Done
+                          </Button>
+                        </AccordionContent>
+                      </AccordionItem>
+                    ))}
+                  </Accordion>
+                )}
+              </ScrollArea>
+            </CardContent>
+          </Card>
+        )}
 
-                        <Button
-                          variant="default"
-                          size="sm"
-                          onClick={() => {
-                            setOpenVariables(openVariables.filter(id => id !== variable.id));
-                          }}
-                          className="w-full mt-2"
-                          data-testid={`button-save-variable-${variable.id}`}
-                        >
-                          Done
-                        </Button>
-                      </AccordionContent>
-                    </AccordionItem>
-                  ))}
-                </Accordion>
-              )}
-            </ScrollArea>
-          </CardContent>
-        </Card>
-
-        {/* Generation Panel */}
-        <Card className="flex flex-col overflow-hidden">
-          <CardHeader className="pb-2 px-3 shrink-0">
-            <CardTitle className="text-sm text-foreground">Generation</CardTitle>
+        <Card className="flex flex-col overflow-hidden min-h-0 min-w-0 md:snap-start md:shrink-0 md:w-[88vw] md:max-w-[520px] lg:w-auto lg:max-w-none lg:shrink">
+          <CardHeader className="pb-2 px-4 shrink-0">
+            <CardTitle className="text-sm">Generation</CardTitle>
           </CardHeader>
-          <CardContent className="flex-1 min-h-0 flex flex-col gap-2 px-3 pb-3">
+          <CardContent className="flex-1 min-h-0 flex flex-col gap-3 px-4 pb-4">
             {generatedImage ? (
               <div className="flex-1 flex flex-col">
                 <img
@@ -1505,38 +1764,43 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
                 />
               </div>
             ) : (
-              <div className="flex-1 flex items-center justify-center text-center text-foreground text-sm">
+              <div className="flex-1 flex items-center justify-center text-center text-muted-foreground text-sm">
                 No generated image yet.
                 <br />
                 Click Generate to create one.
               </div>
             )}
 
-            <div className="space-y-2 mt-auto">
-              <Button
-                onClick={handleGenerate}
-                disabled={isGenerating}
-                className="w-full"
-                data-testid="button-generate"
-              >
-                {isGenerating ? 'Generating...' : 'Generate'}
-              </Button>
-              <Button
-                variant="outline"
-                onClick={handleSubmit}
-                disabled={isGenerating || savePromptMutation.isPending}
-                className="w-full"
-                data-testid="button-submit"
-              >
-                {savePromptMutation.isPending ? 'Releasing...' : 'Release'}
-              </Button>
+            <div className="sticky bottom-0 pt-3 bg-background/80 backdrop-blur border-t border-border/50">
+              <div className="space-y-2">
+                <Button
+                  onClick={handleGenerate}
+                  disabled={isGenerating}
+                  className="w-full"
+                  data-testid="button-generate"
+                >
+                  {isGenerating ? "Generating..." : "Generate"}
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={handleSubmit}
+                  disabled={isGenerating || savePromptMutation.isPending}
+                  className="w-full"
+                  data-testid="button-submit"
+                >
+                  {savePromptMutation.isPending ? "Releasing..." : "Release"}
+                </Button>
+              </div>
             </div>
           </CardContent>
         </Card>
       </div>
 
       {/* Mobile View */}
-      <div ref={mobileContainerRef} className="lg:hidden flex flex-col h-[calc(100vh-8rem)] overflow-y-auto overflow-x-hidden w-full max-w-full">
+      <div
+        ref={mobileContainerRef}
+        className="lg:hidden flex flex-col h-[calc(100vh-8rem)] overflow-y-auto overflow-x-hidden w-full max-w-full"
+      >
         {/* Header - inside scrollable area */}
         <div className="shrink-0 flex items-center gap-4 px-6 py-4 border-b w-full max-w-full overflow-x-hidden">
           {onBack && (
@@ -1545,21 +1809,23 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
               size="sm"
               onClick={onBack}
               data-testid="button-back"
-              className="text-foreground"
+              className="text-white"
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back
             </Button>
           )}
           <div className="flex-1 min-w-0">
-            <h1 className="text-lg font-semibold text-foreground truncate">Create Prompt Template</h1>
-            <p className="text-xs text-foreground truncate">
+            <h1 className="text-lg font-semibold text-white truncate">
+              Create Prompt Template
+            </h1>
+            <p className="text-xs text-white truncate">
               Design reusable prompt templates with customizable variables
             </p>
           </div>
         </div>
 
-        {mobileTab === 'settings' && (
+        {mobileTab === "settings" && (
           <div className="w-full max-w-full overflow-x-hidden">
             <PromptSettingsPanel
               settings={settingsData}
@@ -1569,7 +1835,7 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
           </div>
         )}
 
-        {mobileTab === 'editor' && (
+        {mobileTab === "editor" && (
           <div className="flex flex-col w-full max-w-full overflow-x-hidden">
             {/* Sticky Toolbar with Variables Button */}
             <div className="sticky top-0 z-10 bg-background border-b px-3 py-2 flex items-center justify-end w-full max-w-full shrink-0">
@@ -1597,22 +1863,28 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
                 <div
                   className="absolute inset-0 font-mono text-sm whitespace-pre-wrap pointer-events-none overflow-hidden select-none text-white"
                   style={{
-                    wordBreak: 'break-word',
-                    overflowWrap: 'anywhere',
-                    padding: '8px 12px',
-                    lineHeight: '1.625',
-                    boxSizing: 'border-box'
+                    wordBreak: "break-word",
+                    overflowWrap: "anywhere",
+                    padding: "8px 12px",
+                    lineHeight: "1.625",
+                    boxSizing: "border-box",
                   }}
                 >
                   {prompt.split(/(\[[^\]]+\])/).map((part, index) => {
                     const match = part.match(/\[([^\]]+)\]/);
                     if (match) {
                       const varName = match[1];
-                      const variable = variables.find(v => v.name === varName);
+                      const variable = variables.find(
+                        (v) => v.name === varName
+                      );
                       if (variable) {
-                        const isOpen = editingVariableId === variable.id || openVariables.includes(variable.id);
+                        const isOpen =
+                          editingVariableId === variable.id ||
+                          openVariables.includes(variable.id);
                         return (
-                          <span key={index} className={`select-none cursor-pointer pointer-events-auto ${isOpen ? 'text-orange-400 dark:text-orange-300' : 'text-teal-400 dark:text-teal-300'}`}
+                          <span
+                            key={index}
+                            className={`select-none cursor-pointer pointer-events-auto ${isOpen ? "text-orange-400 dark:text-orange-300" : "text-teal-400 dark:text-teal-300"}`}
                             onClick={(e) => {
                               e.preventDefault();
                               setEditingVariableId(variable.id);
@@ -1620,11 +1892,17 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
                             }}
                             onMouseDown={(e) => e.preventDefault()}
                             data-testid={`badge-inline-variable-${variable.id}`}
-                          >[{varName}]</span>
+                          >
+                            [{varName}]
+                          </span>
                         );
                       }
                     }
-                    return <span key={index} className="select-none">{part}</span>;
+                    return (
+                      <span key={index} className="select-none">
+                        {part}
+                      </span>
+                    );
                   })}
                 </div>
 
@@ -1640,10 +1918,16 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
                       const regex = /\[([^\]]+)\]/g;
                       let match;
                       while ((match = regex.exec(prompt)) !== null) {
-                        if (pos > match.index && pos < match.index + match[0].length) {
+                        if (
+                          pos > match.index &&
+                          pos < match.index + match[0].length
+                        ) {
                           const newPos = match.index + match[0].length;
                           if (textareaRef.current) {
-                            textareaRef.current.setSelectionRange(newPos, newPos);
+                            textareaRef.current.setSelectionRange(
+                              newPos,
+                              newPos
+                            );
                           }
                           break;
                         }
@@ -1651,16 +1935,30 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
                     }, 0);
                   }}
                   onKeyUp={(e) => {
-                    if (e.key === 'ArrowLeft' || e.key === 'ArrowRight' || e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                    if (
+                      e.key === "ArrowLeft" ||
+                      e.key === "ArrowRight" ||
+                      e.key === "ArrowUp" ||
+                      e.key === "ArrowDown"
+                    ) {
                       const pos = textareaRef.current?.selectionStart ?? 0;
                       const regex = /\[([^\]]+)\]/g;
                       let match;
                       while ((match = regex.exec(prompt)) !== null) {
-                        if (pos > match.index && pos < match.index + match[0].length) {
-                          const newPos = e.key === 'ArrowLeft' || e.key === 'ArrowUp' ? match.index : match.index + match[0].length;
+                        if (
+                          pos > match.index &&
+                          pos < match.index + match[0].length
+                        ) {
+                          const newPos =
+                            e.key === "ArrowLeft" || e.key === "ArrowUp"
+                              ? match.index
+                              : match.index + match[0].length;
                           setTimeout(() => {
                             if (textareaRef.current) {
-                              textareaRef.current.setSelectionRange(newPos, newPos);
+                              textareaRef.current.setSelectionRange(
+                                newPos,
+                                newPos
+                              );
                             }
                           }, 0);
                           break;
@@ -1671,12 +1969,12 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
                   placeholder="Write your prompt... Select text to create variables or use [VariableName] syntax."
                   className="absolute inset-0 w-full font-mono text-sm resize-none bg-transparent text-transparent caret-white focus:outline-none focus:ring-0 border-0 shadow-none ring-0 focus-visible:ring-0 rounded-none whitespace-pre-wrap overflow-hidden selection:bg-primary/20"
                   style={{
-                    wordBreak: 'break-word',
-                    overflowWrap: 'anywhere',
-                    caretColor: 'white',
-                    padding: '8px 12px',
-                    lineHeight: '1.625',
-                    boxSizing: 'border-box'
+                    wordBreak: "break-word",
+                    overflowWrap: "anywhere",
+                    caretColor: "white",
+                    padding: "8px 12px",
+                    lineHeight: "1.625",
+                    boxSizing: "border-box",
                   }}
                   data-testid="textarea-prompt"
                 />
@@ -1693,7 +1991,8 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
                     data-testid="button-create-from-selection"
                   >
                     <Plus className="h-4 w-4 mr-2" />
-                    Create Variable: "{selectedText.slice(0, 20)}{selectedText.length > 20 ? '...' : ''}"
+                    Variable erstellen: "{selectedText.slice(0, 20)}
+                    {selectedText.length > 20 ? "..." : ""}"
                   </Button>
                 )}
               </div>
@@ -1701,7 +2000,7 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
           </div>
         )}
 
-        {mobileTab === 'generation' && (
+        {mobileTab === "generation" && (
           <div className="px-3 pt-3 pb-3 flex flex-col w-full max-w-full overflow-x-hidden">
             {generatedImage ? (
               <div className="flex-1 flex flex-col">
@@ -1714,7 +2013,7 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
               </div>
             ) : (
               <div className="flex-1 flex items-center justify-center text-foreground text-sm">
-                No image generated yet
+                Noch kein Bild generiert
               </div>
             )}
 
@@ -1725,7 +2024,7 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
                 className="w-full"
                 data-testid="button-generate"
               >
-                {isGenerating ? 'Generating...' : 'Generate'}
+                {isGenerating ? "Generating..." : "Generate"}
               </Button>
               <Button
                 variant="outline"
@@ -1734,7 +2033,7 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
                 className="w-full"
                 data-testid="button-submit"
               >
-                {savePromptMutation.isPending ? 'Releasing...' : 'Release'}
+                {savePromptMutation.isPending ? "Releasing..." : "Release"}
               </Button>
             </div>
           </div>
@@ -1744,8 +2043,8 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
         <div className="fixed bottom-0 left-0 right-0 z-40 border-t bg-background w-full max-w-full">
           <div className="grid grid-cols-3 w-full max-w-full">
             <Button
-              variant={mobileTab === 'settings' ? 'default' : 'ghost'}
-              onClick={() => setMobileTab('settings')}
+              variant={mobileTab === "settings" ? "default" : "ghost"}
+              onClick={() => setMobileTab("settings")}
               className="flex flex-col h-auto py-3 gap-1 rounded-none no-default-hover-elevate"
               data-testid="button-mobile-tab-settings"
             >
@@ -1753,8 +2052,8 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
               <span className="text-xs font-medium">Settings</span>
             </Button>
             <Button
-              variant={mobileTab === 'editor' ? 'default' : 'ghost'}
-              onClick={() => setMobileTab('editor')}
+              variant={mobileTab === "editor" ? "default" : "ghost"}
+              onClick={() => setMobileTab("editor")}
               className="flex flex-col h-auto py-3 gap-1 rounded-none no-default-hover-elevate"
               data-testid="button-mobile-tab-editor"
             >
@@ -1762,8 +2061,8 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
               <span className="text-xs font-medium">Prompt</span>
             </Button>
             <Button
-              variant={mobileTab === 'generation' ? 'default' : 'ghost'}
-              onClick={() => setMobileTab('generation')}
+              variant={mobileTab === "generation" ? "default" : "ghost"}
+              onClick={() => setMobileTab("generation")}
               className="flex flex-col h-auto py-3 gap-1 rounded-none no-default-hover-elevate"
               data-testid="button-mobile-tab-generation"
             >
@@ -1777,7 +2076,9 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
         {showVariableEditor && (
           <div className="fixed inset-0 bg-background z-50 flex flex-col overflow-hidden">
             <div className="shrink-0 flex items-center justify-between p-4 border-b w-full max-w-full overflow-x-hidden">
-              <h2 className="text-lg font-semibold text-foreground">Variables</h2>
+              <h2 className="text-lg font-semibold text-foreground">
+                Variables
+              </h2>
               <Button
                 variant="ghost"
                 size="icon"
@@ -1801,149 +2102,233 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
                     Select text or use [Name]
                   </p>
                 ) : (
-                  <Accordion type="multiple" value={editingVariableId ? [editingVariableId] : openVariables} onValueChange={setOpenVariables}>
+                  <Accordion
+                    type="multiple"
+                    value={
+                      editingVariableId ? [editingVariableId] : openVariables
+                    }
+                    onValueChange={setOpenVariables}
+                  >
                     {variables.map((variable) => (
                       <AccordionItem
                         key={variable.id}
                         value={variable.id}
                         id={`variable-${variable.id}`}
                       >
-                        <AccordionTrigger className="hover-elevate px-2 rounded" data-testid={`accordion-trigger-${variable.id}`}>
+                        <AccordionTrigger
+                          className="hover-elevate px-2 rounded"
+                          data-testid={`accordion-trigger-${variable.id}`}
+                        >
                           <div className="flex items-center gap-2 flex-1">
-                            <span className="text-sm font-medium text-foreground">{variable.label}</span>
-                            <Badge variant="outline" className="text-xs">{variable.type}</Badge>
+                            <span className="text-sm font-medium text-white">
+                              {variable.label}
+                            </span>
+                            <Badge variant="outline" className="text-xs">
+                              {variable.type}
+                            </Badge>
                           </div>
                         </AccordionTrigger>
                         <AccordionContent className="px-1.5 pt-1 space-y-2 w-full max-w-full overflow-x-hidden">
                           <div className="space-y-2">
-                            <Label className="text-xs text-foreground">Label</Label>
+                            <Label className="text-xs text-white">Label</Label>
                             <Input
                               value={variable.label}
-                              onChange={(e) => updateVariable(variable.id, { label: e.target.value })}
+                              onChange={(e) =>
+                                updateVariable(variable.id, {
+                                  label: e.target.value,
+                                })
+                              }
                               className="h-8 text-sm text-foreground"
                               placeholder="Label"
-                              disabled={promptType === 'showcase'}
+                              disabled={promptType === "showcase"}
                               data-testid={`input-label-${variable.id}`}
                             />
                           </div>
 
                           <div className="space-y-2">
-                            <Label className="text-xs text-foreground">Description</Label>
+                            <Label className="text-xs text-white">
+                              Beschreibung
+                            </Label>
                             <Textarea
                               value={variable.description}
-                              onChange={(e) => updateVariable(variable.id, { description: e.target.value })}
+                              onChange={(e) =>
+                                updateVariable(variable.id, {
+                                  description: e.target.value,
+                                })
+                              }
                               placeholder="Add description..."
                               className="min-h-[60px] text-sm text-foreground"
-                              disabled={promptType === 'showcase'}
+                              disabled={promptType === "showcase"}
                               data-testid={`input-description-${variable.id}`}
                             />
                           </div>
 
                           <div className="space-y-2">
-                            <Label className="text-xs text-foreground">Internal Name</Label>
-                            <Badge variant="secondary" className="text-xs font-mono">
+                            <Label className="text-xs text-white">
+                              Interner Name
+                            </Label>
+                            <Badge
+                              variant="secondary"
+                              className="text-xs font-mono"
+                            >
                               {variable.name}
                             </Badge>
                           </div>
 
                           <div className="space-y-2">
-                            <Label className="text-xs text-foreground">Type</Label>
+                            <Label className="text-xs text-white">Typ</Label>
                             <Select
                               value={variable.type}
-                              onValueChange={(value) => updateVariable(variable.id, { type: value as VariableType })}
-                              disabled={promptType === 'showcase'}
+                              onValueChange={(value) =>
+                                updateVariable(variable.id, {
+                                  type: value as VariableType,
+                                })
+                              }
+                              disabled={promptType === "showcase"}
                             >
-                              <SelectTrigger className="h-9 text-sm" data-testid={`select-type-${variable.id}`}>
+                              <SelectTrigger
+                                className="h-9 text-sm"
+                                data-testid={`select-type-${variable.id}`}
+                              >
                                 <SelectValue />
                               </SelectTrigger>
                               <SelectContent>
                                 <SelectItem value="text">Text</SelectItem>
-                                <SelectItem value="checkbox">Checkbox</SelectItem>
-                                <SelectItem value="multi-select">Multi-Select</SelectItem>
-                                <SelectItem value="single-select">Single-Select</SelectItem>
+                                <SelectItem value="checkbox">
+                                  Checkbox
+                                </SelectItem>
+                                <SelectItem value="multi-select">
+                                  Multi-Select
+                                </SelectItem>
+                                <SelectItem value="single-select">
+                                  Single-Select
+                                </SelectItem>
                                 <SelectItem value="slider">Slider</SelectItem>
                               </SelectContent>
                             </Select>
                           </div>
 
-                          {variable.type === 'text' && (
+                          {variable.type === "text" && (
                             <div className="space-y-2">
-                              <Label className="text-xs text-foreground">Default Value</Label>
+                              <Label className="text-xs text-white">
+                                Default Value
+                              </Label>
                               <Textarea
                                 value={variable.defaultValue as string}
-                                onChange={(e) => updateVariable(variable.id, { defaultValue: e.target.value })}
+                                onChange={(e) =>
+                                  updateVariable(variable.id, {
+                                    defaultValue: e.target.value,
+                                  })
+                                }
                                 placeholder="Default Value"
                                 className="min-h-[80px] text-sm"
-                                disabled={promptType === 'showcase'}
+                                disabled={promptType === "showcase"}
                                 data-testid={`input-default-${variable.id}`}
                               />
                             </div>
                           )}
 
-                          {variable.type === 'checkbox' && (
+                          {variable.type === "checkbox" && (
                             <div className="flex items-center space-x-2">
                               <Checkbox
                                 id={`checkbox-mobile-${variable.id}`}
                                 checked={variable.defaultValue as boolean}
-                                onCheckedChange={(checked) => updateVariable(variable.id, { defaultValue: checked })}
-                                disabled={promptType === 'showcase'}
+                                onCheckedChange={(checked) =>
+                                  updateVariable(variable.id, {
+                                    defaultValue: checked,
+                                  })
+                                }
+                                disabled={promptType === "showcase"}
                                 data-testid={`checkbox-default-${variable.id}`}
                               />
-                              <Label htmlFor={`checkbox-mobile-${variable.id}`} className="text-sm text-foreground">
+                              <Label
+                                htmlFor={`checkbox-mobile-${variable.id}`}
+                                className="text-sm text-white"
+                              >
                                 Active by default
                               </Label>
                             </div>
                           )}
 
-                          {(variable.type === 'multi-select' || variable.type === 'single-select') && (
+                          {(variable.type === "multi-select" ||
+                            variable.type === "single-select") && (
                             <div className="space-y-2">
-                              <Label className="text-xs text-foreground">Options & Default</Label>
+                              <Label className="text-xs text-white">
+                                Options & Default
+                              </Label>
                               <div className="space-y-2">
                                 {variable.options?.map((option, index) => {
-                                  const isDefault = (variable.defaultOptionIndex ?? 0) === index;
+                                  const isDefault =
+                                    (variable.defaultOptionIndex ?? 0) ===
+                                    index;
                                   return (
-                                    <Card key={index} className={`p-2 w-full max-w-full overflow-x-hidden ${isDefault ? 'border-teal-500/50 bg-teal-500/5' : ''}`}>
+                                    <Card
+                                      key={index}
+                                      className={`p-2 w-full max-w-full overflow-x-hidden ${isDefault ? "border-teal-500/50 bg-teal-500/5" : ""}`}
+                                    >
                                       <div className="space-y-2 w-full max-w-full overflow-x-hidden">
                                         <div className="flex items-center gap-2">
                                           <Checkbox
                                             checked={isDefault}
                                             onCheckedChange={(checked) => {
                                               if (checked) {
-                                                updateVariable(variable.id, { defaultOptionIndex: index });
+                                                updateVariable(variable.id, {
+                                                  defaultOptionIndex: index,
+                                                });
                                               }
                                             }}
-                                            disabled={promptType === 'showcase'}
+                                            disabled={promptType === "showcase"}
                                             data-testid={`checkbox-default-option-${variable.id}-${index}`}
                                           />
-                                          <Label className="text-xs text-foreground font-medium">Default</Label>
+                                          <Label className="text-xs text-white font-medium">
+                                            Default
+                                          </Label>
                                         </div>
                                         <div className="space-y-1">
-                                          <Label className="text-xs text-foreground">Display Name</Label>
+                                          <Label className="text-xs text-white">
+                                            Anzeigename
+                                          </Label>
                                           <Input
                                             value={option.visibleName}
                                             onChange={(e) => {
-                                              const newOptions = [...(variable.options || [])];
-                                              newOptions[index] = { ...option, visibleName: e.target.value };
-                                              updateVariable(variable.id, { options: newOptions });
+                                              const newOptions = [
+                                                ...(variable.options || []),
+                                              ];
+                                              newOptions[index] = {
+                                                ...option,
+                                                visibleName: e.target.value,
+                                              };
+                                              updateVariable(variable.id, {
+                                                options: newOptions,
+                                              });
                                             }}
-                                            placeholder="Display Name"
+                                            placeholder="Anzeigename"
                                             className="h-8 text-sm"
-                                            disabled={promptType === 'showcase'}
+                                            disabled={promptType === "showcase"}
                                             data-testid={`input-visible-name-${variable.id}-${index}`}
                                           />
                                         </div>
                                         <div className="space-y-1">
-                                          <Label className="text-xs text-foreground">Prompt Value</Label>
+                                          <Label className="text-xs text-white">
+                                            Prompt Value
+                                          </Label>
                                           <Input
                                             value={option.promptValue}
                                             onChange={(e) => {
-                                              const newOptions = [...(variable.options || [])];
-                                              newOptions[index] = { ...option, promptValue: e.target.value };
-                                              updateVariable(variable.id, { options: newOptions });
+                                              const newOptions = [
+                                                ...(variable.options || []),
+                                              ];
+                                              newOptions[index] = {
+                                                ...option,
+                                                promptValue: e.target.value,
+                                              };
+                                              updateVariable(variable.id, {
+                                                options: newOptions,
+                                              });
                                             }}
                                             placeholder="Prompt Value"
                                             className="h-8 text-sm"
-                                            disabled={promptType === 'showcase'}
+                                            disabled={promptType === "showcase"}
                                             data-testid={`input-prompt-value-${variable.id}-${index}`}
                                           />
                                         </div>
@@ -1951,15 +2336,20 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
                                           variant="ghost"
                                           size="sm"
                                           onClick={() => {
-                                            const newOptions = variable.options?.filter((_, i) => i !== index) || [];
-                                            updateVariable(variable.id, { options: newOptions });
+                                            const newOptions =
+                                              variable.options?.filter(
+                                                (_, i) => i !== index
+                                              ) || [];
+                                            updateVariable(variable.id, {
+                                              options: newOptions,
+                                            });
                                           }}
                                           className="w-full text-destructive"
-                                          disabled={promptType === 'showcase'}
+                                          disabled={promptType === "showcase"}
                                           data-testid={`button-remove-option-${variable.id}-${index}`}
                                         >
                                           <Trash2 className="h-3 w-3 mr-1" />
-                                          Remove Option
+                                          Option entfernen
                                         </Button>
                                       </div>
                                     </Card>
@@ -1968,23 +2358,40 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
                               </div>
                               <div className="flex gap-2">
                                 <Input
-                                  value={newOptionInput[variable.id] || ''}
-                                  onChange={(e) => setNewOptionInput({ ...newOptionInput, [variable.id]: e.target.value })}
+                                  value={newOptionInput[variable.id] || ""}
+                                  onChange={(e) =>
+                                    setNewOptionInput({
+                                      ...newOptionInput,
+                                      [variable.id]: e.target.value,
+                                    })
+                                  }
                                   placeholder="New option"
                                   className="h-8 text-sm"
-                                  disabled={promptType === 'showcase'}
+                                  disabled={promptType === "showcase"}
                                   data-testid={`input-new-option-${variable.id}`}
                                 />
                                 <Button
                                   size="sm"
                                   onClick={() => {
-                                    const optionText = newOptionInput[variable.id];
+                                    const optionText =
+                                      newOptionInput[variable.id];
                                     if (!optionText) return;
-                                    const newOptions = [...(variable.options || []), { visibleName: optionText, promptValue: optionText }];
-                                    updateVariable(variable.id, { options: newOptions });
-                                    setNewOptionInput({ ...newOptionInput, [variable.id]: '' });
+                                    const newOptions = [
+                                      ...(variable.options || []),
+                                      {
+                                        visibleName: optionText,
+                                        promptValue: optionText,
+                                      },
+                                    ];
+                                    updateVariable(variable.id, {
+                                      options: newOptions,
+                                    });
+                                    setNewOptionInput({
+                                      ...newOptionInput,
+                                      [variable.id]: "",
+                                    });
                                   }}
-                                  disabled={promptType === 'showcase'}
+                                  disabled={promptType === "showcase"}
                                   data-testid={`button-add-option-${variable.id}`}
                                 >
                                   <Plus className="h-3 w-3" />
@@ -1993,40 +2400,59 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
                             </div>
                           )}
 
-                          {variable.type === 'slider' && (
+                          {variable.type === "slider" && (
                             <div className="space-y-2">
                               <div className="grid grid-cols-2 gap-2">
                                 <div className="space-y-1">
-                                  <Label className="text-xs text-foreground">Min</Label>
+                                  <Label className="text-xs text-white">
+                                    Min
+                                  </Label>
                                   <Input
                                     type="number"
                                     value={variable.min || 0}
-                                    onChange={(e) => updateVariable(variable.id, { min: parseInt(e.target.value) || 0 })}
+                                    onChange={(e) =>
+                                      updateVariable(variable.id, {
+                                        min: parseInt(e.target.value) || 0,
+                                      })
+                                    }
                                     className="h-8 text-sm"
-                                    disabled={promptType === 'showcase'}
+                                    disabled={promptType === "showcase"}
                                     data-testid={`input-min-${variable.id}`}
                                   />
                                 </div>
                                 <div className="space-y-1">
-                                  <Label className="text-xs text-foreground">Max</Label>
+                                  <Label className="text-xs text-white">
+                                    Max
+                                  </Label>
                                   <Input
                                     type="number"
                                     value={variable.max || 100}
-                                    onChange={(e) => updateVariable(variable.id, { max: parseInt(e.target.value) || 100 })}
+                                    onChange={(e) =>
+                                      updateVariable(variable.id, {
+                                        max: parseInt(e.target.value) || 100,
+                                      })
+                                    }
                                     className="h-8 text-sm"
-                                    disabled={promptType === 'showcase'}
+                                    disabled={promptType === "showcase"}
                                     data-testid={`input-max-${variable.id}`}
                                   />
                                 </div>
                               </div>
                               <div className="space-y-1">
-                                <Label className="text-xs text-foreground">Default Value</Label>
+                                <Label className="text-xs text-white">
+                                  Default Value
+                                </Label>
                                 <Input
                                   type="number"
                                   value={variable.defaultValue as number}
-                                  onChange={(e) => updateVariable(variable.id, { defaultValue: parseInt(e.target.value) || 0 })}
+                                  onChange={(e) =>
+                                    updateVariable(variable.id, {
+                                      defaultValue:
+                                        parseInt(e.target.value) || 0,
+                                    })
+                                  }
                                   className="h-8 text-sm"
-                                  disabled={promptType === 'showcase'}
+                                  disabled={promptType === "showcase"}
                                   data-testid={`input-default-${variable.id}`}
                                 />
                               </div>
@@ -2038,23 +2464,37 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
                               <Checkbox
                                 id={`required-mobile-${variable.id}`}
                                 checked={variable.required}
-                                onCheckedChange={(checked) => updateVariable(variable.id, { required: checked as boolean })}
-                                disabled={promptType === 'showcase'}
+                                onCheckedChange={(checked) =>
+                                  updateVariable(variable.id, {
+                                    required: checked as boolean,
+                                  })
+                                }
+                                disabled={promptType === "showcase"}
                                 data-testid={`checkbox-required-${variable.id}`}
                               />
-                              <Label htmlFor={`required-mobile-${variable.id}`} className="text-sm text-foreground">
-                                Required
+                              <Label
+                                htmlFor={`required-mobile-${variable.id}`}
+                                className="text-sm text-white"
+                              >
+                                Pflichtfeld
                               </Label>
                             </div>
                             <div className="flex items-center space-x-2">
                               <Checkbox
                                 id={`allow-ref-image-mobile-${variable.id}`}
                                 checked={variable.allowReferenceImage || false}
-                                onCheckedChange={(checked) => updateVariable(variable.id, { allowReferenceImage: checked as boolean })}
-                                disabled={promptType === 'showcase'}
+                                onCheckedChange={(checked) =>
+                                  updateVariable(variable.id, {
+                                    allowReferenceImage: checked as boolean,
+                                  })
+                                }
+                                disabled={promptType === "showcase"}
                                 data-testid={`checkbox-allow-ref-image-mobile-${variable.id}`}
                               />
-                              <Label htmlFor={`allow-ref-image-mobile-${variable.id}`} className="text-sm text-foreground">
+                              <Label
+                                htmlFor={`allow-ref-image-mobile-${variable.id}`}
+                                className="text-sm text-white"
+                              >
                                 allow reference image
                               </Label>
                             </div>
@@ -2068,7 +2508,7 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
                               className="flex-1"
                               data-testid={`button-save-variable-${variable.id}`}
                             >
-                              Done
+                              Fertig
                             </Button>
                             <Button
                               variant="destructive"
@@ -2097,36 +2537,54 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Variable?</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete this variable? The text will remain as normal text in the prompt.
+              Are you sure you want to delete this variable? The text will
+              remain as normal text in the prompt.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel data-testid="button-cancel-delete">No</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmDeleteVariable} data-testid="button-confirm-delete">
+            <AlertDialogCancel data-testid="button-cancel-delete">
+              No
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDeleteVariable}
+              data-testid="button-confirm-delete"
+            >
               Yes, delete
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
 
-      <AlertDialog open={unsavedVariableDialog} onOpenChange={setUnsavedVariableDialog}>
+      <AlertDialog
+        open={unsavedVariableDialog}
+        onOpenChange={setUnsavedVariableDialog}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Unsaved Variables</AlertDialogTitle>
             <AlertDialogDescription>
-              You have open variables with potentially unsaved changes. Do you want to generate anyway?
+              You have open variables with potentially unsaved changes. Do you
+              want to generate anyway?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel data-testid="button-cancel-generate">Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={proceedWithGenerate} data-testid="button-proceed-generate">
+            <AlertDialogCancel data-testid="button-cancel-generate">
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={proceedWithGenerate}
+              data-testid="button-proceed-generate"
+            >
               Generate
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
 
-      <AlertDialog open={showValidationDialog} onOpenChange={setShowValidationDialog}>
+      <AlertDialog
+        open={showValidationDialog}
+        onOpenChange={setShowValidationDialog}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Missing Information</AlertDialogTitle>
@@ -2135,7 +2593,10 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogAction onClick={() => setShowValidationDialog(false)} data-testid="button-validation-ok">
+            <AlertDialogAction
+              onClick={() => setShowValidationDialog(false)}
+              data-testid="button-validation-ok"
+            >
               OK
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -2164,7 +2625,9 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
                     <div className="flex flex-col items-start">
                       <span className="font-medium">{p.title}</span>
                       <span className="text-xs text-foreground">
-                        {p.createdAt ? new Date(p.createdAt).toLocaleDateString() : 'Recent'}
+                        {p.createdAt
+                          ? new Date(p.createdAt).toLocaleDateString()
+                          : "Recent"}
                       </span>
                     </div>
                   </Button>
@@ -2177,23 +2640,40 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
             </div>
           </ScrollArea>
           <AlertDialogFooter>
-            <AlertDialogCancel data-testid="button-cancel-load">Cancel</AlertDialogCancel>
+            <AlertDialogCancel data-testid="button-cancel-load">
+              Cancel
+            </AlertDialogCancel>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
 
-      <AlertDialog open={linkOrCreateDialog.open} onOpenChange={(open) => {
-        if (!open) {
-          setLinkOrCreateDialog({ open: false, varName: '', selectedText: '', selectionRange: null });
-        }
-      }}>
+      <AlertDialog
+        open={linkOrCreateDialog.open}
+        onOpenChange={(open) => {
+          if (!open) {
+            setLinkOrCreateDialog({
+              open: false,
+              varName: "",
+              selectedText: "",
+              selectionRange: null,
+            });
+          }
+        }}
+      >
         <AlertDialogContent className="max-w-md">
           <div className="flex justify-end -mt-2 -mr-2">
             <Button
               variant="ghost"
               size="icon"
               className="h-6 w-6 rounded-sm opacity-70 hover:opacity-100"
-              onClick={() => setLinkOrCreateDialog({ open: false, varName: '', selectedText: '', selectionRange: null })}
+              onClick={() =>
+                setLinkOrCreateDialog({
+                  open: false,
+                  varName: "",
+                  selectedText: "",
+                  selectionRange: null,
+                })
+              }
               data-testid="button-close-link-dialog"
             >
               <X className="h-4 w-4" />
@@ -2202,7 +2682,9 @@ export default function PromptEditor({ onBack }: PromptEditorProps = {}) {
           <AlertDialogHeader className="-mt-4">
             <AlertDialogTitle>Variable Already Exists</AlertDialogTitle>
             <AlertDialogDescription>
-              A variable with the name "<span className="font-medium">{linkOrCreateDialog.varName}</span>" already exists. What would you like to do?
+              A variable with the name "
+              <span className="font-medium">{linkOrCreateDialog.varName}</span>"
+              already exists. What would you like to do?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <div className="flex flex-col gap-2">

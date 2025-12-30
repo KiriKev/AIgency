@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -17,8 +17,10 @@ interface FilterBarProps {
 }
 
 export default function FilterBar({ onFilterChange }: FilterBarProps) {
-  const [priceFilter, setPriceFilter] = useState<'all' | 'free' | 'paid'>('all');
-  const [sortBy, setSortBy] = useState('popular');
+  const [priceFilter, setPriceFilter] = useState<"all" | "free" | "paid">(
+    "all"
+  );
+  const [sortBy, setSortBy] = useState("popular");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [showFilters, setShowFilters] = useState(true);
   const lastScrollYRef = useRef(0);
@@ -36,64 +38,69 @@ export default function FilterBar({ onFilterChange }: FilterBarProps) {
       lastScrollYRef.current = currentScrollY;
     };
 
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const mockTags = ['Cyberpunk', 'Portrait', 'Nature'];
+  const mockTags = ["Cyberpunk", "Portrait", "Nature"];
 
-  const handlePriceFilterChange = (filter: 'all' | 'free' | 'paid') => {
+  const handlePriceFilterChange = (filter: "all" | "free" | "paid") => {
     setPriceFilter(filter);
     onFilterChange?.({ priceFilter: filter, sortBy, tags: selectedTags });
   };
 
   const removeTag = (tag: string) => {
-    const updated = selectedTags.filter(t => t !== tag);
+    const updated = selectedTags.filter((t) => t !== tag);
     setSelectedTags(updated);
     onFilterChange?.({ priceFilter, sortBy, tags: updated });
   };
 
   const resetFilters = () => {
-    setPriceFilter('all');
-    setSortBy('popular');
+    setPriceFilter("all");
+    setSortBy("popular");
     setSelectedTags([]);
-    onFilterChange?.({ priceFilter: 'all', sortBy: 'popular', tags: [] });
+    onFilterChange?.({ priceFilter: "all", sortBy: "popular", tags: [] });
   };
 
   return (
-    <div className={`sticky top-16 z-30 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 transition-transform duration-300 ${showFilters ? 'translate-y-0' : '-translate-y-full'
-      }`}>
+    <div
+      className={`sticky top-16 z-30 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 transition-transform duration-300 ${
+        showFilters ? "translate-y-0" : "-translate-y-full"
+      }`}
+    >
       <div className="w-full px-6 lg:px-8 py-3">
         <div className="flex flex-wrap items-center gap-3">
           <div className="flex items-center gap-2">
             <SlidersHorizontal className="h-4 w-4 text-muted-foreground" />
-            <span className="text-sm font-medium">Filters:</span>
+            <span className="text-sm font-medium text-muted-foreground">
+              Filters:
+            </span>
           </div>
 
           <div className="flex gap-2">
             <Button
-              variant={priceFilter === 'all' ? 'default' : 'outline'}
+              variant={priceFilter === "all" ? "default" : "outline"}
               size="sm"
-              onClick={() => handlePriceFilterChange('all')}
-              className={priceFilter === 'all' ? '' : 'text-foreground'}
+              onClick={() => handlePriceFilterChange("all")}
+              className={priceFilter === "all" ? "" : "text-foreground"}
               data-testid="button-filter-all"
             >
               All
             </Button>
             <Button
-              variant={priceFilter === 'free' ? 'default' : 'outline'}
+              variant={priceFilter === "free" ? "default" : "outline"}
               size="sm"
-              onClick={() => handlePriceFilterChange('free')}
-              className={priceFilter === 'free' ? '' : 'text-foreground'}
+              onClick={() => handlePriceFilterChange("free")}
+              className={priceFilter === "free" ? "" : "text-foreground"}
               data-testid="button-filter-free"
             >
               Free
             </Button>
             <Button
-              variant={priceFilter === 'paid' ? 'default' : 'outline'}
+              variant={priceFilter === "paid" ? "default" : "outline"}
               size="sm"
-              onClick={() => handlePriceFilterChange('paid')}
-              className={priceFilter === 'paid' ? '' : 'text-foreground'}
+              onClick={() => handlePriceFilterChange("paid")}
+              className={priceFilter === "paid" ? "" : "text-foreground"}
               data-testid="button-filter-paid"
             >
               Paid
@@ -129,10 +136,18 @@ export default function FilterBar({ onFilterChange }: FilterBarProps) {
 
           {selectedTags.length > 0 && (
             <div className="flex flex-wrap gap-2">
-              {selectedTags.map(tag => (
-                <Badge key={tag} variant="secondary" className="gap-1" data-testid={`badge-tag-${tag}`}>
+              {selectedTags.map((tag) => (
+                <Badge
+                  key={tag}
+                  variant="secondary"
+                  className="gap-1"
+                  data-testid={`badge-tag-${tag}`}
+                >
                   {tag}
-                  <X className="h-3 w-3 cursor-pointer" onClick={() => removeTag(tag)} />
+                  <X
+                    className="h-3 w-3 cursor-pointer"
+                    onClick={() => removeTag(tag)}
+                  />
                 </Badge>
               ))}
             </div>
@@ -140,7 +155,7 @@ export default function FilterBar({ onFilterChange }: FilterBarProps) {
 
           <div className="flex-1" />
 
-          {(priceFilter !== 'all' || selectedTags.length > 0) && (
+          {(priceFilter !== "all" || selectedTags.length > 0) && (
             <Button
               variant="ghost"
               size="sm"
