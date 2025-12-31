@@ -79,7 +79,7 @@ interface SelectOption {
   promptValue: string;
 }
 
-interface Variable {
+export interface Variable {
   id: string;
   name: string;
   label: string;

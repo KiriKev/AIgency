@@ -5,6 +5,7 @@ import { TooltipProvider } from "@radix-ui/react-tooltip";
 import { useState } from "react";
 import { getQueryFn } from "@/lib/queryClient";
 import PrivyWalletProvider from "./PrivyProvider";
+import { ThirdwebProvider } from "./ThirdwebProvider";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(
@@ -27,9 +28,11 @@ export function Providers({ children }: { children: React.ReactNode }) {
 
   return (
     <PrivyWalletProvider>
-      <QueryClientProvider client={queryClient}>
-        <TooltipProvider>{children}</TooltipProvider>
-      </QueryClientProvider>
+      <ThirdwebProvider>
+        <QueryClientProvider client={queryClient}>
+          <TooltipProvider>{children}</TooltipProvider>
+        </QueryClientProvider>
+      </ThirdwebProvider>
     </PrivyWalletProvider>
   );
 }
