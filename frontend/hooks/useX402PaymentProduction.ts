@@ -16,6 +16,7 @@
  * const image = await generateImage({ prompt: 'A cat', resolution: '2K' }, 'base-sepolia');
  */
 
+import React from 'react';
 import { useFetchWithPayment } from "thirdweb/react";
 import { useActiveAccount } from "thirdweb/react";
 import { thirdwebClient } from "../lib/thirdweb-client";
@@ -32,7 +33,26 @@ export interface ImageGenerationSettings {
 }
 
 /**
+ * Safe wrapper for useActiveAccount that handles provider context issues
+ */
+function useSafeActiveAccount() {
+  try {
+    // Always call the hook - this must be consistent
+    return useActiveAccount();
+  } catch (error) {
+    // If we're outside of ThirdwebProvider context, return null
+    // This happens during SSR or if providers aren't set up yet
+    if (error instanceof Error && error.message.includes('must be used within')) {
+      return null;
+    }
+    // Re-throw other errors
+    throw error;
+  }
+}
+
+/**
  * Production hook for x402 payment operations
+ * NOTE: This hook requires being used within ThirdwebProvider context
  */
 export function useX402PaymentProduction() {
   const account = useActiveAccount();
@@ -133,7 +153,7 @@ export function useX402PaymentProduction() {
  * (Has wallet connected via Privy/Thirdweb)
  */
 export function usePaymentReady() {
-  const account = useActiveAccount();
+  const account = useSafeActiveAccount();
 
   return {
     isReady: !!account,

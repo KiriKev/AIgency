@@ -21,6 +21,22 @@ import { defineChain } from "thirdweb/chains";
 import { thirdwebClient } from "../lib/thirdweb-client";
 import { PAYMENT_CHAINS, type ChainKey, getTokenSymbol } from "../lib/payment-config";
 
+/**
+ * Safe wrapper for useActiveAccount that handles provider context issues
+ */
+function useSafeActiveAccount() {
+  try {
+    return useActiveAccount();
+  } catch (error) {
+    // If we're outside of ThirdwebProvider context, return null
+    if (error instanceof Error && error.message.includes('must be used within')) {
+      console.warn('⚠️ useActiveAccount called outside ThirdwebProvider context');
+      return null;
+    }
+    throw error;
+  }
+}
+
 export interface BalanceInfo {
   /** Raw balance in wei (6 decimals for USDC) */
   balance: bigint | undefined;
@@ -45,7 +61,7 @@ export interface BalanceInfo {
  * @returns Balance information
  */
 export function usePaymentBalance(chainKey: ChainKey): BalanceInfo {
-  const account = useActiveAccount();
+  const account = useSafeActiveAccount();
   const chainConfig = PAYMENT_CHAINS[chainKey];
 
   const { data: balance, isLoading } = useWalletBalance({

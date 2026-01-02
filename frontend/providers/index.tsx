@@ -28,11 +28,11 @@ export function Providers({ children }: { children: React.ReactNode }) {
 
   return (
     <PrivyWalletProvider>
-      <ThirdwebProvider>
-        <QueryClientProvider client={queryClient}>
+      <QueryClientProvider client={queryClient}>
+        <ThirdwebProvider>
           <TooltipProvider>{children}</TooltipProvider>
-        </QueryClientProvider>
-      </ThirdwebProvider>
+        </ThirdwebProvider>
+      </QueryClientProvider>
     </PrivyWalletProvider>
   );
 }

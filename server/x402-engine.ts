@@ -6,8 +6,20 @@
 
 import { settlePayment, decodePayment } from "thirdweb/x402";
 import { thirdwebFacilitator } from "./facilitator";
-import { PAYMENT_CHAINS, PAYMENT_CONFIG, type ChainKey } from "../shared/payment-config";
+import { PAYMENT_CHAINS, type ChainKey } from "../shared/payment-config";
 import { log } from "./app";
+
+/**
+ * Payment configuration constants
+ */
+const PAYMENT_CONFIG = {
+  maxTimeoutSeconds: 3600, // 1 hour
+  mimeTypes: {
+    prompt: 'application/json',
+    image: 'image/png',
+    template: 'application/json'
+  }
+} as const;
 
 export interface PaymentRequest {
   resourceUrl: string;
@@ -329,7 +341,7 @@ export class X402PaymentEngine {
       chain: chainConfig.name,
       chainId: chainConfig.id,
       usdcAddress: chainConfig.usdc,
-      blockExplorer: chainConfig.blockExplorer,
+      blockExplorer: chainConfig.explorer
     };
   }
 
