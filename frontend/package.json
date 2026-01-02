@@ -15,7 +15,8 @@
     "@tanstack/react-query": "^5.90.12",
     "next": "16.1.1",
     "react": "19.2.3",
-    "react-dom": "19.2.3"
+    "react-dom": "19.2.3",
+    "thirdweb": "^5.116.1"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

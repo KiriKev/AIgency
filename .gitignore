@@ -29,3 +29,13 @@ secrets.yml
 secrets.yaml
 credentials.json
 service-account*.json
+
+# Documentation files (X402 implementation)
+FINAL_IMPLEMENTATION_SUMMARY.md
+QUICK_START.md
+TESTING_SUMMARY.md
+TEST_PAGE_GUIDE.md
+X402_FIX_SUMMARY.md
+X402_IMPLEMENTATION.md
+X402_TEST_SUITE_GUIDE.md
+PRODUCTION_READY.md
